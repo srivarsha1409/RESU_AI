@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Upload, Target, Briefcase, MessageSquare, CheckCircle, AlertCircle, Info, TrendingUp, Award, FileText, User, Mail, Phone, LogOut } from 'lucide-react';
+import Sidebar from '../../components/Sidebar';
 
 const API_BASE = 'http://127.0.0.1:8000';
 
@@ -8,6 +9,7 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState('analysis');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   // User data
   const [user, setUser] = useState({});
@@ -397,62 +399,78 @@ const getSuggestedSkills = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-700 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20 flex justify-between items-center">
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
+      {/* Sidebar */}
+      <Sidebar 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        userName={resumeData?.data?.name || 'User'}
+        onLogout={handleLogout}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+      />
+
+      {/* Main Content */}
+      <div style={{
+        marginLeft: isCollapsed ? '80px' : '260px',
+        minHeight: '100vh',
+        transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Top Header */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          padding: '20px 30px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">
-  Welcome, {resumeData?.data?.name || 'User'}!
-</h1>
-
-            <p className="text-purple-200">Your AI-powered career dashboard</p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleLogout}
-              className="px-5 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl transition-all flex items-center gap-2"
-            >
-              <LogOut size={18} /> Logout
-            </button>
+            <h1 style={{
+              color: 'white',
+              fontSize: '28px',
+              fontWeight: '700',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              Welcome, {resumeData?.data?.name || 'User'}!
+            </h1>
+            <p style={{
+              color: '#94a3b8',
+              fontSize: '14px',
+              margin: '4px 0 0 0'
+            }}>
+              Your AI-powered career dashboard
+            </p>
           </div>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-6 flex items-start gap-3">
-            <AlertCircle className="text-red-400 mt-0.5" size={20} />
-            <div className="flex-1">
-              <p className="text-red-200 font-medium">Error</p>
-              <p className="text-red-300 text-sm">{error}</p>
+        {/* Content Area */}
+        <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
+          {/* Error Alert */}
+          {error && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px'
+            }}>
+              <AlertCircle style={{ color: '#f87171', marginTop: '2px' }} size={20} />
+              <div style={{ flex: 1 }}>
+                <p style={{ color: '#fca5a5', fontWeight: '600', margin: '0 0 4px 0' }}>Error</p>
+                <p style={{ color: '#fecaca', fontSize: '14px', margin: 0 }}>{error}</p>
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {[
-            { id: 'analysis', label: 'Resume Analysis', icon: FileText },
-            { id: 'ats', label: 'ATS Analysis', icon: Target },
-            { id: 'roles', label: 'Role Recommendation', icon: Briefcase },
-            { id: 'assistant', label: 'AI Assistant', icon: MessageSquare },
-            { id: 'guidance', label: 'Guidance', icon: TrendingUp },
-            { id: 'referrals', label: 'Referrals', icon: MessageSquare },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`px-6 py-3 rounded-xl font-medium capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
-                activeTab === tab.id
-                  ? 'bg-purple-300 text-slate-900 shadow-lg'
-                  : 'bg-white/20 text-purple-100 hover:bg-white/30'
-              }`}
-            >
-              <tab.icon size={18} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
+          )}
 
         {/* Referrals Tab */}
         {activeTab === 'referrals' && (
@@ -1544,6 +1562,7 @@ const getSuggestedSkills = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
