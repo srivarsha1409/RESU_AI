@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, PlusCircle, Upload, Filter, FileText, TrendingUp, Users, Award } from "lucide-react";
+import { X, PlusCircle, Upload, Filter, TrendingUp, Users, Award } from "lucide-react";
 
 const Admin_Resume_Filter = () => {
   const [totalFiles, setTotalFiles] = useState(0);
@@ -182,48 +182,7 @@ const Admin_Resume_Filter = () => {
         if (r.previewUrl) URL.revokeObjectURL(r.previewUrl);
       });
     };
-  }, []);
-
-  const downloadReport = async () => {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.text("Resume Filter Report", 14, 20);
-    doc.setFontSize(10);
-
-    let y = 30;
-    filters.results.forEach((res, index) => {
-      doc.text(`${index + 1}. ${res.name || "N/A"} (${res.filename || "-"})`, 14, y);
-      y += 6;
-
-      if (res.email || res.phone) {
-        doc.text(`${res.email || "-"}    ${res.phone || "-"}`, 14, y);
-        y += 6;
-      }
-
-      doc.text(
-        `CGPA: ${res.education?.bachelor?.cgpa || "-"} | ATS: ${res.ats_score}%`,
-        14,
-        y
-      );
-      y += 6;
-
-      doc.text(
-        `Skills: ${res.skills?.technical?.slice(0, 4).join(", ") || "-"}`,
-        14,
-        y
-      );
-      y += 10;
-
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
-      }
-    });
-
-    doc.save("Filtered_Resume_Report.pdf");
-  };
+  }, [filters.results]);
 
   const sortedResults = React.useMemo(() => {
     if (!filters.results || filters.results.length === 0) return [];
@@ -591,7 +550,7 @@ const Admin_Resume_Filter = () => {
                   cursor: "pointer"
                 }}
               />
-              <FileText size={48} color="#94a3b8" style={{ margin: "0 auto 12px" }} />
+              <div style={{ width: "48px", height: "48px", margin: "0 auto 12px" }} />
               <p style={{ fontSize: "14px", color: "#64748b", margin: "8px 0" }}>
                 <strong style={{ color: "#667eea" }}>Click to upload</strong> or drag and drop
               </p>
@@ -1307,25 +1266,6 @@ const Admin_Resume_Filter = () => {
                   Filtered Results ({filters.results.length})
                 </h2>
               </div>
-              <button
-                onClick={downloadReport}
-                style={{   
-                  background: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "10px",
-                  padding: "10px 18px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  boxShadow: "0 4px 12px rgba(67, 233, 123, 0.3)"
-                }}
-              >
-                💾 Save as PDF
-              </button>
             </div>
 
             <div style={{ overflowX: "auto" }}>

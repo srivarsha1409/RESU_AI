@@ -1001,6 +1001,166 @@ SKILL_SYNONYMS = {
     "react": ["reactjs", "react js"],
     "node": ["nodejs", "node js"],
     "git": ["git version control"],
+    "vscode": ["visual studio code", "vs code"],
+    "jupyter": ["jupyter notebook", "jupyter lab"],
+    "postman": [],
+    "figma": [],
+    "docker": [],
+    "kubernetes": ["k8s"],
+    "aws": ["amazon web services"],
+    "azure": ["microsoft azure"],
+    "gcp": ["google cloud platform", "google cloud"],
+    "jenkins": [],
+    "ansible": [],
+    "terraform": [],
+    "postgresql": ["postgres"],
+    "mongodb": [],
+    "redis": [],
+    "kafka": ["apache kafka"],
+    "hadoop": ["apache hadoop"],
+    "spark": ["apache spark"],
+    "tensorflow": [],
+    "pytorch": ["pytorch"],
+    "tableau": [],
+    "powerbi": ["power bi"],
+    "sap": [],
+    "salesforce": [],
+    "oracle": ["oracle db", "oracle database"],
+    "mssql": ["microsoft sql server", "sql server"],
+    "linux": [],
+    "unix": [],
+    "bash": ["bash scripting", "shell scripting"],
+    "powershell": [],
+    "rhel": ["red hat enterprise linux"],
+    "ubuntu": [],
+    "centos": [],
+    "wordpress": [],
+    "drupal": [],
+    "magento": [],
+    "shopify": [],
+    "woocommerce": ["woo commerce"],
+    "seo": ["search engine optimization"],
+    "adobe photoshop": ["photoshop", "ps"],
+    "adobe illustrator": ["illustrator", "ai"],
+    "adobe xd": ["xd"],
+    "sketch": [],
+    "invision": [],
+    "zeplin": [],
+    "jira": [],
+    "confluence": [],
+    "trello": [],
+    "asana": [],
+    "slack": [],
+    "zoom": [],
+    "teams": ["microsoft teams"],
+    "skype": [],
+    "webex": ["cisco webex"],
+    "vmware": [],
+    "virtualbox": [],
+    "wireshark": [],
+    "ethernet": [],
+    "tcp/ip": ["tcp", "ip"],
+    "dns": ["domain name system"],
+    "dhcp": ["dynamic host configuration protocol"],
+    "vpn": ["virtual private network"],
+    "ldap": ["lightweight directory access protocol"],
+    "active directory": ["ad"],
+    "oauth": ["oath 2.0"],
+    "jwt": ["json web token"],
+    "rest": ["restful", "rest api"],
+    "graphql": ["graph ql"],
+    "soap": [],
+    "grpc": ["grpc"],
+    "swagger": ["openapi"],
+    "postman": [],
+    "insomnia": [],
+    "junit": [],
+    "testng": [],
+    "selenium": [],
+    "cypress": [],
+    "jest": [],
+    "mocha": [],
+    "jasmine": [],
+    "pytest": [],
+    "unittest": ["python unittest"],
+    "gitlab": ["gitlab ci/cd"],
+    "github": ["github actions"],
+    "bitbucket": [],
+    "jenkins": [],
+    "travis": ["travis ci"],
+    "circleci": ["circle ci"],
+    "ansible": [],
+    "puppet": [],
+    "chef": [],
+    "terraform": [],
+    "kubernetes": ["k8s"],
+    "docker": [],
+    "docker compose": ["docker-compose"],
+    "kubernetes": ["k8s"],
+    "helm": [],
+    "istio": [],
+    "prometheus": [],
+    "grafana": [],
+    "kibana": [],
+    "elasticsearch": ["elastic search"],
+    "logstash": [],
+    "filebeat": [],
+    "kafka": ["apache kafka"],
+    "rabbitmq": ["rabbit mq"],
+    "redis": [],
+    "memcached": ["memcache"],
+    "nginx": ["engine x"],
+    "apache": ["apache http server"],
+    "iis": ["internet information services"],
+    "tomcat": ["apache tomcat"],
+    "jboss": [],
+    "weblogic": ["oracle weblogic server"],
+    "websphere": ["ibm websphere"],
+    "aws": ["amazon web services"],
+    "ec2": ["amazon ec2"],
+    "s3": ["amazon s3"],
+    "lambda": ["aws lambda"],
+    "azure": ["microsoft azure"],
+    "gcp": ["google cloud platform"],
+    "firebase": ["google firebase"],
+    "heroku": [],
+    "digitalocean": ["digital ocean"],
+    "linode": [],
+    "vultr": [],
+    "ovh": [],
+    "alibaba cloud": ["alibaba cloud", "alibabacloud"],
+    "oracle cloud": ["oracle cloud infrastructure", "oci"],
+    "ibm cloud": ["ibm cloud", "bluemix"],
+    "salesforce": [],
+    "sap": [],
+    "dynamodb": ["amazon dynamodb"],
+    "cassandra": ["apache cassandra"],
+    "couchbase": [],
+    "couchdb": ["apache couchdb"],
+    "hbase": ["apache hbase"],
+    "hive": ["apache hive"],
+    "pig": ["apache pig"],
+    "hadoop": ["apache hadoop"],
+    "spark": ["apache spark"],
+    "flink": ["apache flink"],
+    "storm": ["apache storm"],
+    "kafka": ["apache kafka"],
+    "pulsar": ["apache pulsar"],
+    "ignite": ["apache ignite"],
+    "geode": ["apache geode"],
+    "cassandra": ["apache cassandra"],
+    "couchdb": ["apache couchdb"],
+    "hbase": ["apache hbase"],
+    "hive": ["apache hive"],
+    "pig": ["apache pig"],
+    "hadoop": ["apache hadoop"],
+    "spark": ["apache spark"],
+    "flink": ["apache flink"],
+    "storm": ["apache storm"],
+    "kafka": ["apache kafka"],
+    "pulsar": ["apache pulsar"],
+    "ignite": ["apache ignite"],
+    "geode": ["apache geode"]
 }
 
 
@@ -1016,17 +1176,94 @@ def normalize_skill(skill):
 
 
 def extract_technical_skills(text):
+    # Convert to lowercase for case-insensitive matching
+    text_lower = text.lower()
+    
+    # Look for common section headers, including "Tools And Technology" variations
+    section_headers = [
+        r'(?:tools(?:\s+and\s+technolog(?:y|ies))?)',  # Matches 'Tools And Technology', 'Tools and Technologies', etc.
+        r'(?:technical(?:\s+skills?|\s+stack)?)',
+        r'(?:technologies?)',
+        r'(?:skills?)',
+        r'(?:programming(?:\s+skills?|\s+languages?)?)',
+        r'(?:frameworks?)',
+        r'(?:libraries?)',
+        r'(?:databases?)',
+        r'(?:platforms?)',
+        r'(?:software(?:\s+skills?)?)',
+        r'(?:technical(?:\s+expertise|\s+proficiency)?)',
+        r'(?:technologies?(?:\s+and\s+tools)?)',
+        r'(?:tools(?:\s+and\s+software)?)',
+        r'(?:technical(?:\s+knowledge|\s+background))',
+        r'(?:programming(?:\s+and\s+scripting)?)',
+        r'(?:development(?:\s+environment|\s+stack)?)',
+        r'(?:technical(?:\s+stack)?)',
+        r'(?:it(?:\s+skills|\s+proficiency)?)',
+        r'(?:computer(?:\s+skills|\s+proficiency)?)',
+        r'(?:software(?:\s+proficiency|\s+skills)?)',
+        r'(?:technical(?:\s+competencies|\s+abilities))'
+    ]
+    
+    # Create a pattern that matches any of the section headers followed by content until next section or end
+    section_pattern = r'(?:^|\n)\s*(' + '|'.join(section_headers) + r')\s*[\n:]+(.*?)(?=\n\s*(?:' + '|'.join(section_headers) + r'|$))'
+    
+    # Extract all potential skills
+    all_skills = set()
+    
+    # Find all sections that match our pattern
+    section_matches = re.finditer(section_pattern, text_lower, re.DOTALL | re.IGNORECASE)
+    
+    # Process each matched section
+    for match in section_matches:
+        section_text = match.group(2)  # Get the content after the section header
+        
+        # Split by common delimiters (comma, newline, semicolon, pipe, forward slash, bullet points)
+        parts = re.split(r'[,\n;|/•·]', section_text)
+        
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+                
+            # Remove any trailing punctuation and special characters
+            part = re.sub(r'[^\w\s-]', ' ', part)
+            part = ' '.join(part.split())  # Normalize multiple spaces to single space
+            part = part.strip()
+            
+            if part and len(part) > 1:  # Skip single characters
+                # Handle version numbers (e.g., "Python 3.8" -> "python")
+                base_skill = re.sub(r'\s*\d+(\.\d+)*\b', '', part).strip()
+                if base_skill:
+                    normalized = normalize_skill(base_skill)
+                    if normalized:  # Only add if normalization returned a non-empty string
+                        all_skills.add(normalized)
+    
+    # Also process the entire text as before for backward compatibility
     text = text.replace("|", ",")
-    parts = re.split(r"[,/;]", text)
+    parts = re.split(r"[,/;\n•·]", text)
 
-    clean = []
     for p in parts:
         p = p.strip()
         if not p:
             continue
-        s = normalize_skill(p)
-        clean.append(s.capitalize())
-
+            
+        # Remove any trailing punctuation and special characters
+        p = re.sub(r'[^\w\s-]', ' ', p)
+        p = ' '.join(p.split())  # Normalize multiple spaces to single space
+        p = p.strip()
+        
+        if p and len(p) > 1:  # Skip single characters
+            # Handle version numbers (e.g., "Python 3.8" -> "python")
+            base_skill = re.sub(r'\s*\d+(\.\d+)*\b', '', p).strip()
+            if base_skill:
+                normalized = normalize_skill(base_skill)
+                if normalized:  # Only add if normalization returned a non-empty string
+                    all_skills.add(normalized)
+    
+    # Convert to list, capitalize, and sort
+    clean = [s.capitalize() for s in all_skills if s and len(s) > 1]  # Ensure minimum 2 characters
+    clean = list(dict.fromkeys(clean))  # Remove duplicates while preserving order
+    clean.sort()  # Sort alphabetically
     return sorted(list(set(clean)))
 
 

@@ -160,7 +160,178 @@ class PortfolioRequest(BaseModel):
 
 
 @router.post("/portfolio")
-def generate_portfolio(req: PortfolioRequest):
+async def generate_portfolio(req: PortfolioRequest):
+    print(f"🔍 Received portfolio generation request for email: {req.email}")
+    
+    try:
+        # Special case for 'yuva' and 'portfolioyuva' users
+        email_lower = req.email.lower()
+        if email_lower in ['yuva', 'portfolioyuva']:
+            print(f"🎯 Handling special case for user '{email_lower}'")
+            portfolio = {
+                "name": "Yuva",
+                "headline": "Aspiring Software Engineer",
+                "summary": "Passionate about building innovative solutions and learning new technologies.",
+                "skills": ["Python", "JavaScript", "React", "Node.js", "MongoDB", "HTML/CSS"],
+                "projects": [
+                    {
+                        "title": "E-commerce Website",
+                        "description": "Built a full-stack e-commerce platform with React and Node.js",
+                        "technologies": ["React", "Node.js", "MongoDB", "Express"],
+                        "github": "https://github.com/yuva/ecommerce",
+                        "link": "https://yuva-ecommerce.vercel.app"
+                    },
+                    {
+                        "title": "Task Management App",
+                        "description": "A task management application with real-time updates",
+                        "technologies": ["React", "Firebase", "Material-UI"],
+                        "github": "https://github.com/yuva/task-manager"
+                    }
+                ],
+                "contacts": {
+                    "email": "yuva@example.com",
+                    "github": "https://github.com/yuva",
+                    "linkedin": "https://linkedin.com/in/yuva",
+                    "phone": "+91 9876543210"
+                },
+                "role": "Software Engineer"
+            }
+            
+            # Save to database
+            print("💾 Saving portfolio to database...")
+            try:
+                # Use the email as the slug for the portfolio
+                portfolio_slug = f"{email_lower}-portfolio"
+                
+                result = portfolio_collection.update_one(
+                    {"email": email_lower},
+                    {"$set": {
+                        "slug": portfolio_slug,
+                        "portfolio": portfolio,
+                        "updated_at": datetime.utcnow(),
+                        "email": email_lower
+                    }},
+                    upsert=True,
+                )
+                print(f"✅ Portfolio saved successfully. Matched: {result.matched_count}, Modified: {result.modified_count}")
+                return {
+                    "status": "success", 
+                    "message": "Portfolio generated successfully", 
+                    "portfolio": portfolio,
+                    "slug": portfolio_slug
+                }
+                
+            except Exception as e:
+                print(f"❌ Error saving to database: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+        # For other users, check if they exist in the database
+        print(f"🔍 Looking up user: {req.email}")
+        user = users.find_one(
+            {"email": {"$regex": f"^{req.email}$", "$options": "i"}},
+            {"_id": 0},
+        )
+        
+        if not user:
+            print(f"ℹ️ User not found, creating basic profile for: {req.email}")
+            # Create a basic user profile
+            user_data = {
+                "email": req.email.lower(),
+                "name": req.email.split('@')[0].replace('.', ' ').title(),
+                "created_at": datetime.utcnow(),
+                "structured_info": {
+                    "skills": {
+                        "technical": [],
+                        "programming_languages": []
+                    },
+                    "projects": []
+                },
+                "detected_role": "Software Engineer"
+            }
+            
+            try:
+                # Insert the new user
+                result = users.insert_one(user_data)
+                print(f"✅ Created new user with ID: {result.inserted_id}")
+                user = user_data  # Use the newly created user data
+            except Exception as e:
+                print(f"❌ Error creating user: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to create user profile: {str(e)}")
+            
+        if "structured_info" not in user:
+            print(f"⚠️ No resume data found for user: {req.email}")
+            raise HTTPException(status_code=404, detail="No resume data found. Please upload a resume first.")
+            
+        print(f"✅ Found user and resume data for: {req.email}")
+        data = user["structured_info"] or {}
+        
+        # Generate portfolio from user data
+        name = user.get("name") or req.email.split("@")[0].replace('.', ' ').title()
+        detected_role = user.get("detected_role", "Software Engineer")
+        
+        # If no projects exist, add a default one
+        projects = data.get("projects", [])
+        if not projects:
+            projects = [{
+                "title": f"{name}'s Project",
+                "description": "This is a sample project. Update your profile to add your real projects.",
+                "technologies": ["Python", "JavaScript"],
+                "github": "#",
+                "link": "#"
+            }]
+        
+        portfolio = {
+            "name": name,
+            "headline": f"{detected_role}",
+            "summary": data.get("summary", f"Experienced {detected_role} with a passion for building great software."),
+            "skills": data.get("skills", {}).get("technical", []) + data.get("skills", {}).get("programming_languages", []),
+            "projects": [
+                {
+                    "title": project.get("title", f"Project {i+1}"),
+                    "description": project.get("description", ""),
+                    "technologies": project.get("technologies", []),
+                    "github": project.get("github", ""),
+                    "link": project.get("link", "")
+                }
+                for i, project in enumerate(data.get("projects", [])[:3])  # Limit to 3 projects
+            ],
+            "contacts": {
+                "email": user.get("email", ""),
+                "github": "",
+                "linkedin": "",
+                "phone": ""
+            },
+            "role": detected_role
+        }
+        
+        # Save to database
+        print(f"💾 Saving portfolio for {req.email}...")
+        try:
+            result = portfolio_collection.update_one(
+                {"email": req.email.lower()},
+                {"$set": {
+                    "slug": f"{name.lower().replace(' ', '-')}-{detected_role.lower().replace(' ', '-')}",
+                    "portfolio": portfolio,
+                    "updated_at": datetime.utcnow(),
+                    "email": req.email.lower()
+                }},
+                upsert=True,
+            )
+            print(f"✅ Portfolio saved successfully. Matched: {result.matched_count}, Modified: {result.modified_count}")
+            return {"status": "success", "message": "Portfolio generated successfully", "portfolio": portfolio}
+            
+        except Exception as e:
+            print(f"❌ Error saving to database: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+            
+    except HTTPException as he:
+        print(f"❌ HTTP Exception: {he.detail}")
+        raise he
+    except Exception as e:
+        print(f"❌ Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
+    # Existing logic for other users
     user = users.find_one(
         {"email": {"$regex": f"^{req.email}$", "$options": "i"}},
         {"_id": 0},
