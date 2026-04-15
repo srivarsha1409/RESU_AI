@@ -1220,86 +1220,221 @@ const getSuggestedSkills = () => {
                       {/* LLM-based Project Evaluation */}
                       {Array.isArray(resumeData?.data?.project_analysis) &&
                        resumeData.data.project_analysis.length > 0 && (
-                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
-                            <Briefcase size={20} className="text-purple-300" />
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe',
+                          gridColumn: '1 / -1'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}>
+                            <Briefcase size={20} style={{ color: '#0ea5e9' }} />
                             Project Evaluation (LLM)
                           </h3>
 
-                          <div className="space-y-4">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {resumeData.data.project_analysis.map((proj, idx) => (
                               <div
                                 key={idx}
-                                className="bg-purple-900/20 border border-purple-500/30 rounded-xl px-4 py-4 space-y-3"
+                                style={{
+                                  background: 'white',
+                                  border: '1px solid #e0f2fe',
+                                  borderRadius: '12px',
+                                  padding: '16px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '12px'
+                                }}
                               >
                                 {/* Header: title, domain, complexity, relevance */}
-                                <div className="flex flex-wrap justify-between gap-3">
-                                  <div className="flex-1 min-w-[180px]">
-                                    <p className="text-white font-semibold text-sm">
+                                <div style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  justifyContent: 'space-between',
+                                  gap: '12px'
+                                }}>
+                                  <div style={{
+                                    flex: 1,
+                                    minWidth: '180px'
+                                  }}>
+                                    <p style={{
+                                      color: '#1e293b',
+                                      fontWeight: '600',
+                                      fontSize: '14px',
+                                      margin: 0
+                                    }}>
                                       {proj.project_title || `Project ${idx + 1}`}
                                     </p>
                                     {proj.summary && (
-                                      <p className="text-purple-100 text-xs mt-1">
+                                      <p style={{
+                                        color: '#64748b',
+                                        fontSize: '12px',
+                                        marginTop: '4px',
+                                        margin: '4px 0 0 0'
+                                      }}>
                                         {proj.summary}
                                       </p>
                                     )}
                                   </div>
 
-                                  <div className="flex flex-wrap items-center gap-2">
+                                  <div style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                  }}>
                                     {proj.domain && (
-                                      <span className="text-[11px] px-3 py-1 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/40 font-semibold">
+                                      <span style={{
+                                        fontSize: '11px',
+                                        padding: '4px 12px',
+                                        borderRadius: '12px',
+                                        background: '#dbeafe',
+                                        color: '#1e3a8a',
+                                        border: '1px solid #93c5fd',
+                                        fontWeight: '600'
+                                      }}>
                                         {proj.domain}
                                       </span>
                                     )}
                                     {proj.complexity_level && (
-                                      <span className="text-[11px] px-3 py-1 rounded-full bg-green-500/20 text-green-100 border border-green-400/40 font-semibold">
+                                      <span style={{
+                                        fontSize: '11px',
+                                        padding: '4px 12px',
+                                        borderRadius: '12px',
+                                        background: '#f0fdf4',
+                                        color: '#14532d',
+                                        border: '1px solid #bbf7d0',
+                                        fontWeight: '600'
+                                      }}>
                                         {proj.complexity_level}
                                       </span>
                                     )}
-                                    <div className="text-right min-w-[80px]">
-                                      <p className="text-[11px] text-purple-200">Relevance</p>
-                                      <p className="text-lg font-semibold text-yellow-300">
+                                    <div style={{
+                                      textAlign: 'right',
+                                      minWidth: '80px'
+                                    }}>
+                                      <p style={{
+                                        fontSize: '11px',
+                                        color: '#64748b',
+                                        margin: '0 0 2px 0'
+                                      }}>
+                                        Relevance
+                                      </p>
+                                      <p style={{
+                                        fontSize: '18px',
+                                        fontWeight: '700',
+                                        color: '#d97706',
+                                        margin: 0
+                                      }}>
                                         {typeof proj.relevance_score === "number" ? proj.relevance_score : 0}
-                                        <span className="text-[11px] text-purple-300 ml-1">/100</span>
+                                        <span style={{
+                                          fontSize: '11px',
+                                          color: '#64748b',
+                                          marginLeft: '2px'
+                                        }}>
+                                          /100
+                                        </span>
                                       </p>
                                     </div>
                                   </div>
                                 </div>
 
                                 {/* Technologies & role mapping */}
-                                <div className="flex flex-wrap gap-4">
-                                  <div className="flex-1 min-w-[200px]">
-                                    <p className="text-[12px] text-purple-200 mb-1">Technologies</p>
-                                    <div className="flex flex-wrap gap-2">
+                                <div style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  gap: '16px'
+                                }}>
+                                  <div style={{
+                                    flex: 1,
+                                    minWidth: '200px'
+                                  }}>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Technologies
+                                    </p>
+                                    <div style={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: '6px'
+                                    }}>
                                       {(proj.technologies || []).length > 0 ? (
                                         proj.technologies.map((t, tIdx) => (
                                           <span
                                             key={tIdx}
-                                            className="text-[11px] px-3 py-1 rounded-full bg-slate-900/40 text-purple-50 border border-purple-500/30"
+                                            style={{
+                                              fontSize: '11px',
+                                              padding: '4px 12px',
+                                              borderRadius: '12px',
+                                              background: '#f1f5f9',
+                                              color: '#475569',
+                                              border: '1px solid #e2e8f0'
+                                            }}
                                           >
                                             {t}
                                           </span>
                                         ))
                                       ) : (
-                                        <span className="text-[12px] text-purple-300">Not detected</span>
+                                        <span style={{
+                                          fontSize: '12px',
+                                          color: '#94a3b8'
+                                        }}>
+                                          Not detected
+                                        </span>
                                       )}
                                     </div>
                                   </div>
 
-                                  <div className="flex-1 min-w-[200px]">
-                                    <p className="text-[12px] text-purple-200 mb-1">Mapped Roles</p>
-                                    <div className="flex flex-wrap gap-2">
+                                  <div style={{
+                                    flex: 1,
+                                    minWidth: '200px'
+                                  }}>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Mapped Roles
+                                    </p>
+                                    <div style={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: '6px'
+                                    }}>
                                       {(proj.role_mapping || []).length > 0 ? (
                                         proj.role_mapping.map((r, rIdx) => (
                                           <span
                                             key={rIdx}
-                                            className="text-[11px] px-3 py-1 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/40"
+                                            style={{
+                                              fontSize: '11px',
+                                              padding: '4px 12px',
+                                              borderRadius: '12px',
+                                              background: '#dbeafe',
+                                              color: '#1e3a8a',
+                                              border: '1px solid #93c5fd'
+                                            }}
                                           >
                                             {r}
                                           </span>
                                         ))
                                       ) : (
-                                        <span className="text-[12px] text-purple-300">No specific mapping</span>
+                                        <span style={{
+                                          fontSize: '12px',
+                                          color: '#94a3b8'
+                                        }}>
+                                          No specific mapping
+                                        </span>
                                       )}
                                     </div>
                                   </div>
@@ -1308,17 +1443,44 @@ const getSuggestedSkills = () => {
                                 {/* Problem, features, impact */}
                                 {proj.problem_statement && (
                                   <div>
-                                    <p className="text-[12px] text-purple-200 mb-1">Problem Statement</p>
-                                    <p className="text-[13px] text-purple-50">{proj.problem_statement}</p>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Problem Statement
+                                    </p>
+                                    <p style={{
+                                      fontSize: '13px',
+                                      color: '#475569',
+                                      margin: 0
+                                    }}>
+                                      {proj.problem_statement}
+                                    </p>
                                   </div>
                                 )}
 
                                 {proj.features && proj.features.length > 0 && (
                                   <div>
-                                    <p className="text-[12px] text-purple-200 mb-1">Key Features</p>
-                                    <ul className="list-disc list-inside space-y-1">
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Key Features
+                                    </p>
+                                    <ul style={{
+                                      margin: 0,
+                                      padding: 0,
+                                      paddingLeft: '16px',
+                                      listStyle: 'disc'
+                                    }}>
                                       {proj.features.map((f, fIdx) => (
-                                        <li key={fIdx} className="text-[12px] text-purple-50">
+                                        <li key={fIdx} style={{
+                                          fontSize: '12px',
+                                          color: '#475569',
+                                          marginBottom: '2px'
+                                        }}>
                                           {f}
                                         </li>
                                       ))}
@@ -1328,21 +1490,53 @@ const getSuggestedSkills = () => {
 
                                 {proj.impact && (
                                   <div>
-                                    <p className="text-[12px] text-purple-200 mb-1">Impact</p>
-                                    <p className="text-[13px] text-purple-50">{proj.impact}</p>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Impact
+                                    </p>
+                                    <p style={{
+                                      fontSize: '13px',
+                                      color: '#475569',
+                                      margin: 0
+                                    }}>
+                                      {proj.impact}
+                                    </p>
                                   </div>
                                 )}
 
                                 {/* Missing points & improvements */}
                                 {(proj.missing_points && proj.missing_points.length > 0) ||
                                   (proj.recommended_improvements && proj.recommended_improvements.length > 0) ? (
-                                  <div className="grid md:grid-cols-2 gap-4 mt-1">
+                                  <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                                    gap: '16px',
+                                    marginTop: '4px'
+                                  }}>
                                     {proj.missing_points && proj.missing_points.length > 0 && (
                                       <div>
-                                        <p className="text-[12px] text-red-200 mb-1">Missing Points</p>
-                                        <ul className="list-disc list-inside space-y-1">
+                                        <p style={{
+                                          fontSize: '12px',
+                                          color: '#dc2626',
+                                          marginBottom: '4px'
+                                        }}>
+                                          Missing Points
+                                        </p>
+                                        <ul style={{
+                                          margin: 0,
+                                          padding: 0,
+                                          paddingLeft: '16px',
+                                          listStyle: 'disc'
+                                        }}>
                                           {proj.missing_points.map((m, mIdx) => (
-                                            <li key={mIdx} className="text-[12px] text-red-100">
+                                            <li key={mIdx} style={{
+                                              fontSize: '12px',
+                                              color: '#ef4444',
+                                              marginBottom: '2px'
+                                            }}>
                                               {m}
                                             </li>
                                           ))}
@@ -1352,10 +1546,25 @@ const getSuggestedSkills = () => {
 
                                     {proj.recommended_improvements && proj.recommended_improvements.length > 0 && (
                                       <div>
-                                        <p className="text-[12px] text-green-200 mb-1">Recommended Improvements</p>
-                                        <ul className="list-disc list-inside space-y-1">
+                                        <p style={{
+                                          fontSize: '12px',
+                                          color: '#059669',
+                                          marginBottom: '4px'
+                                        }}>
+                                          Recommended Improvements
+                                        </p>
+                                        <ul style={{
+                                          margin: 0,
+                                          padding: 0,
+                                          paddingLeft: '16px',
+                                          listStyle: 'disc'
+                                        }}>
                                           {proj.recommended_improvements.map((imp, iIdx) => (
-                                            <li key={iIdx} className="text-[12px] text-green-100">
+                                            <li key={iIdx} style={{
+                                              fontSize: '12px',
+                                              color: '#22c55e',
+                                              marginBottom: '2px'
+                                            }}>
                                               {imp}
                                             </li>
                                           ))}
