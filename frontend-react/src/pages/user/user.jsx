@@ -899,7 +899,7 @@ const getSuggestedSkills = () => {
               alignItems: 'center',
               gap: '12px'
             }}>
-              <MessageSquare size={24} style={{ color: '#0ea5e9' }} />
+              <MessageSquare size={24} style={{ color: '#1e3a5f' }} />
               Referral Message Helper
             </h2>
             <p style={{
@@ -959,7 +959,7 @@ const getSuggestedSkills = () => {
                     transition: 'border-color 0.2s ease'
                   }}
                   placeholder="e.g., Google, Infosys"
-                  onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                  onFocus={(e) => e.target.style.borderColor = '#1e3a5f'}
                   onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 />
               </div>
@@ -988,7 +988,7 @@ const getSuggestedSkills = () => {
                     transition: 'border-color 0.2s ease'
                   }}
                   placeholder="e.g., Software Engineer, Data Analyst"
-                  onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                  onFocus={(e) => e.target.style.borderColor = '#1e3a5f'}
                   onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 />
               </div>
@@ -999,7 +999,7 @@ const getSuggestedSkills = () => {
               disabled={!resumeData?.data}
               style={{
                 padding: '12px 24px',
-                background: '#0ea5e9',
+                background: '#1e3a5f',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -1012,13 +1012,13 @@ const getSuggestedSkills = () => {
               }}
               onMouseEnter={(e) => {
                 if (resumeData?.data) {
-                  e.target.style.background = '#0284c7';
+                  e.target.style.background = '#15294a';
                   e.target.style.transform = 'translateY(-2px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (resumeData?.data) {
-                  e.target.style.background = '#0ea5e9';
+                  e.target.style.background = '#1e3a5f';
                   e.target.style.transform = 'translateY(0)';
                 }
               }}
@@ -1105,15 +1105,15 @@ const getSuggestedSkills = () => {
               {/* Eligible Companies Section - Highlighted */}
               {eligibleCompanies.length > 0 && (
                 <div style={{
-                  background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                  background: 'white',
                   borderRadius: '16px',
                   padding: '20px',
                   marginBottom: '24px',
-                  border: '2px solid #10b981'
+                  border: '1px solid #e2e8f0'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                     <div style={{
-                      background: '#10b981',
+                      background: '#1e3a5f',
                       borderRadius: '50%',
                       padding: '10px',
                       display: 'flex',
@@ -1123,8 +1123,8 @@ const getSuggestedSkills = () => {
                       <CheckCircle size={24} color="#fff" />
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#065f46', margin: 0 }}>
-                        🎯 You're Eligible for {eligibleCompanies.length} {eligibleCompanies.length === 1 ? 'Company' : 'Companies'}!
+                      <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1e3a5f', margin: 0 }}>
+                        You're Eligible for {eligibleCompanies.length} {eligibleCompanies.length === 1 ? 'Company' : 'Companies'}!
                       </h3>
                       <p style={{ fontSize: '14px', color: '#047857', margin: '4px 0 0 0' }}>
                         Based on your skills & department match
@@ -1161,7 +1161,7 @@ const getSuggestedSkills = () => {
                                 fontWeight: '600',
                                 marginTop: '4px'
                               }}>
-                                🎓 Department Match
+                                Department Match
                               </span>
                             )}
                           </div>
@@ -1212,7 +1212,7 @@ const getSuggestedSkills = () => {
                         {company.companyDepartments && company.companyDepartments.length > 0 && (
                           <div style={{ marginBottom: '8px' }}>
                             <p style={{ fontSize: '11px', color: '#6366f1', margin: '0 0 4px 0', fontWeight: '600' }}>
-                              📚 Eligible Departments: {company.companyDepartments.slice(0, 4).join(', ')}
+                              Eligible Departments: {company.companyDepartments.slice(0, 4).join(', ')}
                               {company.companyDepartments.length > 4 ? '...' : ''}
                             </p>
                           </div>
@@ -1294,15 +1294,15 @@ const getSuggestedSkills = () => {
                           alignItems: 'center',
                           gap: '6px',
                           padding: '10px 16px',
-                          background: activeSkillsetTab === upload.id ? '#0ea5e9' : '#f1f5f9',
+                          background: activeSkillsetTab === upload.id ? '#1e3a5f' : '#f1f5f9',
                           color: activeSkillsetTab === upload.id ? '#fff' : '#475569',
                           borderRadius: '8px 8px 0 0',
                           cursor: 'pointer',
                           fontWeight: activeSkillsetTab === upload.id ? '600' : '500',
                           fontSize: '14px',
                           transition: 'all 0.2s',
-                          border: activeSkillsetTab === upload.id ? '2px solid #0ea5e9' : '2px solid #e2e8f0',
-                          borderBottom: activeSkillsetTab === upload.id ? '2px solid #0ea5e9' : 'none',
+                          border: activeSkillsetTab === upload.id ? '2px solid #1e3a5f' : '2px solid #e2e8f0',
+                          borderBottom: activeSkillsetTab === upload.id ? '2px solid #1e3a5f' : 'none',
                         }}
                       >
                         <FileText size={16} />
@@ -1372,14 +1372,10 @@ const getSuggestedSkills = () => {
                               <tr key={idx} style={{ 
                                 borderBottom: '1px solid #e2e8f0', 
                                 background: eligible 
-                                  ? hasDeptMatch 
-                                    ? 'linear-gradient(90deg, #dbeafe 0%, #ecfdf5 30%, #fff 100%)'
-                                    : 'linear-gradient(90deg, #ecfdf5 0%, #d1fae5 30%, #fff 100%)' 
+                                  ? '#f8fafc'
                                   : (idx % 2 === 0 ? '#fff' : '#f8fafc'),
                                 borderLeft: eligible 
-                                  ? hasDeptMatch 
-                                    ? '4px solid #3b82f6' 
-                                    : '4px solid #10b981' 
+                                  ? '4px solid #1e3a5f' 
                                   : 'none'
                               }}>
                                 <td style={{
@@ -1389,12 +1385,12 @@ const getSuggestedSkills = () => {
                                 }}>
                                   {eligible ? (
                                     <div 
-                                      title={`${hasDeptMatch ? '🎓 Dept Match + ' : ''}${eligibleInfo?.matchCount || 0} skills: ${eligibleInfo?.matchedSkills?.join(', ') || ''}`}
+                                      title={`${hasDeptMatch ? 'Dept Match + ' : ''}${eligibleInfo?.matchCount || 0} skills: ${eligibleInfo?.matchedSkills?.join(', ') || ''}`}
                                       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}
                                     >
-                                      <CheckCircle size={18} color={hasDeptMatch ? '#3b82f6' : '#10b981'} />
+                                      <CheckCircle size={18} color={hasDeptMatch ? '#1e3a5f' : '#1e3a5f'} />
                                       {hasDeptMatch && (
-                                        <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '600' }}>🎓</span>
+                                        <span style={{ fontSize: '10px', color: '#1e3a5f', fontWeight: '600' }}>Dept</span>
                                       )}
                                     </div>
                                   ) : (
@@ -1461,21 +1457,21 @@ const getSuggestedSkills = () => {
                 alignItems: 'center',
                 gap: '12px'
               }}>
-                <FileText size={24} style={{ color: '#0ea5e9' }} />
+                <FileText size={24} style={{ color: '#1e3a5f' }} />
                 Resume Analysis Overview
               </h2>
 
               {/* Upload Section */}
               <div style={{
-                border: '2px dashed #0ea5e9',
+                border: '2px dashed #1e3a5f',
                 borderRadius: '12px',
                 padding: '32px',
                 marginBottom: '24px',
                 textAlign: 'center',
                 transition: 'border-color 0.2s ease'
               }}
-              onMouseEnter={(e) => e.target.style.borderColor = '#0284c7'}
-              onMouseLeave={(e) => e.target.style.borderColor = '#0ea5e9'}
+              onMouseEnter={(e) => e.target.style.borderColor = '#15294a'}
+              onMouseLeave={(e) => e.target.style.borderColor = '#1e3a5f'}
               >
                 <input
                   type="file"
@@ -1496,7 +1492,7 @@ const getSuggestedSkills = () => {
                       borderRadius: '50%',
                       marginBottom: '8px'
                     }}>
-                      <Upload size={32} style={{ color: '#0ea5e9' }} />
+                      <Upload size={32} style={{ color: '#1e3a5f' }} />
                     </div>
                     <div style={{ color: '#64748b' }}>
                       {resumeFile ? (
@@ -1506,7 +1502,7 @@ const getSuggestedSkills = () => {
                           justifyContent: 'center',
                           gap: '8px'
                         }}>
-                          <FileText size={20} style={{ color: '#0ea5e9' }} />
+                          <FileText size={20} style={{ color: '#1e3a5f' }} />
                           <span style={{ fontWeight: '500', color: '#1e293b' }}>{resumeFile.name}</span>
                         </div>
                       ) : (
@@ -1540,8 +1536,8 @@ const getSuggestedSkills = () => {
                         <div style={{
                           width: '20px',
                           height: '20px',
-                          border: '2px solid rgba(14, 165, 233, 0.3)',
-                          borderTop: '2px solid #0ea5e9',
+                          border: '2px solid rgba(30, 58, 95, 0.3)',
+                          borderTop: '2px solid #1e3a5f',
                           borderRadius: '50%',
                           animation: 'spin 1s linear infinite'
                         }} />
@@ -1564,11 +1560,11 @@ const getSuggestedSkills = () => {
                     onClick={clearResumeData}
                     disabled={loading}
                     style={{
-                      background: 'linear-gradient(135deg, #fef2f2, #fee2e2)',
-                      border: '1px solid #ef4444',
+                      background: 'white',
+                      border: '1px solid #e2e8f0',
                       borderRadius: '8px',
                       padding: '10px 20px',
-                      color: '#dc2626',
+                      color: '#1e3a5f',
                       fontSize: '14px',
                       fontWeight: '500',
                       cursor: loading ? 'not-allowed' : 'pointer',
@@ -1576,7 +1572,7 @@ const getSuggestedSkills = () => {
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    🔄 Clear & Re-upload Resume
+                    Clear & Re-upload Resume
                   </button>
                   <p style={{ color: '#64748b', fontSize: '12px', marginTop: '8px' }}>
                     If your data looks incorrect, click above to clear and re-upload
@@ -1594,14 +1590,14 @@ const getSuggestedSkills = () => {
                     marginBottom: '24px'
                   }}>
                     <div style={{
-                      background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+                      background: 'white',
                       borderRadius: '12px',
                       padding: '16px',
                       textAlign: 'center',
-                      border: '1px solid #0ea5e9'
+                      border: '1px solid #e2e8f0'
                     }}>
                       <p style={{
-                        color: '#0c4a6e',
+                        color: '#475569',
                         fontSize: '14px',
                         marginBottom: '4px'
                       }}>
@@ -1610,7 +1606,7 @@ const getSuggestedSkills = () => {
                       <p style={{
                         fontSize: '32px',
                         fontWeight: '700',
-                        color: '#0284c7',
+                        color: '#1e3a5f',
                         margin: '0 0 4px 0'
                       }}>
                         {resumeData.ats_score || 0}
@@ -1624,14 +1620,14 @@ const getSuggestedSkills = () => {
                       </p>
                     </div>
                     <div style={{
-                      background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                      background: 'white',
                       borderRadius: '12px',
                       padding: '16px',
                       textAlign: 'center',
-                      border: '1px solid #fbbf24'
+                      border: '1px solid #e2e8f0'
                     }}>
                       <p style={{
-                        color: '#92400e',
+                        color: '#475569',
                         fontSize: '14px',
                         marginBottom: '4px'
                       }}>
@@ -1640,7 +1636,7 @@ const getSuggestedSkills = () => {
                       <p style={{
                         fontSize: '32px',
                         fontWeight: '700',
-                        color: '#d97706',
+                        color: '#1e3a5f',
                         margin: '0 0 4px 0'
                       }}>
                         {resumeData.word_count || 0}
@@ -1654,14 +1650,14 @@ const getSuggestedSkills = () => {
                       </p>
                     </div>
                     <div style={{
-                      background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                      background: 'white',
                       borderRadius: '12px',
                       padding: '16px',
                       textAlign: 'center',
-                      border: '1px solid #3b82f6'
+                      border: '1px solid #e2e8f0'
                     }}>
                       <p style={{
-                        color: '#1e3a8a',
+                        color: '#475569',
                         fontSize: '14px',
                         marginBottom: '4px'
                       }}>
@@ -1670,7 +1666,7 @@ const getSuggestedSkills = () => {
                       <p style={{
                         fontSize: '32px',
                         fontWeight: '700',
-                        color: '#2563eb',
+                        color: '#1e3a5f',
                         margin: '0 0 4px 0'
                       }}>
                         {resumeData.data?.skills?.technical?.length || 0}
@@ -1684,14 +1680,14 @@ const getSuggestedSkills = () => {
                       </p>
                     </div>
                     <div style={{
-                      background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                      background: 'white',
                       borderRadius: '12px',
                       padding: '16px',
                       textAlign: 'center',
-                      border: '1px solid #22c55e'
+                      border: '1px solid #e2e8f0'
                     }}>
                       <p style={{
-                        color: '#14532d',
+                        color: '#475569',
                         fontSize: '14px',
                         marginBottom: '4px'
                       }}>
@@ -1700,7 +1696,7 @@ const getSuggestedSkills = () => {
                       <p style={{
                         fontSize: '32px',
                         fontWeight: '700',
-                        color: '#16a34a',
+                        color: '#1e3a5f',
                         margin: '0 0 4px 0'
                       }}>
                         {resumeData.data?.languages?.length || 0}
@@ -1714,14 +1710,14 @@ const getSuggestedSkills = () => {
                       </p>
                     </div>
                     <div style={{
-                      background: 'linear-gradient(135deg, #eef2ff, #e0e7ff)',
+                      background: 'white',
                       borderRadius: '12px',
                       padding: '16px',
                       textAlign: 'center',
-                      border: '1px solid #6366f1'
+                      border: '1px solid #e2e8f0'
                     }}>
                       <p style={{
-                        color: '#312e81',
+                        color: '#475569',
                         fontSize: '14px',
                         marginBottom: '4px'
                       }}>
@@ -1767,7 +1763,7 @@ const getSuggestedSkills = () => {
                           alignItems: 'center',
                           gap: '8px'
                         }}>
-                          <User size={20} style={{ color: '#0ea5e9' }} />
+                          <User size={20} style={{ color: '#1e3a5f' }} />
                           Personal Information
                         </h3>
                         {resumeData?.data?.name && (
@@ -1777,7 +1773,7 @@ const getSuggestedSkills = () => {
                             gap: '12px',
                             marginBottom: '12px'
                           }}>
-                            <User size={16} style={{ color: '#0ea5e9' }} />
+                            <User size={16} style={{ color: '#1e3a5f' }} />
                             <span style={{
                               color: '#1e293b',
                               fontSize: '14px'
@@ -1793,7 +1789,7 @@ const getSuggestedSkills = () => {
                             gap: '12px',
                             marginBottom: '12px'
                           }}>
-                            <Mail size={16} style={{ color: '#0ea5e9' }} />
+                            <Mail size={16} style={{ color: '#1e3a5f' }} />
                             <span style={{
                               color: '#475569',
                               fontSize: '14px'
@@ -1808,7 +1804,7 @@ const getSuggestedSkills = () => {
                             alignItems: 'center',
                             gap: '12px'
                           }}>
-                            <Phone size={16} style={{ color: '#0ea5e9' }} />
+                            <Phone size={16} style={{ color: '#1e3a5f' }} />
                             <span style={{
                               color: '#475569',
                               fontSize: '14px'
@@ -2111,7 +2107,7 @@ const getSuggestedSkills = () => {
                             alignItems: 'center',
                             gap: '8px'
                           }}>
-                            <Briefcase size={20} style={{ color: '#0ea5e9' }} />
+                            <Briefcase size={20} style={{ color: '#1e3a5f' }} />
                             Project Evaluation (LLM)
                           </h3>
 
@@ -2485,7 +2481,7 @@ const getSuggestedSkills = () => {
                 alignItems: 'center',
                 gap: '12px'
               }}>
-                <Target size={24} style={{ color: '#0ea5e9' }} />
+                <Target size={24} style={{ color: '#1e3a5f' }} />
                 ATS Compatibility Analysis
               </h2>
 
@@ -2493,15 +2489,15 @@ const getSuggestedSkills = () => {
                 <>
                   {/* ATS Score Gauge */}
                   <div style={{
-                    background: 'linear-gradient(135deg, #e0f2fe, #f0f9ff)',
-                    borderRadius: '12px',
+                    background: 'white',
+                    borderRadius: '8px',
                     padding: '32px',
                     marginBottom: '24px',
-                    border: '1px solid #0ea5e9'
+                    border: '1px solid #e2e8f0'
                   }}>
                     <div style={{ textAlign: 'center' }}>
                       <p style={{
-                        color: '#0c4a6e',
+                        color: '#64748b',
                         fontSize: '14px',
                         marginBottom: '12px'
                       }}>
@@ -2530,8 +2526,8 @@ const getSuggestedSkills = () => {
                           />
                           <defs>
                             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor="#0ea5e9" />
-                              <stop offset="100%" stopColor="#0284c7" />
+                              <stop offset="0%" stopColor="#1e3a5f" />
+                              <stop offset="100%" stopColor="#15294a" />
                             </linearGradient>
                           </defs>
                         </svg>
@@ -2614,7 +2610,7 @@ const getSuggestedSkills = () => {
                             ...(rec.color === 'red' ? { color: '#dc2626' } :
                               rec.color === 'yellow' ? { color: '#d97706' } :
                               rec.color === 'green' ? { color: '#059669' } :
-                              { color: '#0ea5e9' })
+                              { color: '#1e3a5f' })
                           }} size={20} />
                           <p style={{
                             color: '#1e293b',
@@ -2764,7 +2760,7 @@ const getSuggestedSkills = () => {
                 alignItems: 'center',
                 gap: '12px'
               }}>
-                <Briefcase size={24} style={{ color: '#0ea5e9' }} />
+                <Briefcase size={24} style={{ color: '#1e3a5f' }} />
                 Recommended Roles
               </h2>
 
@@ -2772,21 +2768,21 @@ const getSuggestedSkills = () => {
                 <>
                   {resumeData.data?.role_match && (
                     <div style={{
-                      background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+                      background: 'white',
                       borderRadius: '12px',
                       padding: '20px',
                       marginBottom: '24px',
-                      border: '1px solid #0ea5e9'
+                      border: '1px solid #e2e8f0'
                     }}>
                       <p style={{
-                        color: '#0c4a6e',
+                        color: '#475569',
                         fontSize: '14px',
                         marginBottom: '4px'
                       }}>
                         Suggested Role from Resume
                       </p>
                       <p style={{
-                        color: '#0284c7',
+                        color: '#1e3a5f',
                         fontSize: '20px',
                         fontWeight: '700',
                         margin: 0
@@ -2859,7 +2855,7 @@ const getSuggestedSkills = () => {
                                 height: '8px',
                                 borderRadius: '4px',
                                 transition: 'width 0.3s ease',
-                                background: role.match >= 70 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f97316)',
+                                background: '#1e3a5f',
                                 width: `${role.match}%`
                               }}
                             />
@@ -2875,12 +2871,12 @@ const getSuggestedSkills = () => {
                             <span
                               key={i}
                               style={{
-                                background: '#e0f2fe',
-                                border: '1px solid #0ea5e9',
+                                background: '#f8fafc',
+                                border: '1px solid #e2e8f0',
                                 padding: '6px 12px',
-                                borderRadius: '20px',
+                                borderRadius: '4px',
                                 fontSize: '14px',
-                                color: '#0c4a6e',
+                                color: '#475569',
                                 fontWeight: '500'
                               }}
                             >
@@ -2894,21 +2890,21 @@ const getSuggestedSkills = () => {
 
                   {resumeData.detected_role && (
                     <div style={{
-                      background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+                      background: '#f8fafc',
                       borderRadius: '12px',
                       padding: '20px',
                       marginBottom: '24px',
-                      border: '1px solid #0ea5e9'
+                      border: '1px solid #e2e8f0'
                     }}>
                       <p style={{
-                        color: '#0c4a6e',
+                        color: '#475569',
                         fontSize: '14px',
                         marginBottom: '4px'
                       }}>
                         AI-Detected Role
                       </p>
                       <p style={{
-                        color: '#0284c7',
+                        color: '#1e3a5f',
                         fontSize: '20px',
                         fontWeight: '700',
                         margin: 0
@@ -2922,10 +2918,10 @@ const getSuggestedSkills = () => {
                   {getSuggestedSkills().length > 0 && (
                     <div style={{
                       marginTop: '32px',
-                      background: 'linear-gradient(135deg, #e0f2fe, #f0f9ff)',
+                      background: '#f8fafc',
                       borderRadius: '12px',
                       padding: '24px',
-                      border: '1px solid #0ea5e9'
+                      border: '1px solid #e2e8f0'
                     }}>
                       <h3 style={{
                         fontSize: '20px',
@@ -2936,7 +2932,7 @@ const getSuggestedSkills = () => {
                         alignItems: 'center',
                         gap: '8px'
                       }}>
-                        <TrendingUp size={20} style={{ color: '#0ea5e9' }} />
+                        <TrendingUp size={20} style={{ color: '#1e3a5f' }} />
                         Suggested Skills to Strengthen Your {resumeData.detected_role || "Career"}
                       </h3>
                       <p style={{
@@ -2945,7 +2941,7 @@ const getSuggestedSkills = () => {
                         marginBottom: '16px'
                       }}>
                         Based on your current resume, here are additional skills recommended for your role:
-                        <span style={{ fontWeight: '600', color: '#0ea5e9', marginLeft: '4px' }}>
+                        <span style={{ fontWeight: '600', color: '#1e3a5f', marginLeft: '4px' }}>
                           {resumeData.detected_role || "General Developer"}
                         </span>
                       </p>
@@ -2959,14 +2955,12 @@ const getSuggestedSkills = () => {
                           <span
                             key={i}
                             style={{
-                              background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                              background: '#1e3a5f',
                               color: 'white',
                               padding: '8px 16px',
-                              borderRadius: '20px',
+                              borderRadius: '4px',
                               fontSize: '14px',
-                              fontWeight: '500',
-                              border: '1px solid rgba(14, 165, 233, 0.3)',
-                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                              fontWeight: '500'
                             }}
                           >
                             {skill}
@@ -2981,7 +2975,7 @@ const getSuggestedSkills = () => {
                   textAlign: 'center',
                   padding: '48px 0'
                 }}>
-                  <Briefcase size={48} style={{ color: '#0ea5e9', marginBottom: '16px', margin: '0 auto' }} />
+                  <Briefcase size={48} style={{ color: '#1e3a5f', marginBottom: '16px', margin: '0 auto' }} />
                   <p style={{
                     color: '#1e293b',
                     fontSize: '18px',
@@ -3320,15 +3314,15 @@ const getSuggestedSkills = () => {
                         display: 'flex', 
                         justifyContent: 'space-between', 
                         alignItems: 'center',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        borderRadius: '16px',
+                        background: '#1e3a5f',
+                        borderRadius: '8px',
                         padding: '20px 24px',
                         color: 'white'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                           <div style={{
-                            background: 'rgba(255,255,255,0.2)',
-                            borderRadius: '12px',
+                            background: 'rgba(255,255,255,0.1)',
+                            borderRadius: '8px',
                             padding: '12px',
                             display: 'flex',
                             alignItems: 'center',
@@ -3341,7 +3335,7 @@ const getSuggestedSkills = () => {
                               Your Personalized Learning Roadmap
                             </h3>
                             <p style={{ fontSize: '14px', opacity: 0.9, margin: '4px 0 0 0' }}>
-                              Follow these steps to boost your career! 🚀
+                              Follow these steps to boost your career
                             </p>
                           </div>
                         </div>
@@ -3351,13 +3345,13 @@ const getSuggestedSkills = () => {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            background: 'rgba(255,255,255,0.2)',
+                            background: 'rgba(255,255,255,0.1)',
                             color: 'white',
                             padding: '10px 18px',
-                            borderRadius: '10px',
+                            borderRadius: '6px',
                             fontSize: '13px',
                             fontWeight: '600',
-                            border: '1px solid rgba(255,255,255,0.3)',
+                            border: '1px solid rgba(255,255,255,0.2)',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             backdropFilter: 'blur(4px)'
@@ -3390,27 +3384,25 @@ const getSuggestedSkills = () => {
                             justifyContent: 'center',
                             gap: '10px',
                             padding: '16px 24px',
-                            borderRadius: '12px',
+                            borderRadius: '6px',
                             border: 'none',
                             cursor: 'pointer',
                             fontSize: '15px',
                             fontWeight: '600',
                             transition: 'all 0.3s ease',
                             background: guidanceSubTab === 'roadmap' 
-                              ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' 
+                              ? '#1e3a5f' 
                               : 'transparent',
                             color: guidanceSubTab === 'roadmap' ? 'white' : '#64748b',
-                            boxShadow: guidanceSubTab === 'roadmap' 
-                              ? '0 4px 15px rgba(139, 92, 246, 0.3)' 
-                              : 'none'
+                            boxShadow: 'none'
                           }}
                         >
                           <Target size={20} />
-                          🎯 Role-Based Roadmap
+                          Role-Based Roadmap
                           <span style={{
                             background: guidanceSubTab === 'roadmap' ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
                             padding: '2px 8px',
-                            borderRadius: '10px',
+                            borderRadius: '4px',
                             fontSize: '10px',
                             fontWeight: '700'
                           }}>I KNOW MY GOAL</span>
@@ -3424,27 +3416,25 @@ const getSuggestedSkills = () => {
                             justifyContent: 'center',
                             gap: '10px',
                             padding: '16px 24px',
-                            borderRadius: '12px',
+                            borderRadius: '6px',
                             border: 'none',
                             cursor: 'pointer',
                             fontSize: '15px',
                             fontWeight: '600',
                             transition: 'all 0.3s ease',
                             background: guidanceSubTab === 'direction' 
-                              ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' 
+                              ? '#1e3a5f' 
                               : 'transparent',
                             color: guidanceSubTab === 'direction' ? 'white' : '#64748b',
-                            boxShadow: guidanceSubTab === 'direction' 
-                              ? '0 4px 15px rgba(6, 182, 212, 0.3)' 
-                              : 'none'
+                            boxShadow: 'none'
                           }}
                         >
                           <Lightbulb size={20} />
-                          🧭 Find Your Direction
+                          Find Your Direction
                           <span style={{
                             background: guidanceSubTab === 'direction' ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
                             padding: '2px 8px',
-                            borderRadius: '10px',
+                            borderRadius: '4px',
                             fontSize: '10px',
                             fontWeight: '700'
                           }}>HELP ME DECIDE</span>
@@ -3457,7 +3447,7 @@ const getSuggestedSkills = () => {
                           {/* Role Roadmap Generator - Custom Role Learning Path */}
                       <div style={{
                         background: 'white',
-                        borderRadius: '16px',
+                        borderRadius: '8px',
                         border: '2px solid #8b5cf6',
                         overflow: 'hidden',
                         boxShadow: '0 4px 20px rgba(139, 92, 246, 0.15)'
@@ -3469,7 +3459,7 @@ const getSuggestedSkills = () => {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             padding: '20px 24px',
-                            background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+                            background: '#f8fafc',
                             cursor: 'pointer'
                           }}
                         >
@@ -3477,38 +3467,37 @@ const getSuggestedSkills = () => {
                             <div style={{
                               width: '48px',
                               height: '48px',
-                              borderRadius: '12px',
-                              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                              borderRadius: '8px',
+                              background: '#1e3a5f',
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                              justifyContent: 'center'
                             }}>
                               <Target size={24} color="white" />
                             </div>
                             <div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#5b21b6', margin: 0 }}>
-                                  🎯 Role Roadmap Generator
+                                <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                                  Role Roadmap Generator
                                 </h4>
                               </div>
-                              <p style={{ fontSize: '13px', color: '#7c3aed', margin: '4px 0 0 0' }}>
+                              <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                                 Enter your target role & get a personalized learning path
                               </p>
                             </div>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span style={{
-                              background: '#8b5cf6',
+                              background: '#1e3a5f',
                               color: 'white',
                               padding: '4px 12px',
-                              borderRadius: '20px',
+                              borderRadius: '4px',
                               fontSize: '11px',
                               fontWeight: '600'
                             }}>
-                              NEW ✨
+                              NEW
                             </span>
-                            {expandedSections.roleRoadmap ? <ChevronUp size={24} color="#8b5cf6" /> : <ChevronDown size={24} color="#8b5cf6" />}
+                            {expandedSections.roleRoadmap ? <ChevronUp size={24} color="#1e3a5f" /> : <ChevronDown size={24} color="#1e3a5f" />}
                           </div>
                         </div>
                         {(expandedSections.roleRoadmap !== false) && (
@@ -3516,7 +3505,7 @@ const getSuggestedSkills = () => {
                             {/* Input Section */}
                             <div style={{
                               background: '#f8fafc',
-                              borderRadius: '12px',
+                              borderRadius: '8px',
                               padding: '20px',
                               marginBottom: '20px',
                               border: '1px solid #e2e8f0'
@@ -3575,10 +3564,10 @@ const getSuggestedSkills = () => {
                                   disabled={roadmapLoading || !targetRole.trim()}
                                   style={{
                                     padding: '14px 28px',
-                                    borderRadius: '10px',
+                                    borderRadius: '6px',
                                     background: roadmapLoading || !targetRole.trim() 
                                       ? '#e2e8f0' 
-                                      : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                      : '#1e3a5f',
                                     color: roadmapLoading || !targetRole.trim() ? '#94a3b8' : 'white',
                                     fontWeight: '600',
                                     fontSize: '14px',
@@ -3588,7 +3577,7 @@ const getSuggestedSkills = () => {
                                     alignItems: 'center',
                                     gap: '8px',
                                     transition: 'all 0.2s ease',
-                                    boxShadow: roadmapLoading || !targetRole.trim() ? 'none' : '0 4px 12px rgba(139, 92, 246, 0.3)'
+                                    boxShadow: 'none'
                                   }}
                                 >
                                   {roadmapLoading ? (
@@ -3644,17 +3633,17 @@ const getSuggestedSkills = () => {
                             {/* Error Display */}
                             {roadmapError && (
                               <div style={{
-                                background: '#fef2f2',
-                                border: '1px solid #fecaca',
-                                borderRadius: '12px',
+                                background: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '6px',
                                 padding: '16px',
                                 marginBottom: '20px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '12px'
                               }}>
-                                <AlertCircle size={20} style={{ color: '#ef4444' }} />
-                                <p style={{ color: '#991b1b', fontSize: '14px', margin: 0 }}>{roadmapError}</p>
+                                <AlertCircle size={20} style={{ color: '#64748b' }} />
+                                <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>{roadmapError}</p>
                               </div>
                             )}
 
@@ -3663,8 +3652,8 @@ const getSuggestedSkills = () => {
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 {/* Match Percentage & Overview */}
                                 <div style={{
-                                  background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-                                  borderRadius: '16px',
+                                  background: '#1e3a5f',
+                                  borderRadius: '8px',
                                   padding: '24px',
                                   color: 'white'
                                 }}>
@@ -3680,7 +3669,7 @@ const getSuggestedSkills = () => {
                                         width: '100px',
                                         height: '100px',
                                         borderRadius: '50%',
-                                        background: `conic-gradient(#22c55e ${roleRoadmap.match_percentage}%, #4c1d95 ${roleRoadmap.match_percentage}%)`,
+                                        background: `conic-gradient(#64748b ${roleRoadmap.match_percentage}%, #1e293b ${roleRoadmap.match_percentage}%)`,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -3690,7 +3679,7 @@ const getSuggestedSkills = () => {
                                           width: '80px',
                                           height: '80px',
                                           borderRadius: '50%',
-                                          background: '#1e1b4b',
+                                          background: '#1e3a5f',
                                           display: 'flex',
                                           alignItems: 'center',
                                           justifyContent: 'center',
@@ -3704,7 +3693,7 @@ const getSuggestedSkills = () => {
                                     <div style={{ textAlign: 'right' }}>
                                       <p style={{ fontSize: '14px', opacity: 0.8, marginBottom: '4px' }}>Estimated Time</p>
                                       <p style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
-                                        ⏱️ {roleRoadmap.estimated_timeline}
+                                        {roleRoadmap.estimated_timeline}
                                       </p>
                                     </div>
                                   </div>
@@ -3715,27 +3704,27 @@ const getSuggestedSkills = () => {
                                   {/* Skills You Have */}
                                   {Array.isArray(roleRoadmap.skills_you_have) && roleRoadmap.skills_you_have.length > 0 && (
                                     <div style={{
-                                      background: '#f0fdf4',
-                                      borderRadius: '14px',
+                                      background: 'white',
+                                      borderRadius: '8px',
                                       padding: '20px',
-                                      border: '2px solid #22c55e'
+                                      border: '1px solid #e2e8f0'
                                     }}>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                                        <CheckCircle size={22} style={{ color: '#22c55e' }} />
-                                        <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#166534', margin: 0 }}>
-                                          ✅ Skills You Already Have ({roleRoadmap.skills_you_have.length})
+                                        <CheckCircle size={22} style={{ color: '#1e3a5f' }} />
+                                        <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#1e3a5f', margin: 0 }}>
+                                          Skills You Already Have ({roleRoadmap.skills_you_have.length})
                                         </h4>
                                       </div>
                                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {roleRoadmap.skills_you_have.map((skill, idx) => (
                                           <span key={idx} style={{
-                                            background: 'white',
-                                            color: '#166534',
+                                            background: '#f8fafc',
+                                            color: '#1e3a5f',
                                             padding: '8px 14px',
-                                            borderRadius: '8px',
+                                            borderRadius: '4px',
                                             fontSize: '13px',
                                             fontWeight: '500',
-                                            border: '1px solid #86efac',
+                                            border: '1px solid #e2e8f0',
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '6px'
@@ -3751,24 +3740,24 @@ const getSuggestedSkills = () => {
                                   {/* Skills To Learn */}
                                   {Array.isArray(roleRoadmap.skills_to_learn) && roleRoadmap.skills_to_learn.length > 0 && (
                                     <div style={{
-                                      background: '#fef2f2',
-                                      borderRadius: '14px',
+                                      background: 'white',
+                                      borderRadius: '8px',
                                       padding: '20px',
-                                      border: '2px solid #ef4444'
+                                      border: '1px solid #e2e8f0'
                                     }}>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                                        <BookOpen size={22} style={{ color: '#ef4444' }} />
-                                        <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#991b1b', margin: 0 }}>
-                                          📚 Skills You Need to Learn ({roleRoadmap.skills_to_learn.length})
+                                        <BookOpen size={22} style={{ color: '#64748b' }} />
+                                        <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                                          Skills You Need to Learn ({roleRoadmap.skills_to_learn.length})
                                         </h4>
                                       </div>
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         {roleRoadmap.skills_to_learn.slice(0, 8).map((skill, idx) => (
                                           <div key={idx} style={{
-                                            background: 'white',
+                                            background: '#f8fafc',
                                             padding: '12px 14px',
-                                            borderRadius: '8px',
-                                            border: '1px solid #fca5a5',
+                                            borderRadius: '6px',
+                                            border: '1px solid #e2e8f0',
                                             display: 'flex',
                                             justifyContent: 'space-between',
                                             alignItems: 'center',
@@ -3778,8 +3767,8 @@ const getSuggestedSkills = () => {
                                               <span style={{
                                                 width: '24px',
                                                 height: '24px',
-                                                borderRadius: '6px',
-                                                background: skill.priority === 'high' ? '#ef4444' : '#f59e0b',
+                                                borderRadius: '4px',
+                                                background: '#1e3a5f',
                                                 color: 'white',
                                                 fontSize: '11px',
                                                 fontWeight: '700',
@@ -3789,18 +3778,19 @@ const getSuggestedSkills = () => {
                                               }}>
                                                 {idx + 1}
                                               </span>
-                                              <span style={{ fontWeight: '600', color: '#991b1b', fontSize: '14px' }}>
+                                              <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '14px' }}>
                                                 {skill.name}
                                               </span>
                                             </div>
                                             <span style={{
                                               fontSize: '10px',
                                               padding: '3px 8px',
-                                              borderRadius: '12px',
-                                              background: skill.priority === 'high' ? '#fef2f2' : '#fffbeb',
-                                              color: skill.priority === 'high' ? '#ef4444' : '#f59e0b',
+                                              borderRadius: '4px',
+                                              background: '#f8fafc',
+                                              color: '#64748b',
                                               fontWeight: '600',
-                                              textTransform: 'uppercase'
+                                              textTransform: 'uppercase',
+                                              border: '1px solid #e2e8f0'
                                             }}>
                                               {skill.priority || 'Required'}
                                             </span>
@@ -3815,24 +3805,24 @@ const getSuggestedSkills = () => {
                                 {Array.isArray(roleRoadmap.roadmap_phases) && roleRoadmap.roadmap_phases.length > 0 && (
                                   <div style={{
                                     background: 'white',
-                                    borderRadius: '14px',
+                                    borderRadius: '8px',
                                     padding: '24px',
-                                    border: '2px solid #8b5cf6'
+                                    border: '1px solid #e2e8f0'
                                   }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
                                       <div style={{
-                                        background: '#8b5cf6',
-                                        borderRadius: '10px',
+                                        background: '#1e3a5f',
+                                        borderRadius: '8px',
                                         padding: '10px',
                                         display: 'flex'
                                       }}>
                                         <GitBranch size={22} color="white" />
                                       </div>
                                       <div>
-                                        <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#5b21b6', margin: 0 }}>
-                                          🛤️ Your Learning Roadmap
+                                        <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                                          Your Learning Roadmap
                                         </h4>
-                                        <p style={{ fontSize: '13px', color: '#7c3aed', margin: '2px 0 0 0' }}>
+                                        <p style={{ fontSize: '13px', color: '#64748b', margin: '2px 0 0 0' }}>
                                           Follow these phases step by step
                                         </p>
                                       </div>
@@ -3845,22 +3835,13 @@ const getSuggestedSkills = () => {
                                         left: '24px',
                                         top: '0',
                                         bottom: '0',
-                                        width: '3px',
-                                        background: 'linear-gradient(180deg, #8b5cf6 0%, #06b6d4 50%, #22c55e 100%)',
+                                        width: '2px',
+                                        background: '#e2e8f0',
                                         borderRadius: '4px'
                                       }} />
 
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                         {roleRoadmap.roadmap_phases.map((phase, idx) => {
-                                          const phaseColors = [
-                                            { bg: '#dbeafe', border: '#3b82f6', accent: '#1d4ed8' },
-                                            { bg: '#fef3c7', border: '#f59e0b', accent: '#b45309' },
-                                            { bg: '#d1fae5', border: '#10b981', accent: '#047857' },
-                                            { bg: '#fce7f3', border: '#ec4899', accent: '#be185d' },
-                                            { bg: '#e0e7ff', border: '#6366f1', accent: '#4338ca' },
-                                          ];
-                                          const color = phaseColors[idx % phaseColors.length];
-                                          
                                           return (
                                             <div key={idx} style={{ display: 'flex', gap: '20px', position: 'relative', zIndex: 1 }}>
                                               {/* Phase number circle */}
@@ -3868,12 +3849,11 @@ const getSuggestedSkills = () => {
                                                 width: '50px',
                                                 height: '50px',
                                                 borderRadius: '50%',
-                                                background: `linear-gradient(135deg, ${color.border} 0%, ${color.accent} 100%)`,
+                                                background: '#1e3a5f',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 flexShrink: 0,
-                                                boxShadow: `0 4px 12px ${color.border}40`,
                                                 border: '3px solid white'
                                               }}>
                                                 <span style={{ color: 'white', fontWeight: '700', fontSize: '18px' }}>
@@ -3884,14 +3864,14 @@ const getSuggestedSkills = () => {
                                               {/* Phase content */}
                                               <div style={{
                                                 flex: 1,
-                                                background: color.bg,
-                                                borderRadius: '14px',
+                                                background: '#f8fafc',
+                                                borderRadius: '8px',
                                                 padding: '20px',
-                                                border: `2px solid ${color.border}`
+                                                border: '1px solid #e2e8f0'
                                               }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
                                                   <div>
-                                                    <h5 style={{ fontSize: '18px', fontWeight: '700', color: color.accent, margin: 0 }}>
+                                                    <h5 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
                                                       {phase.title}
                                                     </h5>
                                                     <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
@@ -3900,12 +3880,12 @@ const getSuggestedSkills = () => {
                                                   </div>
                                                   <span style={{
                                                     background: 'white',
-                                                    color: color.accent,
+                                                    color: '#1e3a5f',
                                                     padding: '6px 14px',
-                                                    borderRadius: '20px',
+                                                    borderRadius: '4px',
                                                     fontSize: '12px',
                                                     fontWeight: '600',
-                                                    border: `1px solid ${color.border}`,
+                                                    border: '1px solid #e2e8f0',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: '6px'
@@ -3918,19 +3898,19 @@ const getSuggestedSkills = () => {
                                                 {/* Skills to learn in this phase */}
                                                 {Array.isArray(phase.skills) && phase.skills.length > 0 && (
                                                   <div style={{ marginBottom: '16px' }}>
-                                                    <p style={{ fontSize: '12px', fontWeight: '600', color: color.accent, marginBottom: '8px' }}>
-                                                      📚 Skills to Master:
+                                                    <p style={{ fontSize: '12px', fontWeight: '600', color: '#1e3a5f', marginBottom: '8px' }}>
+                                                      Skills to Master:
                                                     </p>
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                                       {phase.skills.map((skill, i) => (
                                                         <span key={i} style={{
                                                           background: 'white',
-                                                          color: color.accent,
+                                                          color: '#1e3a5f',
                                                           padding: '6px 12px',
-                                                          borderRadius: '6px',
+                                                          borderRadius: '4px',
                                                           fontSize: '12px',
                                                           fontWeight: '500',
-                                                          border: `1px solid ${color.border}`
+                                                          border: '1px solid #e2e8f0'
                                                         }}>
                                                           {skill}
                                                         </span>
@@ -3942,8 +3922,8 @@ const getSuggestedSkills = () => {
                                                 {/* Action items */}
                                                 {Array.isArray(phase.action_items) && phase.action_items.length > 0 && (
                                                   <div style={{ marginBottom: '12px' }}>
-                                                    <p style={{ fontSize: '12px', fontWeight: '600', color: color.accent, marginBottom: '8px' }}>
-                                                      ⚡ Action Items:
+                                                    <p style={{ fontSize: '12px', fontWeight: '600', color: '#1e3a5f', marginBottom: '8px' }}>
+                                                      Action Items:
                                                     </p>
                                                     <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                                                       {phase.action_items.map((item, i) => (
@@ -3956,9 +3936,9 @@ const getSuggestedSkills = () => {
                                                           marginBottom: '6px',
                                                           background: 'white',
                                                           padding: '8px 12px',
-                                                          borderRadius: '6px'
+                                                          borderRadius: '4px'
                                                         }}>
-                                                          <span style={{ color: color.border }}>▸</span>
+                                                          <span style={{ color: '#1e3a5f' }}>•</span>
                                                           {item}
                                                         </li>
                                                       ))}
@@ -3971,16 +3951,16 @@ const getSuggestedSkills = () => {
                                                   <div style={{
                                                     background: 'white',
                                                     padding: '12px 16px',
-                                                    borderRadius: '8px',
-                                                    border: `2px dashed ${color.border}`,
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #e2e8f0',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: '10px'
                                                   }}>
-                                                    <Trophy size={18} style={{ color: color.accent }} />
+                                                    <Trophy size={18} style={{ color: '#1e3a5f' }} />
                                                     <div>
                                                       <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Milestone</p>
-                                                      <p style={{ fontSize: '13px', fontWeight: '600', color: color.accent, margin: 0 }}>
+                                                      <p style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', margin: 0 }}>
                                                         {phase.milestone}
                                                       </p>
                                                     </div>
@@ -3998,40 +3978,32 @@ const getSuggestedSkills = () => {
                                 {/* Project Ideas */}
                                 {Array.isArray(roleRoadmap.projects) && roleRoadmap.projects.length > 0 && (
                                   <div style={{
-                                    background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-                                    borderRadius: '14px',
+                                    background: 'white',
+                                    borderRadius: '8px',
                                     padding: '24px',
-                                    border: '2px solid #22c55e'
+                                    border: '1px solid #e2e8f0'
                                   }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                                      <Lightbulb size={24} style={{ color: '#22c55e' }} />
-                                      <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#166534', margin: 0 }}>
-                                        🚀 Project Ideas to Build
+                                      <Lightbulb size={24} style={{ color: '#1e3a5f' }} />
+                                      <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                                        Project Ideas to Build
                                       </h4>
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                                       {roleRoadmap.projects.map((project, idx) => {
-                                        const difficultyColors = {
-                                          beginner: { bg: '#dbeafe', color: '#1d4ed8' },
-                                          intermediate: { bg: '#fef3c7', color: '#b45309' },
-                                          advanced: { bg: '#fce7f3', color: '#be185d' }
-                                        };
-                                        const dc = difficultyColors[project.difficulty?.toLowerCase()] || difficultyColors.intermediate;
-                                        
                                         return (
                                           <div key={idx} style={{
-                                            background: 'white',
-                                            borderRadius: '12px',
+                                            background: '#f8fafc',
+                                            borderRadius: '8px',
                                             padding: '18px',
-                                            border: '1px solid #86efac',
-                                            boxShadow: '0 2px 8px rgba(34, 197, 94, 0.1)'
+                                            border: '1px solid #e2e8f0'
                                           }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                                               <span style={{
                                                 width: '28px',
                                                 height: '28px',
-                                                borderRadius: '8px',
-                                                background: '#22c55e',
+                                                borderRadius: '6px',
+                                                background: '#1e3a5f',
                                                 color: 'white',
                                                 fontSize: '13px',
                                                 fontWeight: '700',
@@ -4041,7 +4013,7 @@ const getSuggestedSkills = () => {
                                               }}>
                                                 {idx + 1}
                                               </span>
-                                              <h5 style={{ fontSize: '15px', fontWeight: '700', color: '#166534', margin: 0 }}>
+                                              <h5 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
                                                 {project.title}
                                               </h5>
                                             </div>
@@ -4050,26 +4022,28 @@ const getSuggestedSkills = () => {
                                             </p>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                               <span style={{
-                                                background: dc.bg,
-                                                color: dc.color,
+                                                background: 'white',
+                                                color: '#64748b',
                                                 padding: '4px 10px',
-                                                borderRadius: '12px',
+                                                borderRadius: '4px',
                                                 fontSize: '11px',
                                                 fontWeight: '600',
-                                                textTransform: 'capitalize'
+                                                textTransform: 'capitalize',
+                                                border: '1px solid #e2e8f0'
                                               }}>
                                                 {project.difficulty}
                                               </span>
                                               {project.duration && (
                                                 <span style={{
-                                                  background: '#f1f5f9',
+                                                  background: 'white',
                                                   color: '#64748b',
                                                   padding: '4px 10px',
-                                                  borderRadius: '12px',
+                                                  borderRadius: '4px',
                                                   fontSize: '11px',
-                                                  fontWeight: '500'
+                                                  fontWeight: '500',
+                                                  border: '1px solid #e2e8f0'
                                                 }}>
-                                                  ⏱️ {project.duration}
+                                                  {project.duration}
                                                 </span>
                                               )}
                                             </div>
@@ -4102,12 +4076,12 @@ const getSuggestedSkills = () => {
                                           gap: '10px',
                                           background: 'white',
                                           padding: '12px 16px',
-                                          borderRadius: '8px',
-                                          border: '1px solid #fde68a',
+                                          borderRadius: '6px',
+                                          border: '1px solid #e2e8f0',
                                           fontSize: '13px',
-                                          color: '#78350f'
+                                          color: '#475569'
                                         }}>
-                                          <span>⭐</span>
+                                          <span>•</span>
                                           {tip}
                                         </li>
                                       ))}
@@ -4127,8 +4101,8 @@ const getSuggestedSkills = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                           {/* Intro Card for Direction Tab */}
                           <div style={{
-                            background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-                            borderRadius: '16px',
+                            background: '#1e3a5f',
+                            borderRadius: '8px',
                             padding: '24px',
                             color: 'white',
                             display: 'flex',
@@ -4136,8 +4110,8 @@ const getSuggestedSkills = () => {
                             gap: '20px'
                           }}>
                             <div style={{
-                              background: 'rgba(255,255,255,0.2)',
-                              borderRadius: '16px',
+                              background: 'rgba(255,255,255,0.1)',
+                              borderRadius: '8px',
                               padding: '16px',
                               display: 'flex'
                             }}>
@@ -4145,10 +4119,10 @@ const getSuggestedSkills = () => {
                             </div>
                             <div>
                               <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 6px 0' }}>
-                                🧭 Not Sure Which Role is Right for You?
+                                Not Sure Which Role is Right for You?
                               </h3>
                               <p style={{ fontSize: '14px', opacity: 0.9, margin: 0 }}>
-                                Follow these 7 steps to discover your ideal career path based on your skills, interests, and goals!
+                                Follow these 7 steps to discover your ideal career path based on your skills, interests, and goals.
                               </p>
                             </div>
                           </div>
@@ -4157,10 +4131,9 @@ const getSuggestedSkills = () => {
                       {guidance.career_clarity_summary && (
                         <div style={{
                           background: 'white',
-                          borderRadius: '16px',
-                          border: '2px solid #6366f1',
-                          overflow: 'hidden',
-                          boxShadow: '0 4px 20px rgba(99, 102, 241, 0.15)'
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          overflow: 'hidden'
                         }}>
                           <div 
                             onClick={() => setExpandedSections(prev => ({ ...prev, career: !prev.career }))}
@@ -4169,7 +4142,7 @@ const getSuggestedSkills = () => {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               padding: '20px 24px',
-                              background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
+                              background: '#f8fafc',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease'
                             }}
@@ -4178,42 +4151,41 @@ const getSuggestedSkills = () => {
                               <div style={{
                                 width: '48px',
                                 height: '48px',
-                                borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                borderRadius: '8px',
+                                background: '#1e3a5f',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
                                 fontWeight: '700',
-                                fontSize: '18px',
-                                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+                                fontSize: '18px'
                               }}>
                                 1
                               </div>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <Target size={20} style={{ color: '#6366f1' }} />
-                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#312e81', margin: 0 }}>
+                                  <Target size={20} style={{ color: '#1e3a5f' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
                                     Know Your Direction
                                   </h4>
                                 </div>
-                                <p style={{ fontSize: '13px', color: '#6366f1', margin: '4px 0 0 0' }}>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                                   Understand your career alignment & best-fit roles
                                 </p>
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <span style={{
-                                background: '#6366f1',
+                                background: '#1e3a5f',
                                 color: 'white',
                                 padding: '4px 12px',
-                                borderRadius: '20px',
+                                borderRadius: '4px',
                                 fontSize: '11px',
                                 fontWeight: '600'
                               }}>
                                 START HERE
                               </span>
-                              {expandedSections.career ? <ChevronUp size={24} color="#6366f1" /> : <ChevronDown size={24} color="#6366f1" />}
+                              {expandedSections.career ? <ChevronUp size={24} color="#1e3a5f" /> : <ChevronDown size={24} color="#1e3a5f" />}
                             </div>
                           </div>
                           {(expandedSections.career !== false) && (
@@ -4221,28 +4193,28 @@ const getSuggestedSkills = () => {
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
                                 {/* Primary Alignment */}
                                 <div style={{
-                                  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                                  borderRadius: '12px',
+                                  background: '#f8fafc',
+                                  borderRadius: '8px',
                                   padding: '20px',
-                                  border: '1px solid #0ea5e9'
+                                  border: '1px solid #e2e8f0'
                                 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                                     <div style={{
-                                      background: '#0ea5e9',
-                                      borderRadius: '8px',
+                                      background: '#1e3a5f',
+                                      borderRadius: '6px',
                                       padding: '8px',
                                       display: 'flex'
                                     }}>
                                       <Briefcase size={18} color="white" />
                                     </div>
-                                    <span style={{ fontWeight: '600', color: '#0369a1', fontSize: '14px' }}>
+                                    <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '14px' }}>
                                       Your Primary Track
                                     </span>
                                   </div>
                                   <p style={{ 
                                     fontSize: '20px', 
                                     fontWeight: '700', 
-                                    color: '#0c4a6e', 
+                                    color: '#1e3a5f', 
                                     margin: 0,
                                     lineHeight: '1.3'
                                   }}>
@@ -4253,21 +4225,21 @@ const getSuggestedSkills = () => {
                                 {/* Best Fit Roles */}
                                 {Array.isArray(guidance.career_clarity_summary.aligned_roles) && guidance.career_clarity_summary.aligned_roles.length > 0 && (
                                   <div style={{
-                                    background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                                    borderRadius: '12px',
+                                    background: '#f8fafc',
+                                    borderRadius: '8px',
                                     padding: '20px',
-                                    border: '1px solid #22c55e'
+                                    border: '1px solid #e2e8f0'
                                   }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                                       <div style={{
-                                        background: '#22c55e',
-                                        borderRadius: '8px',
+                                        background: '#1e3a5f',
+                                        borderRadius: '6px',
                                         padding: '8px',
                                         display: 'flex'
                                       }}>
                                         <CheckCircle size={18} color="white" />
                                       </div>
-                                      <span style={{ fontWeight: '600', color: '#15803d', fontSize: '14px' }}>
+                                      <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '14px' }}>
                                         Best Fit Roles For You
                                       </span>
                                     </div>
@@ -4275,12 +4247,12 @@ const getSuggestedSkills = () => {
                                       {guidance.career_clarity_summary.aligned_roles.map((role, idx) => (
                                         <span key={idx} style={{
                                           background: 'white',
-                                          color: '#166534',
+                                          color: '#1e3a5f',
                                           padding: '8px 14px',
-                                          borderRadius: '8px',
+                                          borderRadius: '4px',
                                           fontSize: '13px',
                                           fontWeight: '600',
-                                          border: '1px solid #86efac',
+                                          border: '1px solid #e2e8f0',
                                           display: 'flex',
                                           alignItems: 'center',
                                           gap: '6px'
@@ -4295,21 +4267,21 @@ const getSuggestedSkills = () => {
                                 {/* Roles to Avoid */}
                                 {Array.isArray(guidance.career_clarity_summary.roles_to_avoid) && guidance.career_clarity_summary.roles_to_avoid.length > 0 && (
                                   <div style={{
-                                    background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
-                                    borderRadius: '12px',
+                                    background: '#f8fafc',
+                                    borderRadius: '8px',
                                     padding: '20px',
-                                    border: '1px solid #ef4444'
+                                    border: '1px solid #e2e8f0'
                                   }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                                       <div style={{
-                                        background: '#ef4444',
-                                        borderRadius: '8px',
+                                        background: '#64748b',
+                                        borderRadius: '6px',
                                         padding: '8px',
                                         display: 'flex'
                                       }}>
                                         <AlertCircle size={18} color="white" />
                                       </div>
-                                      <span style={{ fontWeight: '600', color: '#b91c1c', fontSize: '14px' }}>
+                                      <span style={{ fontWeight: '600', color: '#475569', fontSize: '14px' }}>
                                         Not Recommended For You
                                       </span>
                                     </div>
@@ -4317,12 +4289,12 @@ const getSuggestedSkills = () => {
                                       {guidance.career_clarity_summary.roles_to_avoid.map((role, idx) => (
                                         <span key={idx} style={{
                                           background: 'white',
-                                          color: '#991b1b',
+                                          color: '#64748b',
                                           padding: '8px 14px',
-                                          borderRadius: '8px',
+                                          borderRadius: '4px',
                                           fontSize: '13px',
                                           fontWeight: '500',
-                                          border: '1px solid #fca5a5',
+                                          border: '1px solid #e2e8f0',
                                           textDecoration: 'line-through',
                                           opacity: 0.8
                                         }}>
@@ -4339,7 +4311,7 @@ const getSuggestedSkills = () => {
                                   marginTop: '16px',
                                   padding: '16px',
                                   background: '#f8fafc',
-                                  borderRadius: '10px',
+                                  borderRadius: '6px',
                                   border: '1px solid #e2e8f0',
                                   display: 'flex',
                                   alignItems: 'flex-start',
@@ -4361,9 +4333,9 @@ const getSuggestedSkills = () => {
                         <div style={{
                           background: 'white',
                           borderRadius: '16px',
-                          border: '2px solid #0ea5e9',
+                          border: '1px solid #e2e8f0',
                           overflow: 'hidden',
-                          boxShadow: '0 4px 20px rgba(14, 165, 233, 0.15)'
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                         }}>
                           <div 
                             onClick={() => setExpandedSections(prev => ({ ...prev, skills: !prev.skills }))}
@@ -4372,7 +4344,7 @@ const getSuggestedSkills = () => {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               padding: '20px 24px',
-                              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                              background: '#f8fafc',
                               cursor: 'pointer'
                             }}
                           >
@@ -4381,25 +4353,25 @@ const getSuggestedSkills = () => {
                                 width: '48px',
                                 height: '48px',
                                 borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
+                                background: '#1e3a5f',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
                                 fontWeight: '700',
                                 fontSize: '18px',
-                                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
+                                boxShadow: '0 2px 6px rgba(30, 58, 95, 0.2)'
                               }}>
                                 2
                               </div>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <Code size={20} style={{ color: '#0ea5e9' }} />
-                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#0c4a6e', margin: 0 }}>
+                                  <Code size={20} style={{ color: '#1e3a5f' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e3a5f', margin: 0 }}>
                                     Your Current Skills Assessment
                                   </h4>
                                 </div>
-                                <p style={{ fontSize: '13px', color: '#0284c7', margin: '4px 0 0 0' }}>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                                   {guidance.technical_skills.length} skills identified • See your proficiency levels
                                 </p>
                               </div>
@@ -4411,10 +4383,10 @@ const getSuggestedSkills = () => {
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                                 {guidance.technical_skills.map((s, idx) => {
                                   const levelColors = {
-                                    'beginner': { bg: '#fef3c7', border: '#f59e0b', color: '#92400e', icon: '🌱' },
-                                    'intermediate': { bg: '#dbeafe', border: '#3b82f6', color: '#1e40af', icon: '📈' },
-                                    'advanced': { bg: '#d1fae5', border: '#10b981', color: '#047857', icon: '🚀' },
-                                    'expert': { bg: '#e0e7ff', border: '#6366f1', color: '#4338ca', icon: '⭐' },
+                                    'beginner': { bg: '#f8fafc', border: '#e2e8f0', color: '#64748b', icon: '' },
+                                    'intermediate': { bg: '#f8fafc', border: '#e2e8f0', color: '#475569', icon: '' },
+                                    'advanced': { bg: '#f8fafc', border: '#e2e8f0', color: '#1e3a5f', icon: '' },
+                                    'expert': { bg: '#f8fafc', border: '#1e3a5f', color: '#1e3a5f', icon: '' },
                                   };
                                   const levelColor = levelColors[s.level?.toLowerCase()] || levelColors['intermediate'];
                                   
@@ -4466,10 +4438,10 @@ const getSuggestedSkills = () => {
                                 justifyContent: 'center'
                               }}>
                                 <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>Skill Levels:</span>
-                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>🌱 Beginner</span>
-                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>📈 Intermediate</span>
-                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>🚀 Advanced</span>
-                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>⭐ Expert</span>
+                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>Beginner</span>
+                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>Intermediate</span>
+                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>Advanced</span>
+                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>Expert</span>
                               </div>
                             </div>
                           )}
@@ -4481,9 +4453,9 @@ const getSuggestedSkills = () => {
                         <div style={{
                           background: 'white',
                           borderRadius: '16px',
-                          border: '2px solid #ef4444',
+                          border: '1px solid #e2e8f0',
                           overflow: 'hidden',
-                          boxShadow: '0 4px 20px rgba(239, 68, 68, 0.15)'
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                         }}>
                           <div 
                             onClick={() => setExpandedSections(prev => ({ ...prev, missing: !prev.missing }))}
@@ -4492,7 +4464,7 @@ const getSuggestedSkills = () => {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               padding: '20px 24px',
-                              background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                              background: '#f8fafc',
                               cursor: 'pointer'
                             }}
                           >
@@ -4501,32 +4473,32 @@ const getSuggestedSkills = () => {
                                 width: '48px',
                                 height: '48px',
                                 borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                background: '#1e3a5f',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
                                 fontWeight: '700',
                                 fontSize: '18px',
-                                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                                boxShadow: '0 2px 6px rgba(30, 58, 95, 0.2)'
                               }}>
                                 3
                               </div>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <BookOpen size={20} style={{ color: '#ef4444' }} />
-                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#991b1b', margin: 0 }}>
+                                  <BookOpen size={20} style={{ color: '#1e3a5f' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e3a5f', margin: 0 }}>
                                     Skills You Need to Learn
                                   </h4>
                                 </div>
-                                <p style={{ fontSize: '13px', color: '#dc2626', margin: '4px 0 0 0' }}>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                                   {guidance.missing_skills.length} essential skills to boost your profile
                                 </p>
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <span style={{
-                                background: '#ef4444',
+                                background: '#1e3a5f',
                                 color: 'white',
                                 padding: '4px 12px',
                                 borderRadius: '20px',
@@ -4535,7 +4507,7 @@ const getSuggestedSkills = () => {
                               }}>
                                 ACTION NEEDED
                               </span>
-                              {expandedSections.missing ? <ChevronUp size={24} color="#ef4444" /> : <ChevronDown size={24} color="#ef4444" />}
+                              {expandedSections.missing ? <ChevronUp size={24} color="#1e3a5f" /> : <ChevronDown size={24} color="#1e3a5f" />}
                             </div>
                           </div>
                           {(expandedSections.missing !== false) && (
@@ -4546,9 +4518,9 @@ const getSuggestedSkills = () => {
                                     display: 'flex',
                                     gap: '16px',
                                     padding: '16px',
-                                    background: idx % 2 === 0 ? '#fff7ed' : '#fef3c7',
+                                    background: idx % 2 === 0 ? '#f8fafc' : 'white',
                                     borderRadius: '12px',
-                                    border: '1px solid #fed7aa',
+                                    border: '1px solid #e2e8f0',
                                     alignItems: 'flex-start',
                                     transition: 'all 0.2s ease'
                                   }}>
@@ -4556,7 +4528,7 @@ const getSuggestedSkills = () => {
                                       width: '36px',
                                       height: '36px',
                                       borderRadius: '10px',
-                                      background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                                      background: '#1e3a5f',
                                       display: 'flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
@@ -4569,10 +4541,10 @@ const getSuggestedSkills = () => {
                                     </div>
                                     <div style={{ flex: 1 }}>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                                        <Zap size={16} style={{ color: '#ea580c' }} />
+                                        <Zap size={16} style={{ color: '#1e3a5f' }} />
                                         <span style={{
                                           fontWeight: '700',
-                                          color: '#9a3412',
+                                          color: '#1e293b',
                                           fontSize: '15px'
                                         }}>
                                           {ms.name}
@@ -4580,7 +4552,7 @@ const getSuggestedSkills = () => {
                                       </div>
                                       <p style={{
                                         fontSize: '13px',
-                                        color: '#78350f',
+                                        color: '#475569',
                                         margin: 0,
                                         lineHeight: '1.5',
                                         display: 'flex',
@@ -4627,9 +4599,9 @@ const getSuggestedSkills = () => {
                         <div style={{
                           background: 'white',
                           borderRadius: '16px',
-                          border: '2px solid #d946ef',
+                          border: '1px solid #e2e8f0',
                           overflow: 'hidden',
-                          boxShadow: '0 4px 20px rgba(217, 70, 239, 0.15)'
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                         }}>
                           <div 
                             onClick={() => setExpandedSections(prev => ({ ...prev, learning: !prev.learning }))}
@@ -4638,7 +4610,7 @@ const getSuggestedSkills = () => {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               padding: '20px 24px',
-                              background: 'linear-gradient(135deg, #fdf4ff 0%, #f5d0fe 100%)',
+                              background: '#f8fafc',
                               cursor: 'pointer'
                             }}
                           >
@@ -4647,32 +4619,32 @@ const getSuggestedSkills = () => {
                                 width: '48px',
                                 height: '48px',
                                 borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #d946ef 0%, #a855f7 100%)',
+                                background: '#1e3a5f',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
                                 fontWeight: '700',
                                 fontSize: '18px',
-                                boxShadow: '0 4px 12px rgba(217, 70, 239, 0.3)'
+                                boxShadow: '0 2px 6px rgba(30, 58, 95, 0.2)'
                               }}>
                                 4
                               </div>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <GraduationCap size={20} style={{ color: '#d946ef' }} />
-                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#701a75', margin: 0 }}>
+                                  <GraduationCap size={20} style={{ color: '#1e3a5f' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e3a5f', margin: 0 }}>
                                     Step-by-Step Learning Path
                                   </h4>
                                 </div>
-                                <p style={{ fontSize: '13px', color: '#a21caf', margin: '4px 0 0 0' }}>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                                   Follow this roadmap to master your skills
                                 </p>
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <span style={{
-                                background: '#d946ef',
+                                background: '#1e3a5f',
                                 color: 'white',
                                 padding: '4px 12px',
                                 borderRadius: '20px',
@@ -4681,7 +4653,7 @@ const getSuggestedSkills = () => {
                               }}>
                                 ROADMAP
                               </span>
-                              {expandedSections.learning ? <ChevronUp size={24} color="#d946ef" /> : <ChevronDown size={24} color="#d946ef" />}
+                              {expandedSections.learning ? <ChevronUp size={24} color="#1e3a5f" /> : <ChevronDown size={24} color="#1e3a5f" />}
                             </div>
                           </div>
                           {(expandedSections.learning !== false) && (
@@ -4694,7 +4666,7 @@ const getSuggestedSkills = () => {
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     padding: '16px 20px',
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                    background: '#1e3a5f',
                                     borderRadius: '12px 12px 0 0',
                                     color: 'white'
                                   }}>
@@ -4728,10 +4700,10 @@ const getSuggestedSkills = () => {
 
                                   {/* Learning Steps Container */}
                                   <div style={{
-                                    background: '#faf5ff',
+                                    background: '#f8fafc',
                                     borderRadius: '0 0 12px 12px',
                                     padding: '20px',
-                                    border: '2px solid #e9d5ff',
+                                    border: '1px solid #e2e8f0',
                                     borderTop: 'none'
                                   }}>
                                     {/* Topics Section */}
@@ -4751,13 +4723,13 @@ const getSuggestedSkills = () => {
                                           }}>
                                             <BookOpen size={18} color="white" />
                                           </div>
-                                          <span style={{ fontWeight: '700', color: '#5b21b6', fontSize: '15px' }}>
-                                            📚 Topics to Master (in order)
+                                          <span style={{ fontWeight: '700', color: '#1e3a5f', fontSize: '15px' }}>
+                                            Topics to Master (in order)
                                           </span>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingLeft: '8px' }}>
                                           {lp.topics.map((topic, tIdx) => (
-                                            <div 
+                                            <div
                                               key={tIdx} 
                                               style={{
                                                 display: 'flex',
@@ -4766,7 +4738,7 @@ const getSuggestedSkills = () => {
                                                 padding: '12px 16px',
                                                 background: 'white',
                                                 borderRadius: '10px',
-                                                border: '1px solid #ddd6fe',
+                                                border: '1px solid #e2e8f0',
                                                 position: 'relative'
                                               }}
                                             >
@@ -4775,8 +4747,8 @@ const getSuggestedSkills = () => {
                                                 height: '32px',
                                                 borderRadius: '50%',
                                                 background: completedSteps[`topic_${lpIdx}_${tIdx}`] 
-                                                  ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
-                                                  : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                                  ? '#1e3a5f'
+                                                  : '#1e3a5f',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -4808,10 +4780,10 @@ const getSuggestedSkills = () => {
                                                   height: '28px',
                                                   borderRadius: '6px',
                                                   border: completedSteps[`topic_${lpIdx}_${tIdx}`] 
-                                                    ? '2px solid #22c55e' 
+                                                    ? '2px solid #1e3a5f' 
                                                     : '2px solid #d1d5db',
                                                   background: completedSteps[`topic_${lpIdx}_${tIdx}`] 
-                                                    ? '#22c55e' 
+                                                    ? '#1e3a5f' 
                                                     : 'white',
                                                   cursor: 'pointer',
                                                   display: 'flex',
@@ -4831,7 +4803,7 @@ const getSuggestedSkills = () => {
                                                   bottom: '-12px',
                                                   width: '2px',
                                                   height: '12px',
-                                                  background: '#ddd6fe',
+                                                  background: '#e2e8f0',
                                                   zIndex: 1
                                                 }} />
                                               )}
@@ -4937,9 +4909,9 @@ const getSuggestedSkills = () => {
                                           gap: '8px',
                                           marginBottom: '12px'
                                         }}>
-                                          <FolderOpen size={18} style={{ color: '#16a34a' }} />
-                                          <span style={{ fontWeight: '700', color: '#166534', fontSize: '14px' }}>
-                                            🚀 Build These Projects
+                                          <FolderOpen size={18} style={{ color: '#1e3a5f' }} />
+                                          <span style={{ fontWeight: '700', color: '#1e3a5f', fontSize: '14px' }}>
+                                            Build These Projects
                                           </span>
                                         </div>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
@@ -4976,9 +4948,9 @@ const getSuggestedSkills = () => {
                         <div style={{
                           background: 'white',
                           borderRadius: '16px',
-                          border: '2px solid #22c55e',
+                          border: '1px solid #e2e8f0',
                           overflow: 'hidden',
-                          boxShadow: '0 4px 20px rgba(34, 197, 94, 0.15)'
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                         }}>
                           <div 
                             onClick={() => setExpandedSections(prev => ({ ...prev, projects: !prev.projects }))}
@@ -4987,7 +4959,7 @@ const getSuggestedSkills = () => {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               padding: '20px 24px',
-                              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                              background: '#f8fafc',
                               cursor: 'pointer'
                             }}
                           >
@@ -4996,32 +4968,32 @@ const getSuggestedSkills = () => {
                                 width: '48px',
                                 height: '48px',
                                 borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                background: '#1e3a5f',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
                                 fontWeight: '700',
                                 fontSize: '18px',
-                                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                                boxShadow: '0 2px 6px rgba(30, 58, 95, 0.2)'
                               }}>
                                 5
                               </div>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <Lightbulb size={20} style={{ color: '#22c55e' }} />
-                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#166534', margin: 0 }}>
+                                  <Lightbulb size={20} style={{ color: '#1e3a5f' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e3a5f', margin: 0 }}>
                                     Project Ideas to Build
                                   </h4>
                                 </div>
-                                <p style={{ fontSize: '13px', color: '#15803d', margin: '4px 0 0 0' }}>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                                   Build these to showcase your skills to employers
                                 </p>
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <span style={{
-                                background: '#22c55e',
+                                background: '#1e3a5f',
                                 color: 'white',
                                 padding: '4px 12px',
                                 borderRadius: '20px',
@@ -5030,7 +5002,7 @@ const getSuggestedSkills = () => {
                               }}>
                                 PORTFOLIO
                               </span>
-                              {expandedSections.projects ? <ChevronUp size={24} color="#22c55e" /> : <ChevronDown size={24} color="#22c55e" />}
+                              {expandedSections.projects ? <ChevronUp size={24} color="#1e3a5f" /> : <ChevronDown size={24} color="#1e3a5f" />}
                             </div>
                           </div>
                           {(expandedSections.projects !== false) && (
@@ -5042,17 +5014,17 @@ const getSuggestedSkills = () => {
                               }}>
                                 {guidance.project_ideas.map((p, idx) => {
                                   const projectColors = [
-                                    { bg: '#dbeafe', border: '#3b82f6', accent: '#1d4ed8', icon: '🌐' },
-                                    { bg: '#fce7f3', border: '#ec4899', accent: '#be185d', icon: '📱' },
-                                    { bg: '#fef3c7', border: '#f59e0b', accent: '#b45309', icon: '⚙️' },
-                                    { bg: '#e0e7ff', border: '#6366f1', accent: '#4338ca', icon: '🔒' },
-                                    { bg: '#ccfbf1', border: '#14b8a6', accent: '#0f766e', icon: '📊' },
+                                    { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                    { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                    { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                    { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                    { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
                                   ];
                                   const color = projectColors[idx % projectColors.length];
                                   
                                   return (
                                     <div key={idx} style={{
-                                      border: `2px solid ${color.border}`,
+                                      border: `1px solid ${color.border}`,
                                       borderRadius: '14px',
                                       padding: '18px',
                                       background: 'white',
@@ -5087,8 +5059,8 @@ const getSuggestedSkills = () => {
                                         <div style={{
                                           width: '32px',
                                           height: '32px',
-                                          borderRadius: '8px',
-                                          background: `linear-gradient(135deg, ${color.border} 0%, ${color.accent} 100%)`,
+                                          borderRadius: '6px',
+                                          background: '#1e3a5f',
                                           display: 'flex',
                                           alignItems: 'center',
                                           justifyContent: 'center',
@@ -5099,7 +5071,7 @@ const getSuggestedSkills = () => {
                                           {idx + 1}
                                         </div>
                                         <p style={{
-                                          color: color.accent,
+                                          color: '#1e293b',
                                           fontWeight: '700',
                                           fontSize: '15px',
                                           margin: 0,
@@ -5195,10 +5167,9 @@ const getSuggestedSkills = () => {
                       {Array.isArray(guidance.certificate_recommendations) && guidance.certificate_recommendations.length > 0 && (
                         <div style={{
                           background: 'white',
-                          borderRadius: '16px',
-                          border: '2px solid #f59e0b',
-                          overflow: 'hidden',
-                          boxShadow: '0 4px 20px rgba(245, 158, 11, 0.15)'
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          overflow: 'hidden'
                         }}>
                           <div 
                             onClick={() => setExpandedSections(prev => ({ ...prev, certs: !prev.certs }))}
@@ -5207,7 +5178,7 @@ const getSuggestedSkills = () => {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               padding: '20px 24px',
-                              background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                              background: '#f8fafc',
                               cursor: 'pointer'
                             }}
                           >
@@ -5215,26 +5186,25 @@ const getSuggestedSkills = () => {
                               <div style={{
                                 width: '48px',
                                 height: '48px',
-                                borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                borderRadius: '8px',
+                                background: '#1e3a5f',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
                                 fontWeight: '700',
-                                fontSize: '18px',
-                                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+                                fontSize: '18px'
                               }}>
                                 6
                               </div>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <Award size={20} style={{ color: '#f59e0b' }} />
-                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#92400e', margin: 0 }}>
+                                  <Award size={20} style={{ color: '#1e3a5f' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
                                     Recommended Certifications
                                   </h4>
                                 </div>
-                                <p style={{ fontSize: '13px', color: '#b45309', margin: '4px 0 0 0' }}>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                                   Boost your resume with these credentials
                                 </p>
                               </div>
@@ -5270,18 +5240,16 @@ const getSuggestedSkills = () => {
                                       display: 'flex',
                                       gap: '16px',
                                       padding: '16px',
-                                      background: isPursue ? '#f0fdf4' : '#fef2f2',
-                                      borderRadius: '12px',
-                                      border: `2px solid ${isPursue ? '#86efac' : '#fca5a5'}`,
+                                      background: '#f8fafc',
+                                      borderRadius: '8px',
+                                      border: '1px solid #e2e8f0',
                                       alignItems: 'flex-start'
                                     }}>
                                       <div style={{
                                         width: '40px',
                                         height: '40px',
-                                        borderRadius: '10px',
-                                        background: isPursue 
-                                          ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
-                                          : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                        borderRadius: '8px',
+                                        background: '#1e3a5f',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -5304,7 +5272,7 @@ const getSuggestedSkills = () => {
                                           <span style={{
                                             fontWeight: '700',
                                             fontSize: '15px',
-                                            color: isPursue ? '#166534' : '#991b1b'
+                                            color: '#1e293b'
                                           }}>
                                             {cert.name}
                                           </span>
@@ -5359,7 +5327,6 @@ const getSuggestedSkills = () => {
                           borderRadius: '16px',
                           border: '2px solid #0ea5e9',
                           overflow: 'hidden',
-                          boxShadow: '0 4px 20px rgba(14, 165, 233, 0.15)'
                         }}>
                           <div 
                             onClick={() => setExpandedSections(prev => ({ ...prev, schedule: !prev.schedule }))}
@@ -5368,7 +5335,7 @@ const getSuggestedSkills = () => {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               padding: '20px 24px',
-                              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                              background: '#f8fafc',
                               cursor: 'pointer'
                             }}
                           >
@@ -5376,36 +5343,35 @@ const getSuggestedSkills = () => {
                               <div style={{
                                 width: '48px',
                                 height: '48px',
-                                borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                                borderRadius: '8px',
+                                background: '#1e3a5f',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
                                 fontWeight: '700',
-                                fontSize: '18px',
-                                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
+                                fontSize: '18px'
                               }}>
                                 7
                               </div>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <Calendar size={20} style={{ color: '#0ea5e9' }} />
-                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#0c4a6e', margin: 0 }}>
+                                  <Calendar size={20} style={{ color: '#1e3a5f' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
                                     {guidance.weekly_schedule.length}-Week Action Plan
                                   </h4>
                                 </div>
-                                <p style={{ fontSize: '13px', color: '#0284c7', margin: '4px 0 0 0' }}>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                                   Your week-by-week learning schedule
                                 </p>
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <span style={{
-                                background: '#0ea5e9',
+                                background: '#1e3a5f',
                                 color: 'white',
                                 padding: '4px 12px',
-                                borderRadius: '20px',
+                                borderRadius: '4px',
                                 fontSize: '11px',
                                 fontWeight: '600'
                               }}>
@@ -5425,7 +5391,7 @@ const getSuggestedSkills = () => {
                                   top: '0',
                                   bottom: '0',
                                   width: '3px',
-                                  background: 'linear-gradient(180deg, #0ea5e9 0%, #06b6d4 50%, #10b981 100%)',
+                                  background: '#1e3a5f',
                                   borderRadius: '4px',
                                   zIndex: 0
                                 }} />
@@ -5433,14 +5399,14 @@ const getSuggestedSkills = () => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                   {guidance.weekly_schedule.map((w, idx) => {
                                     const weekColors = [
-                                      { bg: '#dbeafe', border: '#3b82f6', accent: '#1d4ed8', icon: '🚀' },
-                                      { bg: '#d1fae5', border: '#10b981', accent: '#047857', icon: '📚' },
-                                      { bg: '#fef3c7', border: '#f59e0b', accent: '#b45309', icon: '💡' },
-                                      { bg: '#fce7f3', border: '#ec4899', accent: '#be185d', icon: '🎯' },
-                                      { bg: '#e0e7ff', border: '#6366f1', accent: '#4338ca', icon: '⚡' },
-                                      { bg: '#ccfbf1', border: '#14b8a6', accent: '#0f766e', icon: '🔧' },
-                                      { bg: '#fed7aa', border: '#f97316', accent: '#c2410c', icon: '🏆' },
-                                      { bg: '#d9f99d', border: '#84cc16', accent: '#4d7c0f', icon: '✨' },
+                                      { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                      { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                      { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                      { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                      { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                      { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                      { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
+                                      { bg: '#f8fafc', border: '#e2e8f0', accent: '#1e3a5f', icon: '' },
                                     ];
                                     const color = weekColors[idx % weekColors.length];
                                     
@@ -5457,13 +5423,13 @@ const getSuggestedSkills = () => {
                                           height: '50px',
                                           borderRadius: '50%',
                                           background: completedSteps[`week_${idx}`] 
-                                            ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
-                                            : `linear-gradient(135deg, ${color.border} 0%, ${color.accent} 100%)`,
+                                            ? '#1e3a5f'
+                                            : '#1e3a5f',
                                           display: 'flex',
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                           flexShrink: 0,
-                                          boxShadow: `0 4px 12px ${color.border}40`,
+                                          boxShadow: '0 2px 6px rgba(30, 58, 95, 0.2)',
                                           border: '3px solid white',
                                           cursor: 'pointer',
                                           transition: 'all 0.2s ease'
@@ -5492,8 +5458,8 @@ const getSuggestedSkills = () => {
                                           background: 'white',
                                           borderRadius: '16px',
                                           padding: '20px',
-                                          border: `2px solid ${completedSteps[`week_${idx}`] ? '#22c55e' : color.border}`,
-                                          boxShadow: `0 4px 16px ${color.border}20`,
+                                          border: completedSteps[`week_${idx}`] ? '1px solid #1e3a5f' : '1px solid #e2e8f0',
+                                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
                                           transition: 'all 0.3s ease',
                                           opacity: completedSteps[`week_${idx}`] ? 0.85 : 1
                                         }}>
@@ -5717,16 +5683,15 @@ const getSuggestedSkills = () => {
                                 marginTop: '24px',
                                 textAlign: 'center',
                                 padding: '20px',
-                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                background: '#1e3a5f',
                                 borderRadius: '12px',
                                 color: 'white'
                               }}>
-                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎓</div>
                                 <p style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 6px 0' }}>
                                   Complete all {guidance.weekly_schedule.length} weeks to level up!
                                 </p>
                                 <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>
-                                  Click the week circles to mark them as done ✓
+                                  Click the week circles to mark them as done
                                 </p>
                               </div>
                             </div>
