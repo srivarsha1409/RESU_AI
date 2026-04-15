@@ -1113,11 +1113,36 @@ const getSuggestedSkills = () => {
 
                       {/* Languages */}
                       {resumeData?.data?.languages?.length > 0 && (
-                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-4">Languages</h3>
-                          <div className="flex flex-wrap gap-2">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe',
+                          gridColumn: '1 / -1'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '16px'
+                          }}>
+                            Languages
+                          </h3>
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px'
+                          }}>
                             {resumeData?.data?.languages.map((lang, idx) => (
-                              <span key={idx} className="bg-pink-600/40 px-4 py-2 rounded-full text-white text-sm font-medium border border-pink-500/30">
+                              <span key={idx} style={{
+                                padding: '8px 16px',
+                                borderRadius: '20px',
+                                background: '#f0fdf4',
+                                color: '#14532d',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                border: '1px solid #bbf7d0'
+                              }}>
                                 {lang}
                               </span>
                             ))}
@@ -1127,9 +1152,29 @@ const getSuggestedSkills = () => {
 
                       {/* Summary */}
                       {resumeData?.data?.summary && (
-                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Professional Summary</h3>
-                          <p className="text-white leading-relaxed">{resumeData?.data?.summary}</p>
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe',
+                          gridColumn: '1 / -1'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            Professional Summary
+                          </h3>
+                          <p style={{
+                            color: '#475569',
+                            lineHeight: '1.6',
+                            margin: 0,
+                            fontSize: '14px'
+                          }}>
+                            {resumeData?.data?.summary}
+                          </p>
                         </div>
                       )}
 
