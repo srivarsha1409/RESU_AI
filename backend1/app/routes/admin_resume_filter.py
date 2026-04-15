@@ -250,26 +250,35 @@ async def filter_uploaded_resumes(
         ats_score = parsed.get("ats_score", 0)
         edu = data.get("education", {}) or {}
 
-        # Human languages (lowercased for filtering)
-        langs = [lang.lower().strip() for lang in data.get("languages", []) if lang]
+        # --- Human languages ---
+        # process_resume_file already normalizes languages (via normalize_languages),
+        # so we use that list as-is for display and keep a lowercased copy for filters.
+        display_langs = [lang for lang in data.get("languages", []) if lang]
+        langs_lower = [lang.lower().strip() for lang in display_langs]
 
-        # Normalize technical skills similarly to streaming endpoint: split on '|', lowercase, dedupe
+        # --- Technical skills ---
+        # Start from the AI "skills.technical" block and derive a normalized list
+        # for filtering, while returning a cleaned display list in the response.
         raw_tech_skills = (data.get("skills", {}) or {}).get("technical", []) or []
-        normalized_tech_skills = []
+        display_tech_skills: list[str] = []
+        seen_tech = set()
         for item in raw_tech_skills:
             for part in re.split(r"\s*\|\s*", str(item)):
-                part_clean = part.strip()
-                if part_clean and part_clean.lower() not in normalized_tech_skills:
-                    normalized_tech_skills.append(part_clean.lower())
+                value = part.strip()
+                if not value:
+                    continue
+                key = value.lower()
+                if key not in seen_tech:
+                    seen_tech.add(key)
+                    display_tech_skills.append(value)
 
-        tech_skills = normalized_tech_skills
+        # Lowercased copy for matching Required Skills filters
+        tech_skills = [s.lower() for s in display_tech_skills]
 
-        # Areas of interest from skills block
-        interest_areas = [
-            a.lower().strip()
-            for a in (data.get("skills", {}) or {}).get("area_of_interest", [])
-            if a
-        ]
+        # --- Areas of interest ---
+        raw_aoi = (data.get("skills", {}) or {}).get("area_of_interest", []) or []
+        display_aoi = [a for a in raw_aoi if a]
+        interest_areas_lower = [a.lower().strip() for a in raw_aoi if a]
 
         # Convert numeric fields
         tenth_value = parse_percentage(edu.get("10th", {}).get("percentage"))
@@ -292,8 +301,8 @@ async def filter_uploaded_resumes(
         if ats is not None and ats_score < ats:
             continue
 
-        # Language filter (any match)
-        if language and not any(language in l for l in langs):
+        # Language filter (any match, case-insensitive)
+        if language and not any(language in l for l in langs_lower):
             continue
 
         # Department / degree
@@ -307,14 +316,19 @@ async def filter_uploaded_resumes(
         if skill_list and not all(any(skill in s for s in tech_skills) for skill in skill_list):
             continue
 
-        # Area of interest filter: any match across AOI list
+        # Area of interest filter: any match across AOI list (case-insensitive)
         if area_filters and not any(
-            any(af in area for af in area_filters) for area in interest_areas
+            any(af in area for af in area_filters) for area in interest_areas_lower
         ):
             continue
 
         email = data.get("email") or parsed.get("email")
         phone = data.get("phone") or parsed.get("phone")
+
+        # Build skills block for response: reuse original skills but override
+        # technical with the cleaned display list so frontend sees normalized skills.
+        skills_block = data.get("skills", {}) or {}
+        skills_block["technical"] = display_tech_skills
 
         results.append(
             {
@@ -324,9 +338,9 @@ async def filter_uploaded_resumes(
                 "phone": phone,
                 "ats_score": ats_score,
                 "education": edu,
-                "skills": data.get("skills", {}),
-                "languages": langs,
-                "area_of_interest": interest_areas,
+                "skills": skills_block,
+                "languages": display_langs,
+                "area_of_interest": display_aoi,
             }
         )
 

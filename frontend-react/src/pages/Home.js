@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div style={{height:'100vh',display:'flex',flexDirection:'column',justifyContent:'space-between',color:'#fff',background:'linear-gradient(135deg, #ff00cc, #333399, #00c9ff, #92fe9d)',backgroundSize:'400% 400%'}}>
       <header style={{padding:'25px 60px',display:'flex',justifyContent:'space-between',alignItems:'center',backdropFilter:'blur(10px)',background:'rgba(255, 255, 255, 0.1)',boxShadow:'0 0 20px rgba(255,255,255,0.2)'}}>
-        <div style={{fontSize:'1.8rem',fontWeight:700,color:'#fff',textShadow:'0 0 10px rgba(255,255,255,0.6)'}}>🔍 Resume Keyword Generator</div>
+        <div style={{fontSize:'1.8rem',fontWeight:700,color:'#fff',textShadow:'0 0 10px rgba(255,255,255,0.6)'}}>🔍 RESUME INSIGHT AI</div>
         <nav>
           <Link to="/about" style={{color:'#fff',marginLeft:25,textDecoration:'none',fontWeight:500}}>About</Link>
           <Link to="/features" style={{color:'#fff',marginLeft:25,textDecoration:'none',fontWeight:500}}>Features</Link>

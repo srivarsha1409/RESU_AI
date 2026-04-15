@@ -374,7 +374,7 @@ const getSuggestedSkills = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-700 to-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20 flex justify-between items-center">
@@ -418,8 +418,8 @@ const getSuggestedSkills = () => {
               onClick={() => handleTabChange(tab.id)}
               className={`px-6 py-3 rounded-xl font-medium capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'bg-purple-600 text-white shadow-lg'
-                  : 'bg-white/10 text-purple-200 hover:bg-white/20'
+                  ? 'bg-purple-300 text-slate-900 shadow-lg'
+                  : 'bg-white/20 text-purple-100 hover:bg-white/30'
               }`}
             >
               <tab.icon size={18} />
