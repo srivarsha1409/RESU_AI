@@ -112,17 +112,17 @@ In the project directory, you can run:
 
 The Admin Module is designed for recruiters and HR teams to streamline the hiring process. With the growing reliance on technology-driven screening, recruiters need tools that provide deep insights, accuracy, and efficiency.
 
-Key Features:
+**Key Features:**
 
-ATS Score Analysis: Measures how well a resume aligns with applicant tracking systems, helping recruiters identify resumes likely to pass automated screening.
+**ATS Score Analysis:** Measures how well a resume aligns with applicant tracking systems, helping recruiters identify resumes likely to pass automated screening.
 
-Education & Percentage Extraction: Automatically detects academic qualifications, even if formats differ across resumes.
+**Education & Percentage Extraction:** Automatically detects academic qualifications, even if formats differ across resumes.
 
-Certificate Validation: Confirms the authenticity and relevance of certifications listed by candidates.
+**Certificate Validation:** Confirms the authenticity and relevance of certifications listed by candidates.
 
-Competitive Programming & LeetCode Activity: Evaluates coding skills, problem-solving abilities, and technical competency.
+**Competitive Programming & LeetCode Activity:** Evaluates coding skills, problem-solving abilities, and technical competency.
 
-Skill-to-Role Matching: Suggests suitable job roles based on candidate skills and experience.
+**Skill-to-Role Matching**: Suggests suitable job roles based on candidate skills and experience.
 
 Guidance & Recommendations: Offers personalized recommendations to candidates for improving their profiles.
 
