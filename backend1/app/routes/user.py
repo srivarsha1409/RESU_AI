@@ -1,6 +1,8 @@
 # app/routes/user.py
 
-from fastapi import APIRouter, UploadFile, Form, HTTPException
+from fastapi import APIRouter, UploadFile, Form, HTTPException, File
+from fastapi.responses import FileResponse
+from pathlib import Path
 from datetime import datetime
 from pydantic import BaseModel
 import re
@@ -34,13 +36,15 @@ def get_user_info(email: str):
 # 2️⃣ Upload Resume → Process + AI Skill Suggestion (Dynamic Role)
 # ---------------------------------------------------------------------
 @router.post("/upload_resume")
-async def upload_resume(email: str = Form(...), file: UploadFile = None):
+async def upload_resume(email: str = Form(...), file: UploadFile = File(...)):
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
+    print(f"🔎 upload_resume called for: {email}, filename: {getattr(file, 'filename', None)}")
 
     try:
         # ✅ Step 1: Process the resume and extract data
         result = await process_resume_file(file)
+        print("🔍 process_resume_file result:", result)
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
 
@@ -120,6 +124,9 @@ async def upload_resume(email: str = Form(...), file: UploadFile = None):
             "suggested_skills": suggested_skills,
         }
 
+    except HTTPException as he:
+        print("❌ HTTP Exception in upload_resume:", getattr(he, 'detail', str(he)))
+        raise he
     except Exception as e:
         print("❌ Error in upload_resume:", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -153,6 +160,50 @@ def get_history(email: str):
 def get_all_users():
     all_users = list(users.find({}, {"_id": 0, "password": 0}))
     return {"status": "success", "users": all_users}
+
+
+# ---------------------------------------------------------------------
+# Serve Skillset Excel
+# ---------------------------------------------------------------------
+@router.get("/skillset")
+def download_skillset():
+    """Return the Skillset Excel file placed at the backend root."""
+    # File is expected at the project root (backend1/Skillset of Companies Visited.xlsx)
+    root = Path(__file__).resolve().parents[2]
+    candidate = root / "Skillset of Companies Visited.xlsx"
+    if not candidate.exists():
+        raise HTTPException(status_code=404, detail="Skillset file not found on server")
+    return FileResponse(path=str(candidate), filename="Skillset_of_Companies_Visited.xlsx", media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+@router.get("/skillset_json")
+def skillset_json():
+    """Return the Skillset Excel parsed into JSON (all sheets).
+
+    Requires `pandas` to be available in the environment. Returns JSON of
+    the form: { "sheets": { "Sheet1": [ {col:val, ...}, ... ], ... } }
+    """
+    root = Path(__file__).resolve().parents[2]
+    candidate = root / "Skillset of Companies Visited.xlsx"
+    if not candidate.exists():
+        raise HTTPException(status_code=404, detail="Skillset file not found on server")
+
+    try:
+        import pandas as pd
+    except Exception:
+        raise HTTPException(status_code=500, detail="Pandas is required on the server to parse Excel files")
+
+    try:
+        # Try openpyxl first (for .xlsx), fall back to xlrd (for .xls)
+        try:
+            dfs = pd.read_excel(candidate, sheet_name=None, engine='openpyxl')
+        except Exception:
+            dfs = pd.read_excel(candidate, sheet_name=None, engine='xlrd')
+        
+        sheets = {name: df.fillna("").to_dict(orient="records") for name, df in dfs.items()}
+        return {"sheets": sheets}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read Excel: {str(e)}")
 
 
 class PortfolioRequest(BaseModel):

@@ -605,23 +605,6 @@ const handleLogout = async () => {
                 Analyze Resume
               </button>
 
-              {/* button for go to resume */}
-<div className=" text-center">
-  <button
-    onClick={() => navigate("/admin_resume_filter")}
-                    style={{
-                  padding: "10px 14px",
-                  borderRadius: 8,
-                  border: "none",
-                  fontWeight: 700,
-                  background: "#00aaff",
-                  color: "#fff",
-                }}
-  >
-    Go to Resume Filter
-  </button>
-</div>
-
               {/* helper action buttons */}
              
             </div>

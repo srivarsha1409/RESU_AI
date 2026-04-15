@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pymongo
+pdfplumber
+python-dotenv
+bcrypt
+pyjwt
+httpx
+pandas
+openpyxl
+xlrd
+certifi
+google-auth

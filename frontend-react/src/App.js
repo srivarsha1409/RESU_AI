@@ -51,15 +51,6 @@ function App() {
       />
 
       <Route
-        path="/admin_resume_filter"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <Admin1 />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
         path="*"
         element={
           <div style={{ padding: 20 }}>

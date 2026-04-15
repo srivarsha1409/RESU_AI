@@ -29,6 +29,11 @@ export default function UserDashboard() {
   const [userMessage, setUserMessage] = useState('');
   const [chatting, setChatting] = useState(false);
 
+  // Skillset tab data
+  const [skillsetData, setSkillsetData] = useState(null);
+  const [skillsetLoading, setSkillsetLoading] = useState(false);
+  const [skillsetError, setSkillsetError] = useState(null);
+
   const email = localStorage.getItem("email");
 
   const fetchGuidance = useCallback(async () => {
@@ -90,6 +95,28 @@ export default function UserDashboard() {
     }
   }, [activeTab, resumeData, guidance, guidanceLoading, fetchGuidance]);
 
+  // Fetch skillset JSON when user navigates to the skillset tab
+  useEffect(() => {
+    if (activeTab !== 'skillset') return;
+    const fetchSkillset = async () => {
+      setSkillsetLoading(true);
+      setSkillsetError(null);
+      try {
+        const res = await fetch(`${API_BASE}/user/skillset_json`);
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const data = await res.json();
+        setSkillsetData(data);
+      } catch (err) {
+        console.error('Skillset fetch error:', err);
+        setSkillsetError(err.message || 'Failed to load skillset');
+        setSkillsetData(null);
+      } finally {
+        setSkillsetLoading(false);
+      }
+    };
+    fetchSkillset();
+  }, [activeTab]);
+
   // Coding profiles removed from user portal
 
   const handleFileChange = (e) => {
@@ -132,7 +159,7 @@ export default function UserDashboard() {
         });
 
       } else {
-        setError(result.error || 'Failed to upload resume');
+        setError(result.error || result.detail || 'Failed to upload resume');
       }
     } catch (err) {
       setError('Network error: ' + err.message);
@@ -666,6 +693,59 @@ const getSuggestedSkills = () => {
           </div>
         )}
 
+        {/* Skillset Tab */}
+        {activeTab === 'skillset' && (
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid #e0f2fe',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+            }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>Company Skillset</h2>
+
+              {skillsetLoading && <p>Loading skillset...</p>}
+              {skillsetError && (
+                <div style={{ color: '#b91c1c' }}>Error loading skillset: {skillsetError}</div>
+              )}
+
+              {skillsetData && (
+                (() => {
+                  const sheets = skillsetData.sheets || {};
+                  const first = Object.keys(sheets)[0];
+                  const rows = sheets[first] || [];
+                  const headers = rows[0] ? Object.keys(rows[0]) : [];
+
+                  return (
+                    <div style={{ overflowX: 'auto', marginTop: '12px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>{first}</h3>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr>
+                            {headers.map(h => (
+                              <th key={h} style={{ border: '1px solid #e5e7eb', padding: '8px', textAlign: 'left', background: '#f8fafc' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map((r, idx) => (
+                            <tr key={idx} style={{ background: idx % 2 === 0 ? 'white' : '#f8fafc' }}>
+                              {headers.map(h => (
+                                <td key={h} style={{ border: '1px solid #e5e7eb', padding: '8px' }}>{String(r[h] ?? '')}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Resume Analysis Tab */}
         {activeTab === 'analysis' && (
           <div style={{ marginBottom: '24px' }}>
@@ -780,6 +860,8 @@ const getSuggestedSkills = () => {
                   </div>
                 </label>
               </div>
+
+              
 
               {resumeData ? (
                 <>

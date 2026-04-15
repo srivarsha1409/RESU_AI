@@ -56,6 +56,143 @@ def normalize_languages(text):
     return results
 
 
+def _extract_largest_json_substrings(text):
+    """Find top-level JSON object/array substrings by scanning for balanced braces/brackets.
+
+    Returns a list of candidate substrings (object or array), ordered by length desc.
+    This function attempts to ignore braces inside quoted strings and handle escapes.
+    """
+    candidates = []
+    if not text or not isinstance(text, str):
+        return candidates
+
+    for opener, closer in (("{", "}"), ("[", "]")):
+        start_indices = [i for i, ch in enumerate(text) if ch == opener]
+        for start in start_indices:
+            in_string = False
+            escape = False
+            depth = 0
+            for i in range(start, len(text)):
+                ch = text[i]
+                if ch == '"' and not escape:
+                    in_string = not in_string
+                if ch == '\\' and not escape:
+                    escape = True
+                    continue
+                else:
+                    escape = False
+
+                if not in_string:
+                    if ch == opener:
+                        depth += 1
+                    elif ch == closer:
+                        depth -= 1
+                        if depth == 0:
+                            cand = text[start:i+1]
+                            candidates.append(cand)
+                            break
+            # end for i
+    # return unique sorted by length desc
+    uniq = list(dict.fromkeys(candidates))
+    uniq.sort(key=len, reverse=True)
+    return uniq
+
+
+def local_extract_resume(text):
+    """Lightweight local extraction fallback when LLM parsing fails.
+
+    Returns a dict matching the minimal resume JSON schema used downstream.
+    """
+    if not text or not isinstance(text, str):
+        return {}
+
+    out = {
+        "name": "",
+        "email": "",
+        "phone": "",
+        "linkedin": "",
+        "github": "",
+        "leetcode": "",
+        "codechef": "",
+        "languages": [],
+        "education": {},
+        "skills": {"technical": [], "soft": [], "area_of_interest": []},
+        "internships": [],
+        "projects": [],
+        "certificates": [],
+        "role_match": "",
+        "summary": "",
+    }
+
+    # Simple heuristics
+    # Email
+    email_match = re.search(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}", text)
+    if email_match:
+        out["email"] = email_match.group(0)
+
+    # Phone (simple international/local variants)
+    phone_match = re.search(r"(\+?\d[\d \-()]{7,}\d)", text)
+    if phone_match:
+        out["phone"] = re.sub(r"\s+", " ", phone_match.group(0)).strip()
+
+    # Name: take first non-empty line with letters and spaces and less than 4 words
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    for ln in lines[:10]:
+        if re.match(r"^[A-Za-z .,'-]{2,40}$", ln) and len(ln.split()) <= 4:
+            # skip lines that contain @ or digits (likely email/phone)
+            if "@" in ln or re.search(r"\d", ln):
+                continue
+            out["name"] = ln
+            break
+
+    # Links
+    linkedin = re.search(r"(https?://)?(www\.)?linkedin\.com/[A-Za-z0-9_/\-]+", text)
+    if linkedin:
+        out["linkedin"] = linkedin.group(0)
+    github = re.search(r"(https?://)?(www\.)?github\.com/[A-Za-z0-9_/\-]+", text)
+    if github:
+        out["github"] = github.group(0)
+
+    # Skills: match common tech keywords
+    tech_keywords = [
+        "python","java","c\+\+","c#","go","node","react","angular","vue","javascript","typescript",
+        "mongodb","mysql","postgres","sql","redis","aws","azure","gcp","docker","kubernetes",
+        "tensorflow","pytorch","scikit-learn","pandas","numpy","fastapi","django","flask"
+    ]
+    text_lower = text.lower()
+    found = []
+    for kw in tech_keywords:
+        pattern = re.escape(kw)
+        if re.search(rf"\b{pattern}\b", text_lower):
+            pretty = kw.replace('\\+', '+').replace('c#', 'C#')
+            found.append(pretty)
+    # dedupe
+    out["skills"]["technical"] = list(dict.fromkeys([s.capitalize() if len(s) <= 3 else s for s in found]))
+
+    # Projects: look for headings 'project' and capture following 1-3 lines
+    projects = []
+    for i, ln in enumerate(lines):
+        if re.search(r"\bproject(s)?\b", ln, re.I):
+            snippet = " ".join(lines[i+1:i+4])
+            if snippet:
+                projects.append({"title": ln, "description": snippet})
+    out["projects"] = projects
+
+    # Education: look for degree keywords
+    edu = {}
+    for ln in lines:
+        if re.search(r"\bbachelor|b\.tech|btech|b\.sc|master|m\.tech|mtech|m\.sc|phd\b", ln, re.I):
+            edu.setdefault("bachelor", {})
+            edu["bachelor"]["institute"] = ln
+            break
+    out["education"] = edu
+
+    # Put a short summary as first 160 chars of file
+    out["summary"] = (text.strip()[:160] + "...") if len(text.strip()) > 160 else text.strip()
+
+    return out
+
+
 
 # -------------------------
 # Extract username from URL
@@ -217,7 +354,8 @@ async def evaluate_certificates(cert_list):
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,
-            max_tokens=600,
+            # Lower token use to avoid OpenRouter credit (402) errors
+            max_tokens=400,
         )
         raw = response.choices[0].message.content or ""
     except Exception as exc:
@@ -384,7 +522,8 @@ async def evaluate_projects(project_list):
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,
-            max_tokens=2000,  # Increased from 800 to prevent truncation
+            # Conservative token limit to avoid OpenRouter 402 credit errors
+            max_tokens=800,
         )
         raw = response.choices[0].message.content or ""
     except Exception as exc:
@@ -641,6 +780,8 @@ Resume text:
 """
 
         # ---- Call AI model via openrouter_client ----
+        ai_output = ""
+        ai_error = None
         try:
             response = openrouter_client.chat.completions.create(
                 model="gpt-4.1-mini",
@@ -649,12 +790,33 @@ Resume text:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.2,
-                # Slightly reduced to stay within current OpenRouter credit max_tokens limit
-                max_tokens=1500,
+                # Reduced to stay within smaller OpenRouter credit limits (avoid 402)
+                max_tokens=800,
             )
             ai_output = response.choices[0].message.content
         except Exception as exc:
-            return {"error": f"AI request failed: {str(exc)}"}
+            ai_error = str(exc)
+            print("⚠️ AI request failed (first attempt):", ai_error)
+            # Retry with smaller token budget and truncated prompt to conserve credits
+            try:
+                short_prompt_text = text[:20000] if len(text) > 20000 else text
+                short_prompt = prompt.replace(prompt_text, short_prompt_text)
+                response = openrouter_client.chat.completions.create(
+                    model="gpt-4.1-mini",
+                    messages=[
+                        {"role": "system", "content": "Return valid JSON only. Do not include commentary."},
+                        {"role": "user", "content": short_prompt}
+                    ],
+                    temperature=0.2,
+                    max_tokens=400,
+                )
+                ai_output = response.choices[0].message.content
+                ai_error = None
+                print("⚠️ AI request succeeded on retry with smaller tokens")
+            except Exception as exc2:
+                ai_error = str(exc2)
+                print("⚠️ AI retry failed:", ai_error)
+                ai_output = ""
 
         # ---- Parse JSON ----
         ai_output = ai_output.strip().replace("```json", "").replace("```", "")
@@ -684,19 +846,77 @@ Resume text:
                     cleaned = json_match.group(0)
                 
                 data = json.loads(cleaned)
-                print("✅ Resume JSON parsing succeeded after cleanup")
+                # Ensure data is a dict, not a list
+                if isinstance(data, list):
+                    # If it's a list, try to use the first dict element if available
+                    data = next((item for item in data if isinstance(item, dict)), {})
+                    print("✅ Resume JSON was a list; extracted first dict element")
+                else:
+                    print("✅ Resume JSON parsing succeeded after cleanup")
             except Exception as e2:
-                return {"error": f"Failed to parse AI JSON: {str(e2)}", "raw": ai_output}
+                # Final attempt: try to extract balanced JSON substrings from AI output
+                try:
+                    candidates = _extract_largest_json_substrings(ai_output)
+                    parsed = None
+                    for cand in candidates:
+                        try:
+                            parsed = json.loads(cand)
+                            # Ensure parsed is a dict, not a list
+                            if isinstance(parsed, list):
+                                parsed = next((item for item in parsed if isinstance(item, dict)), None)
+                            if parsed and isinstance(parsed, dict):
+                                print("✅ Parsed JSON from extracted candidate substring")
+                                data = parsed
+                                break
+                        except Exception:
+                            # try small cleanup on candidate
+                            s = cand.replace(',}', '}').replace(',]', ']')
+                            s = s.replace('}{', '},{')
+                            try:
+                                parsed = json.loads(s)
+                                print("✅ Parsed JSON after cleaning candidate substring")
+                                data = parsed
+                                break
+                            except Exception:
+                                continue
+
+                    if parsed is None:
+                        # Fallback: use local extractor to ensure we still return structured data
+                        print("⚠️ AI JSON parse failed; falling back to local extractor")
+                        data = local_extract_resume(text)
+                        # Store raw AI info for debugging
+                        data["raw_ai_output"] = ai_output[:2000] if isinstance(ai_output, str) else ""
+                        data["raw_ai_error"] = ai_error
+                        parsed = data
+                except Exception:
+                    # Final fallback to local extractor
+                    print("⚠️ Resume JSON parsing ultimately failed; using local extractor")
+                    data = local_extract_resume(text)
+                    data["raw_ai_output"] = ai_output[:2000] if isinstance(ai_output, str) else ""
+                    data["raw_ai_error"] = ai_error
+
+        # Safety check: ensure data is a dict before proceeding
+        if not isinstance(data, dict):
+            print("⚠️ Data is not a dict; using local extractor fallback")
+            data = local_extract_resume(text)
+            if isinstance(ai_output, str):
+                data["raw_ai_output"] = ai_output[:2000]
+            if ai_error:
+                data["raw_ai_error"] = ai_error
 
         # ---- Certificate worthiness evaluation (non-blocking fallback on failure) ----
-        cert_list = data.get("certificates", []) or []
+        cert_list = data.get("certificates", [])
+        if not isinstance(cert_list, list):
+            cert_list = []
         cert_analysis = await evaluate_certificates(cert_list)
         if not isinstance(cert_analysis, list):
             cert_analysis = []
         data["certificate_analysis"] = cert_analysis
 
         # ---- Project evaluation (LLM) ----
-        project_list = data.get("projects", []) or []
+        project_list = data.get("projects", [])
+        if not isinstance(project_list, list):
+            project_list = []
         project_analysis = await evaluate_projects(project_list)
         if not isinstance(project_analysis, list):
             project_analysis = []

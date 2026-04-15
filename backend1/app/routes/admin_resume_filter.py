@@ -1,6 +1,7 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException
 from fastapi.responses import StreamingResponse
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel
 from app.helpers.resume_helper import process_resume_file, normalize_languages
 from io import BytesIO
 import json
@@ -8,6 +9,9 @@ import re
 import asyncio
 
 router = APIRouter()
+
+from app.config import SECRET_KEY, ALGORITHM
+import jwt
 
 # ---------------------------------------------------------
 # 🔧 Helper classes & functions
@@ -29,6 +33,11 @@ class InMemoryUpload:
             return b""
         self._consumed = True
         return self._data
+
+
+class UpdateSkillsetRequest(BaseModel):
+    """Request model for updating skillset data."""
+    sheets: Dict[str, List[Dict[str, Any]]]
 
 
 def parse_percentage(value):
@@ -70,7 +79,22 @@ async def filter_uploaded_resumes_stream(
     department: Optional[str] = Form(None),
     degree: Optional[str] = Form(None),
     area_of_interest: Optional[str] = Form(None),
+    authorization: str | None = Header(default=None),
 ):
+    # Authorization: expect 'Bearer <token>' and require role == 'trainer'
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token verification failed")
+    role = payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required to access this endpoint")
     """
     Stream resume filtering progress file by file, returning live updates to the frontend.
     Each SSE (Server-Sent Event) message includes partial progress and cumulative results.
@@ -231,7 +255,23 @@ async def filter_uploaded_resumes(
     department: Optional[str] = Form(None),
     degree: Optional[str] = Form(None),
     area_of_interest: Optional[str] = Form(None),
+    authorization: str | None = Header(default=None),
 ):
+    # Authorization check (require trainer role)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token verification failed")
+    role = payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required to access this endpoint")
+    
     results = []
     skill_list = [s.strip().lower() for s in skills.split(",")] if skills else []
     area_filters = [a.strip().lower() for a in area_of_interest.split(",")] if area_of_interest else []
@@ -345,3 +385,230 @@ async def filter_uploaded_resumes(
         )
 
     return {"count": len(results), "results": results}
+
+# ---------------------------------------------------------
+# 📊 Trainer Skillset Management
+# ---------------------------------------------------------
+@router.post("/upload_skillset")
+async def upload_skillset(
+    file: UploadFile = File(...),
+    mode: str = Form("replace"),
+    authorization: str | None = Header(default=None),
+):
+    """Upload Companies Skillset Excel file (Trainer only).
+    
+    Requires trainer role. Saves the file to backend root as "Skillset of Companies Visited.xlsx".
+    Mode: 'replace' (default) or 'append' to add sheets to existing file.
+    This file is then served to users via /user/skillset and /user/skillset_json.
+    """
+    # Authorization check (require trainer role)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required. Please log in again.")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header format. Please log in again.")
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired. Please log in again.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token. Please log in again.")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
+    role = payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required to access this endpoint")
+    
+    if not file or not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+    
+    # Validate file extension
+    if not file.filename.lower().endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Invalid file format. Please upload .xlsx or .xls file only")
+    
+    try:
+        from pathlib import Path
+        import pandas as pd
+        from io import BytesIO
+        
+        # Save to backend root as "Skillset of Companies Visited.xlsx"
+        root = Path(__file__).resolve().parents[2]
+        skillset_path = root / "Skillset of Companies Visited.xlsx"
+        
+        # Read uploaded file content
+        content = await file.read()
+        
+        # Validate file is not empty
+        if len(content) == 0:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+        
+        # Determine engine based on file extension
+        engine = 'openpyxl' if file.filename.lower().endswith('.xlsx') else 'xlrd'
+        
+        # Validate it's a valid Excel file by trying to read it
+        try:
+            test_read = pd.read_excel(BytesIO(content), sheet_name=None, engine=engine)
+            if not test_read or len(test_read) == 0:
+                raise HTTPException(status_code=400, detail="Excel file contains no sheets")
+        except Exception as read_err:
+            # If file validation fails, try alternative engine
+            alt_engine = 'xlrd' if engine == 'openpyxl' else 'openpyxl'
+            try:
+                test_read = pd.read_excel(BytesIO(content), sheet_name=None, engine=alt_engine)
+                if not test_read or len(test_read) == 0:
+                    raise HTTPException(status_code=400, detail="Excel file contains no sheets")
+                engine = alt_engine  # Use the working engine
+            except Exception as alt_error:
+                raise HTTPException(status_code=400, detail=f"Invalid Excel file. Please ensure you're uploading a real Excel file (.xlsx or .xls), not a CSV. Error: {str(read_err)}")
+        
+        if mode == "append" and skillset_path.exists():
+            # Append mode: merge sheets from uploaded file with existing file
+            try:
+                # Read existing file - try both engines
+                try:
+                    existing_dfs = pd.read_excel(skillset_path, sheet_name=None, engine='openpyxl')
+                except:
+                    existing_dfs = pd.read_excel(skillset_path, sheet_name=None, engine='xlrd')
+                
+                # Read new file with the validated working engine
+                new_dfs = pd.read_excel(BytesIO(content), sheet_name=None, engine=engine)
+                
+                # Merge: new sheets override existing ones with same name
+                merged_dfs = {**existing_dfs, **new_dfs}
+                
+                # Write merged data back with openpyxl
+                with pd.ExcelWriter(skillset_path, engine='openpyxl') as writer:
+                    for sheet_name, df in merged_dfs.items():
+                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+                
+                return {
+                    "status": "success",
+                    "message": f"Skillset appended successfully! {len(new_dfs)} sheet(s) added/updated ✅",
+                    "mode": "append",
+                    "sheets_added": list(new_dfs.keys()),
+                    "total_sheets": len(merged_dfs)
+                }
+            except Exception as append_error:
+                raise HTTPException(status_code=500, detail=f"Failed to append skillset: {str(append_error)}")
+        else:
+            # Replace mode: overwrite existing file
+            with open(skillset_path, "wb") as f:
+                f.write(content)
+            
+            return {
+                "status": "success",
+                "message": "Skillset file uploaded successfully ✅",
+                "mode": "replace",
+                "filename": file.filename,
+                "path": str(skillset_path)
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload skillset: {str(e)}")
+
+
+@router.get("/skillset_preview")
+async def skillset_preview(authorization: str | None = Header(default=None)):
+    """Get preview of current skillset Excel file (Trainer only).
+    
+    Returns JSON of all sheets in the skillset file.
+    """
+    # Authorization check (require trainer role)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required. Please log in again.")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header format. Please log in again.")
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired. Please log in again.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token. Please log in again.")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
+    role = payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required to access this endpoint")
+    
+    try:
+        from pathlib import Path
+        import pandas as pd
+        
+        root = Path(__file__).resolve().parents[2]
+        skillset_path = root / "Skillset of Companies Visited.xlsx"
+        
+        if not skillset_path.exists():
+            return {"sheets": {}, "message": "No skillset file uploaded yet"}
+        
+        # Try openpyxl first, fall back to xlrd for older .xls files
+        try:
+            dfs = pd.read_excel(skillset_path, sheet_name=None, engine='openpyxl')
+        except Exception as e1:
+            try:
+                dfs = pd.read_excel(skillset_path, sheet_name=None, engine='xlrd')
+            except Exception as e2:
+                raise HTTPException(status_code=500, detail=f"Failed to read Excel file. Please upload a valid .xlsx or .xls file. Error: {str(e1)}")
+        
+        sheets = {name: df.fillna("").to_dict(orient="records") for name, df in dfs.items()}
+        
+        return {"status": "success", "sheets": sheets}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read skillset: {str(e)}")
+
+
+@router.post("/update_skillset")
+async def update_skillset(request: UpdateSkillsetRequest, authorization: str | None = Header(default=None)):
+    """Update skillset Excel file with edited data (Trainer only).
+    
+    Accepts JSON with edited sheet data and updates the Excel file.
+    """
+    # Authorization check (require trainer role)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required. Please log in again.")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header format. Please log in again.")
+    token = parts[1]
+    try:
+        jwt_payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired. Please log in again.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token. Please log in again.")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
+    role = jwt_payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required to access this endpoint")
+    
+    try:
+        from pathlib import Path
+        import pandas as pd
+        
+        root = Path(__file__).resolve().parents[2]
+        skillset_path = root / "Skillset of Companies Visited.xlsx"
+        
+        # Extract sheets from request payload
+        sheets_data = request.sheets
+        
+        if not sheets_data:
+            raise HTTPException(status_code=400, detail="No sheets data provided")
+        
+        # Convert sheets data to DataFrames and save
+        with pd.ExcelWriter(skillset_path, engine='openpyxl') as writer:
+            for sheet_name, rows in sheets_data.items():
+                if rows:  # Only write if sheet has data
+                    df = pd.DataFrame(rows)
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+        
+        return {"status": "success", "message": "Skillset updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update skillset: {str(e)}")

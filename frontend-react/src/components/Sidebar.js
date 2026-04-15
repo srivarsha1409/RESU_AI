@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Target, Briefcase, MessageSquare, TrendingUp, Users, LogOut, User, Menu, X } from 'lucide-react';
+import { FileText, Target, Briefcase, MessageSquare, TrendingUp, Users, LogOut, User, Menu, X, Award } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, userName, onLogout, isCollapsed, setIsCollapsed }) => {
   const menuItems = [
@@ -9,6 +9,7 @@ const Sidebar = ({ activeTab, setActiveTab, userName, onLogout, isCollapsed, set
     { id: 'assistant', label: 'AI Assistant', icon: MessageSquare },
     { id: 'guidance', label: 'Guidance', icon: TrendingUp },
     { id: 'referrals', label: 'Referrals', icon: Users },
+    { id: 'skillset', label: 'Company Skillset', icon: Award },
   ];
 
   return (

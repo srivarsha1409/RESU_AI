@@ -2,10 +2,17 @@ import React, { useState } from "react";
 import { X, PlusCircle, Upload, Filter, FileText, TrendingUp, Users, Award } from "lucide-react";
 
 const Trainer = () => {
+  const [activeTab, setActiveTab] = useState("filter"); // "filter" or "skillset"
   const [totalFiles, setTotalFiles] = useState(0);
   const [processedFiles, setProcessedFiles] = useState(0);
   const [loading, setLoading] = useState(false);
   const [resumes, setResumes] = useState([]);
+  const [skillsetData, setSkillsetData] = useState(null);
+  const [skillsetLoading, setSkillsetLoading] = useState(false);
+  const [skillsetError, setSkillsetError] = useState(null);
+  const [uploadMode, setUploadMode] = useState("replace"); // "replace" or "append"
+  const [editMode, setEditMode] = useState(false); // Edit existing skillset
+  const [editedData, setEditedData] = useState(null); // Store edited data
   const [filters, setFilters] = useState({
     cgpa: "",
     tenth: "",
@@ -140,8 +147,15 @@ if (filters.departments.length > 0)
 
 
   try {
+    const token = localStorage.getItem('access_token');
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch("http://127.0.0.1:8000/admin/filter_uploaded_resumes_stream", {
       method: "POST",
+      headers: headers,
       body: formData,
     });
 
@@ -298,6 +312,124 @@ const handleSort = (key) => {
   });
 };
 
+  // ===== Skillset Management Functions =====
+  const fetchSkillsetPreview = async () => {
+    const token = localStorage.getItem('access_token');
+    setSkillsetLoading(true);
+    setSkillsetError(null);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/admin/skillset_preview', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSkillsetData(data.sheets);
+      } else {
+        setSkillsetError(data.detail || 'Failed to load skillset');
+      }
+    } catch (err) {
+      setSkillsetError(err.message || 'Failed to load skillset');
+    } finally {
+      setSkillsetLoading(false);
+    }
+  };
+
+  const handleSkillsetUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const token = localStorage.getItem('access_token');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('mode', uploadMode);
+
+    setSkillsetLoading(true);
+    setSkillsetError(null);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/admin/upload_skillset', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await response.json();
+      if (response.ok) {
+        // Refresh preview after upload
+        await fetchSkillsetPreview();
+        alert(data.message || 'Skillset uploaded successfully!');
+      } else {
+        // Handle token errors specifically
+        if (response.status === 401) {
+          setSkillsetError(`${data.detail || 'Authentication failed'}. Please refresh and log in again.`);
+        } else {
+          setSkillsetError(data.detail || 'Failed to upload skillset');
+        }
+      }
+    } catch (err) {
+      setSkillsetError(err.message || 'Network error: Failed to upload skillset');
+    } finally {
+      setSkillsetLoading(false);
+      // Reset file input
+      e.target.value = '';
+    }
+  };
+
+  // Fetch skillset when tab changes
+  React.useEffect(() => {
+    if (activeTab === 'skillset') {
+      fetchSkillsetPreview();
+    }
+  }, [activeTab]);
+
+  // ===== Skillset Edit Functions =====
+  const startEditing = () => {
+    if (skillsetData) {
+      setEditedData(JSON.parse(JSON.stringify(skillsetData))); // Deep copy
+      setEditMode(true);
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditMode(false);
+    setEditedData(null);
+  };
+
+  const handleCellChange = (sheetName, rowIndex, columnName, value) => {
+    setEditedData(prev => {
+      const updated = { ...prev };
+      updated[sheetName][rowIndex][columnName] = value;
+      return updated;
+    });
+  };
+
+  const saveEdits = async () => {
+    const token = localStorage.getItem('access_token');
+    setSkillsetLoading(true);
+    setSkillsetError(null);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/admin/update_skillset', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sheets: editedData })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSkillsetData(editedData);
+        setEditMode(false);
+        setEditedData(null);
+        alert('Skillset updated successfully! ✅');
+      } else {
+        setSkillsetError(data.detail || 'Failed to save changes');
+      }
+    } catch (err) {
+      setSkillsetError(err.message || 'Failed to save changes');
+    } finally {
+      setSkillsetLoading(false);
+    }
+  };
+
   const activeFiltersCount = [
     filters.cgpa,
     filters.tenth,
@@ -315,47 +447,85 @@ const handleSort = (key) => {
       background: "#f8fafc",
       padding: "0"
     }}>
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar with Tabs */}
      <div
   style={{
     position: "relative",
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     padding: "20px 32px",
     boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center", // centers heading block
   }}
 >
- 
+  <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+    {/* Heading */}
+    <div style={{ textAlign: "center", marginBottom: "20px" }}>
+      <h1
+        style={{
+          fontSize: "28px",
+          fontWeight: "700",
+          color: "#fff",
+          margin: 0,
+        }}
+      >
+        Trainer Portal
+      </h1>
+      <p
+        style={{
+          color: "rgba(255,255,255,0.9)",
+          fontSize: "14px",
+          margin: "4px 0 0 0",
+        }}
+      >
+        Manage resumes and company skillset
+      </p>
+    </div>
 
-  {/* Centered Heading */}
-  <div style={{ textAlign: "center" }}>
-    <h1
-      style={{
-        fontSize: "28px",
-        fontWeight: "700",
-        color: "#fff",
-        margin: 0,
-      }}
-    >
-      Resume Filter Dashboard
-    </h1>
-    <p
-      style={{
-        color: "rgba(255,255,255,0.9)",
-        fontSize: "14px",
-        margin: "4px 0 0 0",
-      }}
-    >
-      Upload, filter, and analyze candidate resumes
-    </p>
+    {/* Tab Navigation */}
+    <div style={{ display: "flex", gap: "8px", borderBottom: "2px solid rgba(255,255,255,0.2)" }}>
+      <button
+        onClick={() => setActiveTab("filter")}
+        style={{
+          padding: "12px 20px",
+          background: activeTab === "filter" ? "rgba(255,255,255,0.2)" : "transparent",
+          color: "#fff",
+          border: "none",
+          borderBottom: activeTab === "filter" ? "3px solid #fff" : "none",
+          cursor: "pointer",
+          fontSize: "15px",
+          fontWeight: activeTab === "filter" ? "600" : "500",
+          transition: "all 0.3s",
+        }}
+      >
+        <Filter size={16} style={{ display: "inline", marginRight: "8px" }} />
+        Resume Filter
+      </button>
+      <button
+        onClick={() => setActiveTab("skillset")}
+        style={{
+          padding: "12px 20px",
+          background: activeTab === "skillset" ? "rgba(255,255,255,0.2)" : "transparent",
+          color: "#fff",
+          border: "none",
+          borderBottom: activeTab === "skillset" ? "3px solid #fff" : "none",
+          cursor: "pointer",
+          fontSize: "15px",
+          fontWeight: activeTab === "skillset" ? "600" : "500",
+          transition: "all 0.3s",
+        }}
+      >
+        <Award size={16} style={{ display: "inline", marginRight: "8px" }} />
+        Company Skillset
+      </button>
+    </div>
   </div>
 </div>
 
 
       <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "32px" }}>
         
+        {/* Resume Filter Tab */}
+        {activeTab === "filter" && (
+        <>
         {/* Stats Cards */}
         <div style={{ 
           display: "grid", 
@@ -1383,10 +1553,310 @@ const handleSort = (key) => {
             </div>
           )
         )}
+        </>
+        )}
+
+        {/* Company Skillset Tab */}
+        {activeTab === "skillset" && (
+        <div style={{
+          background: "white",
+          borderRadius: "16px",
+          padding: "24px",
+          border: "1px solid #e0f2fe",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)"
+        }}>
+          <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1e293b", marginBottom: "12px" }}>
+            Company Skillset Management
+          </h2>
+          <p style={{ color: "#64748b", marginBottom: "20px" }}>
+            Upload and manage the "Skillset of Companies Visited" Excel file. Changes will automatically be visible to all users.
+          </p>
+
+          {/* Mode Selector */}
+          <div style={{
+            display: "flex",
+            gap: "12px",
+            marginBottom: "20px",
+            padding: "16px",
+            background: "#f0f9ff",
+            borderRadius: "8px",
+            border: "1px solid #bae6fd"
+          }}>
+            <div style={{ flex: 1 }}>
+              <label style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "12px",
+                background: uploadMode === "replace" ? "#667eea" : "white",
+                color: uploadMode === "replace" ? "white" : "#1e293b",
+                borderRadius: "8px",
+                border: "2px solid",
+                borderColor: uploadMode === "replace" ? "#667eea" : "#cbd5e1",
+                cursor: "pointer",
+                fontWeight: "600",
+                transition: "all 0.3s"
+              }}>
+                <input
+                  type="radio"
+                  name="uploadMode"
+                  value="replace"
+                  checked={uploadMode === "replace"}
+                  onChange={(e) => setUploadMode(e.target.value)}
+                  style={{ cursor: "pointer" }}
+                />
+                <div>
+                  <div style={{ fontSize: "14px" }}>Replace Entire File</div>
+                  <div style={{
+                    fontSize: "11px",
+                    opacity: 0.8,
+                    fontWeight: "400",
+                    marginTop: "2px"
+                  }}>
+                    Overwrites existing skillset completely
+                  </div>
+                </div>
+              </label>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "12px",
+                background: uploadMode === "append" ? "#667eea" : "white",
+                color: uploadMode === "append" ? "white" : "#1e293b",
+                borderRadius: "8px",
+                border: "2px solid",
+                borderColor: uploadMode === "append" ? "#667eea" : "#cbd5e1",
+                cursor: "pointer",
+                fontWeight: "600",
+                transition: "all 0.3s"
+              }}>
+                <input
+                  type="radio"
+                  name="uploadMode"
+                  value="append"
+                  checked={uploadMode === "append"}
+                  onChange={(e) => setUploadMode(e.target.value)}
+                  style={{ cursor: "pointer" }}
+                />
+                <div>
+                  <div style={{ fontSize: "14px" }}>Append/Merge Sheets</div>
+                  <div style={{
+                    fontSize: "11px",
+                    opacity: 0.8,
+                    fontWeight: "400",
+                    marginTop: "2px"
+                  }}>
+                    Adds or updates specific sheets
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Upload Section */}
+          <div style={{
+            padding: "20px",
+            border: "2px dashed #cbd5e1",
+            borderRadius: "12px",
+            textAlign: "center",
+            marginBottom: "24px",
+            background: "#f8fafc",
+            cursor: "pointer",
+            transition: "all 0.3s"
+          }}>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleSkillsetUpload}
+              style={{ display: "none" }}
+              id="skillset-upload"
+            />
+            <label htmlFor="skillset-upload" style={{ cursor: "pointer", display: "block" }}>
+              <Upload size={32} style={{ margin: "0 auto 12px", color: "#667eea" }} />
+              <p style={{ margin: "8px 0", fontWeight: "600", color: "#1e293b" }}>
+                Click to upload Excel file
+              </p>
+              <p style={{ color: "#64748b", fontSize: "13px", margin: "4px 0 0 0" }}>
+                Supported format: .xlsx or .xls (NOT CSV)
+              </p>
+              <p style={{ color: "#94a3b8", fontSize: "12px", margin: "4px 0 0 0" }}>
+                Make sure the file is a real Excel file with actual sheets
+              </p>
+            </label>
+          </div>
+
+          {skillsetLoading && <p style={{ color: "#667eea" }}>Loading skillset...</p>}
+          {skillsetError && (
+            <div style={{ color: "#b91c1c", padding: "12px", background: "#fee2e2", borderRadius: "8px", marginBottom: "16px" }}>
+              Error: {skillsetError}
+            </div>
+          )}
+
+          {/* Preview Section */}
+          {skillsetData && Object.keys(skillsetData).length > 0 && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#1e293b" }}>
+                  Current Skillset Preview
+                </h3>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {!editMode ? (
+                    <button
+                      onClick={startEditing}
+                      style={{
+                        padding: "8px 16px",
+                        background: "#3b82f6",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontSize: "13px",
+                        fontWeight: "600"
+                      }}
+                    >
+                      ✏️ Edit Skillset
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={saveEdits}
+                        disabled={skillsetLoading}
+                        style={{
+                          padding: "8px 16px",
+                          background: "#10b981",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor: skillsetLoading ? "not-allowed" : "pointer",
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          opacity: skillsetLoading ? 0.6 : 1
+                        }}
+                      >
+                        {skillsetLoading ? "Saving..." : "✅ Save Changes"}
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        style={{
+                          padding: "8px 16px",
+                          background: "#ef4444",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontSize: "13px",
+                          fontWeight: "600"
+                        }}
+                      >
+                        ❌ Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {editMode && (
+                <div style={{
+                  padding: "12px",
+                  background: "#fef3c7",
+                  border: "1px solid #fcd34d",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                  fontSize: "13px",
+                  color: "#92400e"
+                }}>
+                  📝 Click on any cell to edit. Changes will be saved to all users.
+                </div>
+              )}
+
+              {Object.entries(editMode ? editedData : skillsetData).map(([sheetName, rows]) => (
+                <div key={sheetName} style={{ marginBottom: "24px" }}>
+                  <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#475569", marginBottom: "8px" }}>
+                    {sheetName}
+                  </h4>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                      <thead>
+                        <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                          {rows.length > 0 && Object.keys(rows[0]).map(col => (
+                            <th key={col} style={{
+                              padding: "10px",
+                              textAlign: "left",
+                              fontWeight: "600",
+                              color: "#475569",
+                              borderRight: "1px solid #e2e8f0"
+                            }}>
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.slice(0, 10).map((row, idx) => (
+                          <tr key={idx} style={{ borderBottom: "1px solid #e2e8f0", background: idx % 2 === 0 ? "#fff" : "#f8fafc" }}>
+                            {Object.entries(row).map(([col, val]) => (
+                              <td key={col} style={{
+                                padding: "10px",
+                                color: "#334155",
+                                borderRight: "1px solid #e2e8f0",
+                                background: editMode ? "#fffbeb" : "transparent"
+                              }}>
+                                {editMode ? (
+                                  <input
+                                    type="text"
+                                    value={val ?? ''}
+                                    onChange={(e) => handleCellChange(sheetName, idx, col, e.target.value)}
+                                    style={{
+                                      width: "100%",
+                                      padding: "4px",
+                                      border: "1px solid #dbeafe",
+                                      borderRadius: "4px",
+                                      fontSize: "13px",
+                                      fontFamily: "inherit"
+                                    }}
+                                  />
+                                ) : (
+                                  String(val ?? '')
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {rows.length > 10 && (
+                    <p style={{ color: "#64748b", fontSize: "12px", marginTop: "8px" }}>
+                      Showing 10 of {rows.length} rows
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!skillsetLoading && (!skillsetData || Object.keys(skillsetData).length === 0) && !skillsetError && (
+            <div style={{
+              padding: "32px",
+              textAlign: "center",
+              background: "#f0f9ff",
+              borderRadius: "12px",
+              color: "#0369a1"
+            }}>
+              <Award size={40} style={{ margin: "0 auto 12px", opacity: 0.6 }} />
+              <p>No skillset file uploaded yet. Upload an Excel file to get started.</p>
+            </div>
+          )}
+        </div>
+        )}
 
       </div>
     </div>
   );
+
 };
 
 export default Trainer;
