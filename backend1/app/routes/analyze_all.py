@@ -4,8 +4,9 @@
 from fastapi import APIRouter, File, UploadFile, Query
 from fastapi.responses import JSONResponse
 
-from app.helpers.resume_helper import process_resume_file
-from app.routes.github_routes import analyze_github
+from app.helpers.resume_helper import process_resume_file, extract_username_from_input
+from app.helpers.github_helper import get_github_repo_counts, get_pr_metrics
+from app.config import GITHUB_TOKEN_ENV
 from app.routes.leetcode_routes import analyze_leetcode
 from app.routes.codechef_routes import analyze_codechef
 
@@ -34,8 +35,24 @@ async def analyze_all(
     # ---------------- GitHub ----------------
     if github:
         try:
-            gh_data = analyze_github(github, token)
-            results["github"] = gh_data
+            username = extract_username_from_input(github)
+            if not username:
+                results["github_error"] = "Could not parse GitHub username from input"
+            else:
+                token_to_use = token or GITHUB_TOKEN_ENV
+                if not token_to_use:
+                    results["github_error"] = "GitHub token missing. Pass ?token=... or set GITHUB_TOKEN env variable"
+                else:
+                    gql = get_github_repo_counts(username, token_to_use)
+                    if "error_graphql" in gql:
+                        results["github_error"] = gql.get("error_graphql")
+                    else:
+                        pr = get_pr_metrics(username, token_to_use)
+                        if "error_pr_api" in pr:
+                            results["github_error"] = pr.get("error_pr_api")
+                        else:
+                            combined = {**gql, **pr}
+                            results["github"] = {"username": username, "github_metrics": combined}
         except Exception as e:
             results["github_error"] = str(e)
 

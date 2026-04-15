@@ -123,21 +123,23 @@ const navigate = useNavigate();
     return results;
   }
 
-  // Normalize technical skills on frontend (defensive) to avoid
-  // any combined entries like "Python, NumPy, Pandas" rendering
-  // as a single pill.
-  function normalizeTechnicalClient(input) {
-    if (!input) return [];
-
-    const source = Array.isArray(input) ? input : [input];
+  // Technical skills: build a neat display list purely for UI (backend data unchanged)
+  function buildDisplayTechnicalSkills(raw) {
+    if (!raw) return [];
+    const source = Array.isArray(raw) ? raw : [raw];
     const result = [];
+    const seen = new Set();
 
     source.forEach((item) => {
+      if (item == null) return;
       String(item)
         .split(/[,;/]|\s*\|\s*| and /i)
         .forEach((part) => {
           const value = part.trim();
-          if (value && !result.includes(value)) {
+          if (!value) return;
+          const key = value.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
             result.push(value);
           }
         });
@@ -1155,30 +1157,49 @@ const handleLogout = async () => {
           </div>
           <div style={{ background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 12 }}>
-              {(data?.certificates && data.certificates.length > 0) ? data.certificates.map((c, idx) => (
-                <div key={idx} style={{ background: "#f0f9ff", padding: 12, borderRadius: 8, borderLeft: "4px solid #3b82f6" }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: "#1e3a8a" }}>{c.role || c}</div>
-                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{c.issuer || ""}</div>
-                </div>
-              )) : <div style={{ color: "#6b7280" }}>Not mentioned</div>}
+              {(data?.certificates && data.certificates.length > 0)
+                ? data.certificates.map((c, idx) => {
+                    const cert = typeof c === "string" ? { name: c } : c || {};
+                    const title = cert.role || cert.name || "Certificate";
+                    const provider = cert.issuer || cert.provider || "";
+                    const date = cert.date || cert.issued_on || "";
+                    const details = cert.details || cert.description || "";
+
+                    return (
+                      <div key={idx} style={{ background: "#f0f9ff", padding: 12, borderRadius: 8, borderLeft: "4px solid #3b82f6" }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: "#1e3a8a" }}>{title}</div>
+                        {(provider || date) && (
+                          <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
+                            {[provider, date].filter(Boolean).join(" • ")}
+                          </div>
+                        )}
+                        {details && (
+                          <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>
+                            {details}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                : <div style={{ color: "#6b7280" }}>Not mentioned</div>}
             </div>
           </div>
 
           {/* Skills & ATS */}
-          <div style={{ fontSize: 24, fontWeight: 700, margin: "30px 0 20px 0", color: "#1a237e", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 24, fontWeight: 700, margin: "30px 0 12px 0", color: "#1a237e" }}>
             Analysis Summary
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
-            <div style={{ background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "stretch" }}>
+            <div style={{ flex: 1, minWidth: 280, background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
               <h3 style={{ margin: "0 0 16px 0", color: "#1f2937" }}>🛠 Skills Analysis</h3>
               <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
                 <div style={{ flex: 1, minWidth: 250 }}>
                   <h4 style={{ fontSize: 16, color: "#1f2937", marginBottom: 12 }}>Technical Skills</h4>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {(() => {
-                      const tech = normalizeTechnicalClient(data?.skills?.technical || []);
-                      return tech.length > 0
-                        ? tech.map((s) => renderPill(s))
+                      const displayTech = buildDisplayTechnicalSkills(data?.skills?.technical || []);
+                      return displayTech.length > 0
+                        ? displayTech.map((s) => renderPill(s))
                         : <span style={{ color: "#6b7280" }}>—</span>;
                     })()}
                   </div>
@@ -1194,7 +1215,7 @@ const handleLogout = async () => {
               </div>
             </div>
 
-            <div style={{ background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+            <div style={{ flex: 1, minWidth: 280, background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
               <h3 style={{ margin: "0 0 16px 0", color: "#1f2937" }}>🧾 ATS Score</h3>
               <div style={{ textAlign: "center", padding: 20 }}>
                 <div style={{ fontSize: 48, fontWeight: 700, color: "#1e3a8a" }}>

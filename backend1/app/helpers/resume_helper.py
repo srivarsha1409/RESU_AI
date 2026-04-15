@@ -260,16 +260,9 @@ Resume text:
         except Exception as e:
             return {"error": f"Failed to parse AI JSON: {str(e)}", "raw": ai_output}
 
-        # ---- Normalize technical skills (split combined strings) ----
+        # ---- Technical skills: keep AI output as-is (no backend post-processing) ----
+        # Use the "skills" block exactly as returned by the AI JSON.
         skills_block = data.get("skills", {}) or {}
-        raw_tech_skills = skills_block.get("technical", []) or []
-        normalized_tech = []
-        for item in raw_tech_skills:
-            for part in re.split(r"[,;/]|\s*\|\s*| and ", str(item)):
-                part_clean = part.strip()
-                if part_clean and part_clean not in normalized_tech:
-                    normalized_tech.append(part_clean)
-        skills_block["technical"] = normalized_tech
         data["skills"] = skills_block
 
         # ---- Normalize languages (robust, but no guessing) ----
