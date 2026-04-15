@@ -29,7 +29,8 @@ app = FastAPI(title="AI Resume + Platform Analyzer")
 # ✅ CORS Setup (allow cookies from frontend)
 # -------------------------
 origins = [
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "http://localhost:3002"
 ]
 
 app.add_middleware(
