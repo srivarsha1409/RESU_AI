@@ -5,6 +5,7 @@ import About from './pages/About';
 import Features from './pages/Features';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
+import PortfolioPage from './pages/Portfolio';
 import Admin from './pages/Admin/Admin';
 import Admin1 from './pages/Admin/Admin_Resume_Filter';
 import User from './pages/user/user';
@@ -19,6 +20,7 @@ function App() {
       <Route path="/features" element={<Features />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/portfolio" element={<PortfolioPage />} />
 
       {/* ✅ Protected routes */}
       <Route

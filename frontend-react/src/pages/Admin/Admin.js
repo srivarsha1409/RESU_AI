@@ -70,6 +70,9 @@ export default function Admin() {
   const [currentId, setCurrentId] = useState(null);
   const [data, setData] = useState({ ...initialData });
   const [messages, setMessages] = useState([]);
+  const [portfolio, setPortfolio] = useState(null);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [portfolioError, setPortfolioError] = useState(null);
   const [eduTab, setEduTab] = useState("higher");
   const [selectedFile, setSelectedFile] = useState(null);
 const navigate = useNavigate();
@@ -271,6 +274,37 @@ incoming.skills = { ...initialData.skills, ...(json.data.skills || {}) };
       console.error("Upload failed:", error);
       addMsg("error", "❌ Upload failed!", "⚠️");
       alert("Something went wrong while uploading the resume.");
+    }
+  };
+
+  const generatePortfolioForCandidate = async () => {
+    if (!data?.email) {
+      addMsg("error", "No candidate email found for portfolio generation", "⚠️");
+      return;
+    }
+
+    setPortfolioLoading(true);
+    setPortfolioError(null);
+
+    try {
+      const res = await fetch(`${backend}/user/portfolio`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.detail || json.error || "Failed to generate portfolio");
+      }
+
+      setPortfolio(json.portfolio || null);
+      addMsg("success", "Portfolio generated", "✅");
+    } catch (err) {
+      console.error("Portfolio generation error:", err);
+      setPortfolioError(err.message || "Failed to generate portfolio");
+    } finally {
+      setPortfolioLoading(false);
     }
   };
 
@@ -620,7 +654,7 @@ const handleLogout = async () => {
               <div style={{ fontSize: 28, fontWeight: 700 }}>Resume Analysis Dashboard</div>
               <div style={{ color: "#4b5563" }}>Upload a candidate resume (PDF) to extract details and compute ATS score</div>
             </div>
-            <div>
+            <div style={{ display: "flex", gap: 10 }}>
               <button
                 onClick={downloadReport}
                 disabled={!data}
@@ -636,6 +670,22 @@ const handleLogout = async () => {
                 }}
               >
                 📥 Download Report
+              </button>
+              <button
+                onClick={generatePortfolioForCandidate}
+                disabled={!data?.email || portfolioLoading}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  border: "none",
+                  cursor: !data?.email || portfolioLoading ? "not-allowed" : "pointer",
+                  fontWeight: 700,
+                  background: "#8b5cf6",
+                  color: "#fff",
+                  opacity: !data?.email || portfolioLoading ? 0.6 : 1,
+                }}
+              >
+                {portfolioLoading ? "Generating Portfolio..." : "Generate Portfolio"}
               </button>
             </div>
           </header>
@@ -705,6 +755,77 @@ const handleLogout = async () => {
               ))}
             </div>
           </div>
+
+          {portfolioError && (
+            <div style={{ marginBottom: 16, background: "#fef2f2", color: "#b91c1c", padding: 12, borderRadius: 8, border: "1px solid #fecaca", fontSize: 13 }}>
+              Portfolio error: {portfolioError}
+            </div>
+          )}
+
+          {portfolio && (
+            <div style={{ marginBottom: 24, background: "#0f172a", borderRadius: 16, padding: 20, color: "#e5e7eb" }}>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>{portfolio.name}</div>
+                <div style={{ fontSize: 14, color: "#c4b5fd" }}>{portfolio.headline}</div>
+                <p style={{ marginTop: 8, fontSize: 13, lineHeight: 1.6 }}>{portfolio.summary}</p>
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>Skills</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {portfolio.skills?.map((s, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: 999,
+                        background: "rgba(129, 140, 248, 0.2)",
+                        border: "1px solid rgba(129, 140, 248, 0.6)",
+                        fontSize: 12,
+                      }}
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>Projects</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
+                  {portfolio.projects?.map((p, i) => (
+                    <div key={i} style={{ background: "rgba(15, 23, 42, 0.8)", borderRadius: 12, padding: 12, border: "1px solid rgba(148, 163, 184, 0.5)" }}>
+                      <div style={{ fontWeight: 600, marginBottom: 4 }}>{p.title}</div>
+                      {p.technologies?.length > 0 && (
+                        <div style={{ fontSize: 11, color: "#a5b4fc", marginBottom: 4 }}>
+                          Tech: {p.technologies.join(", ")}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 12, marginBottom: 4 }}>{p.description}</div>
+                      <div style={{ display: "flex", gap: 8, fontSize: 11 }}>
+                        {p.github && (
+                          <a href={p.github} target="_blank" rel="noreferrer" style={{ color: "#38bdf8", textDecoration: "underline" }}>
+                            GitHub
+                          </a>
+                        )}
+                        {p.link && (
+                          <a href={p.link} target="_blank" rel="noreferrer" style={{ color: "#4ade80", textDecoration: "underline" }}>
+                            Live Demo
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ borderTop: "1px solid rgba(148, 163, 184, 0.5)", paddingTop: 8, fontSize: 12 }}>
+                <div>Email: {portfolio.contacts?.email}</div>
+                {portfolio.contacts?.linkedin && <div>LinkedIn: {portfolio.contacts.linkedin}</div>}
+                {portfolio.contacts?.github && <div>GitHub: {portfolio.contacts.github}</div>}
+              </div>
+            </div>
+          )}
 
           {/* Personal Information */}
           <div style={{ fontSize: 24, fontWeight: 700, margin: "30px 0 20px 0", color: "#1a237e", display: "flex", alignItems: "center", gap: 10 }}>

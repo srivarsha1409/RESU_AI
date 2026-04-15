@@ -619,9 +619,58 @@ Resume text:
             project_analysis = []
         data["project_analysis"] = project_analysis
 
-        # ---- Technical skills: keep AI output as-is (no backend post-processing) ----
-        # Use the "skills" block exactly as returned by the AI JSON.
+        # ---- Technical skills post-processing ----
+        # Clean the skills block minimally so that:
+        # 1) Items listed under area_of_interest are NOT duplicated in technical skills
+        # 2) Long strings that match certificate titles are NOT treated as technical skills
         skills_block = data.get("skills", {}) or {}
+
+        technical_skills = skills_block.get("technical") or []
+        aoi_list = skills_block.get("area_of_interest") or []
+        certificates_list = data.get("certificates") or []
+
+        # Normalise to lists of strings
+        if isinstance(technical_skills, str):
+            technical_skills = [s.strip() for s in re.split(r"[,;/]\s*", technical_skills) if s.strip()]
+        if isinstance(aoi_list, str):
+            aoi_list = [s.strip() for s in re.split(r"[,;/]\s*", aoi_list) if s.strip()]
+        if isinstance(certificates_list, str):
+            certificates_list = [certificates_list]
+
+        aoi_lower = {str(x).strip().lower() for x in aoi_list if str(x).strip()}
+        cert_lower_list = [str(c).strip().lower() for c in certificates_list if str(c).strip()]
+
+        cleaned_technical = []
+        seen = set()
+        for item in technical_skills:
+            s = str(item).strip()
+            if not s:
+                continue
+
+            key = s.lower()
+
+            # Skip if this exact text already exists under Areas of Interest
+            if key in aoi_lower:
+                continue
+
+            # Skip if this matches or is a clear substring of any certificate title.
+            # This catches both full names and shorter provider phrases like
+            # "microsoft azure" or "google cloud" when they appear in
+            # certificate strings such as "microsoft azure az-900".
+            for c in cert_lower_list:
+                # only treat as certificate if the certificate string is longer
+                if len(c.split()) >= len(key.split()):
+                    if key == c or key in c or c in key:
+                        key = None
+                        break
+            if key is None:
+                continue
+
+            if key not in seen:
+                seen.add(key)
+                cleaned_technical.append(s)
+
+        skills_block["technical"] = cleaned_technical
         data["skills"] = skills_block
 
         # ---- Normalize languages (robust, but no guessing) ----

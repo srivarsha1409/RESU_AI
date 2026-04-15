@@ -2,12 +2,15 @@
 
 from fastapi import APIRouter, UploadFile, Form, HTTPException
 from datetime import datetime
+from pydantic import BaseModel
+import re
 import httpx  # ✅ For calling your AI API endpoint
 from app.routes.auth_routes import db
 from app.routes.resume_routes import process_resume_file
 
 router = APIRouter(prefix="/user", tags=["User Dashboard"])
 users = db["users"]
+portfolio_collection = db["portfolio"]
 
 # Your AI Chat endpoint (local FastAPI route)
 AI_CHAT_URL = "http://127.0.0.1:8000/ai/chat"
@@ -150,3 +153,95 @@ def get_history(email: str):
 def get_all_users():
     all_users = list(users.find({}, {"_id": 0, "password": 0}))
     return {"status": "success", "users": all_users}
+
+
+class PortfolioRequest(BaseModel):
+    email: str
+
+
+@router.post("/portfolio")
+def generate_portfolio(req: PortfolioRequest):
+    user = users.find_one(
+        {"email": {"$regex": f"^{req.email}$", "$options": "i"}},
+        {"_id": 0},
+    )
+    if not user or "structured_info" not in user:
+        raise HTTPException(status_code=404, detail="No resume data found for this user")
+
+    data = user["structured_info"] or {}
+    detected_role = user.get("detected_role", "Software Engineer")
+
+    name = data.get("name") or user.get("name") or req.email.split("@")[0]
+
+    if detected_role and detected_role != "Unknown":
+        headline = f"Aspiring {detected_role}"
+    else:
+        headline = "Aspiring Software Engineer"
+
+    summary = data.get("summary") or (
+        "Passionate fresher looking for opportunities in software development, "
+        "with a strong foundation in programming and problem solving."
+    )
+
+    skills_block = data.get("skills") or {}
+    skills = (
+        skills_block.get("technical")
+        or skills_block.get("tech")
+        or []
+    )
+
+    raw_projects = data.get("projects") or []
+    projects = []
+    for p in raw_projects:
+        if isinstance(p, dict):
+            title = p.get("title") or p.get("name") or "Project"
+            desc = p.get("description") or p.get("details") or ""
+            tech = p.get("tech_stack") or p.get("technologies") or []
+            if isinstance(tech, str):
+                tech = [t.strip() for t in tech.split(",") if t.strip()]
+            github = p.get("github") or p.get("git_url") or ""
+            link = p.get("live_link") or p.get("deployment") or ""
+        else:
+            title = "Project"
+            desc = str(p)
+            tech = []
+            github = ""
+            link = ""
+
+        projects.append(
+            {
+                "title": title,
+                "description": desc,
+                "technologies": tech,
+                "github": github,
+                "link": link,
+            }
+        )
+
+    contacts = {
+        "email": data.get("email") or user.get("email") or req.email,
+        "github": data.get("github") or "",
+        "linkedin": data.get("linkedin") or "",
+        "phone": data.get("phone") or "",
+    }
+
+    base_slug = f"{name}-{detected_role}".replace(" ", "-")
+    slug = re.sub(r"[^a-zA-Z0-9\-]", "", base_slug).lower()
+
+    portfolio = {
+        "name": name,
+        "headline": headline,
+        "summary": summary,
+        "skills": skills[:15],
+        "projects": projects[:6],
+        "contacts": contacts,
+        "role": detected_role,
+    }
+
+    portfolio_collection.update_one(
+        {"email": req.email},
+        {"$set": {"slug": slug, "portfolio": portfolio, "updated_at": datetime.utcnow()}},
+        upsert=True,
+    )
+
+    return {"slug": slug, "portfolio": portfolio}

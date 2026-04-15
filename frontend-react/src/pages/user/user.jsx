@@ -19,6 +19,10 @@ export default function UserDashboard() {
   const [guidance, setGuidance] = useState(null);
   const [guidanceLoading, setGuidanceLoading] = useState(false);
   const [guidanceError, setGuidanceError] = useState(null);
+  const [refCompany, setRefCompany] = useState('');
+  const [refRole, setRefRole] = useState('');
+  const [refLinkedInNote, setRefLinkedInNote] = useState('');
+  const [refReferralDM, setRefReferralDM] = useState('');
   
   // AI Chat
   const [chatMessages, setChatMessages] = useState([]);
@@ -144,6 +148,38 @@ export default function UserDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateReferralMessages = () => {
+    if (!resumeData?.data) return;
+
+    const name = resumeData.data.name || 'I';
+    const shortName = name.split(' ')[0];
+    const emailId = resumeData.data.email || '';
+    const mainSkills = (resumeData.data.skills?.technical || []).slice(0, 4).join(', ');
+    const company = refCompany || 'your company';
+    const role = refRole || 'a suitable role';
+
+    const linkedInNote = `Hi, I'm ${shortName}, a fresher with skills in ${mainSkills || 'software development'}. I came across openings for ${role} at ${company} and would love to connect and learn more about your experience there.`;
+
+    const referralDMLines = [
+      `Hi,`,
+      '',
+      `I'm ${name}, currently looking for ${role} opportunities at ${company}. Based on my background in ${mainSkills || 'software development'}, I believe I could be a good fit.`,
+      '',
+      'If you are comfortable, could you please review my profile and let me know if a referral is possible?',
+    ];
+
+    if (emailId) {
+      referralDMLines.push('', `You can also reach me at ${emailId}.`);
+    }
+
+    referralDMLines.push('', 'Thank you for your time.', 'Regards,', name);
+
+    const referralDM = referralDMLines.join('\n');
+
+    setRefLinkedInNote(linkedInNote);
+    setRefReferralDM(referralDM);
   };
 
   const sendMessage = async () => {
@@ -372,12 +408,14 @@ const getSuggestedSkills = () => {
 
             <p className="text-purple-200">Your AI-powered career dashboard</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-5 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl transition-all flex items-center gap-2"
-          >
-            <LogOut size={18} /> Logout
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleLogout}
+              className="px-5 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl transition-all flex items-center gap-2"
+            >
+              <LogOut size={18} /> Logout
+            </button>
+          </div>
         </div>
 
         {/* Error Alert */}
@@ -398,7 +436,8 @@ const getSuggestedSkills = () => {
             { id: 'ats', label: 'ATS Analysis', icon: Target },
             { id: 'roles', label: 'Role Recommendation', icon: Briefcase },
             { id: 'assistant', label: 'AI Assistant', icon: MessageSquare },
-            { id: 'guidance', label: 'Guidance', icon: TrendingUp }
+            { id: 'guidance', label: 'Guidance', icon: TrendingUp },
+            { id: 'referrals', label: 'Referrals', icon: MessageSquare },
           ].map(tab => (
             <button
               key={tab.id}
@@ -414,6 +453,73 @@ const getSuggestedSkills = () => {
             </button>
           ))}
         </div>
+
+        {/* Referrals Tab */}
+        {activeTab === 'referrals' && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 space-y-5">
+            <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+              <MessageSquare size={22} />
+              Referral Message Helper
+            </h2>
+            <p className="text-purple-200 text-sm">
+              Generate a LinkedIn connection note and referral request message using your resume details.
+            </p>
+
+            {!resumeData?.data && (
+              <div className="bg-yellow-500/20 border border-yellow-400/60 rounded-xl p-4 text-sm text-yellow-100">
+                Please upload your resume first in the <span className="font-semibold">Resume Analysis</span> tab to use this feature.
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <label className="block text-sm text-purple-100">Company</label>
+                <input
+                  type="text"
+                  value={refCompany}
+                  onChange={(e) => setRefCompany(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  placeholder="e.g., Google, Infosys"
+                />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm text-purple-100">Target Role</label>
+                <input
+                  type="text"
+                  value={refRole}
+                  onChange={(e) => setRefRole(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  placeholder="e.g., Software Engineer, Data Analyst"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={generateReferralMessages}
+              disabled={!resumeData?.data}
+              className="px-5 py-2.5 bg-purple-500/70 hover:bg-purple-500 text-white text-sm font-medium rounded-xl border border-purple-300/60 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Generate Messages
+            </button>
+
+            {(refLinkedInNote || refReferralDM) && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-black/30 rounded-xl p-4 border border-white/10">
+                  <h3 className="text-sm font-semibold text-purple-200 mb-2">LinkedIn Connection Note</h3>
+                  <p className="text-sm text-slate-100 whitespace-pre-line">
+                    {refLinkedInNote}
+                  </p>
+                </div>
+                <div className="bg-black/30 rounded-xl p-4 border border-white/10">
+                  <h3 className="text-sm font-semibold text-purple-200 mb-2">Referral Request DM</h3>
+                  <p className="text-sm text-slate-100 whitespace-pre-line">
+                    {refReferralDM}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Resume Analysis Tab */}
         {activeTab === 'analysis' && (
