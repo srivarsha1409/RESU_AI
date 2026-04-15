@@ -167,6 +167,115 @@ def calculate_ats_score(data, text, normalized_languages=None):
         "languages": normalized_languages,
     }
 
+
+# -------------------------
+# LLM-based Certificate Evaluation
+# -------------------------
+async def evaluate_certificates(cert_list):
+    """Evaluate certificate worthiness using OpenRouter LLM.
+
+    Returns a list of objects with keys:
+    certificate, worthiness_score (0-100 int), highlight (bool), reason (str).
+    On any error or missing client, returns [].
+    """
+    if not openrouter_client:
+        return []
+
+    if not cert_list:
+        return []
+
+    # Ensure we work with a simple list of strings
+    cert_strings = [str(c).strip() for c in cert_list if str(c).strip()]
+    if not cert_strings:
+        return []
+
+    prompt = (
+        "You are evaluating certificates for freshers. "
+        "For each certificate, rate its industry value, difficulty, and relevance to IT/software roles. "
+        "Return JSON only with the following schema (no extra text):\n\n"
+        "[\n"
+        "  {\n"
+        "    \"certificate\": \"<original certificate string>\",\n"
+        "    \"worthiness_score\": 0,\n"
+        "    \"highlight\": false,\n"
+        "    \"reason\": \"<short plain-text explanation>\"\n"
+        "  }\n"
+        "]\n\n"
+        f"Certificates: {json.dumps(cert_strings)}"
+    )
+
+    try:
+        response = openrouter_client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Return JSON only. Do not include commentary or markdown fences.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            max_tokens=600,
+        )
+        raw = response.choices[0].message.content or ""
+    except Exception as exc:
+        print("⚠️ Certificate evaluation LLM call failed:", exc)
+        return []
+
+    raw_clean = raw.strip().replace("```json", "").replace("```", "").strip()
+
+    try:
+        parsed = json.loads(raw_clean)
+    except Exception as exc:
+        print("⚠️ Certificate evaluation JSON parse failed:", exc, "Raw:", raw_clean[:300])
+        return []
+
+    if isinstance(parsed, dict) and "results" in parsed:
+        items = parsed.get("results", [])
+    else:
+        items = parsed
+
+    if not isinstance(items, list):
+        return []
+
+    results = []
+    for obj in items:
+        if not isinstance(obj, dict):
+            continue
+
+        certificate = str(obj.get("certificate", "")).strip()
+        if not certificate:
+            continue
+
+        # Coerce score to int 0-100
+        score_val = obj.get("worthiness_score", 0)
+        try:
+            score_int = int(score_val)
+        except Exception:
+            score_int = 0
+        score_int = max(0, min(100, score_int))
+
+        # Coerce highlight to bool
+        highlight_val = obj.get("highlight", False)
+        if isinstance(highlight_val, str):
+            highlight_bool = highlight_val.strip().lower() in {"true", "yes", "1"}
+        else:
+            highlight_bool = bool(highlight_val)
+
+        reason = str(obj.get("reason", "")).strip()
+
+        results.append(
+            {
+                "certificate": certificate,
+                "worthiness_score": score_int,
+                "highlight": highlight_bool,
+                "reason": reason,
+            }
+        )
+
+    return results
+
+
 # -------------------------
 # Core Resume Processor
 # -------------------------
@@ -247,7 +356,8 @@ Resume text:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.2,
-                max_tokens=2000,
+                # Slightly reduced to stay within current OpenRouter credit max_tokens limit
+                max_tokens=1500,
             )
             ai_output = response.choices[0].message.content
         except Exception as exc:
@@ -259,6 +369,13 @@ Resume text:
             data = json.loads(ai_output)
         except Exception as e:
             return {"error": f"Failed to parse AI JSON: {str(e)}", "raw": ai_output}
+
+        # ---- Certificate worthiness evaluation (non-blocking fallback on failure) ----
+        cert_list = data.get("certificates", []) or []
+        cert_analysis = await evaluate_certificates(cert_list)
+        if not isinstance(cert_analysis, list):
+            cert_analysis = []
+        data["certificate_analysis"] = cert_analysis
 
         # ---- Technical skills: keep AI output as-is (no backend post-processing) ----
         # Use the "skills" block exactly as returned by the AI JSON.

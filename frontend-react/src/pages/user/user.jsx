@@ -597,6 +597,55 @@ const getSuggestedSkills = () => {
                           <p className="text-white leading-relaxed">{resumeData?.data?.summary}</p>
                         </div>
                       )}
+
+                      {/* LLM-based Certificate Evaluation */}
+                      {Array.isArray(resumeData?.data?.certificate_analysis) &&
+                       resumeData.data.certificate_analysis.length > 0 && (
+                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
+                            <Award size={20} className="text-yellow-300" />
+                            Certificate Evaluation (LLM)
+                          </h3>
+
+                          <div className="space-y-3">
+                            {resumeData.data.certificate_analysis.map((cert, idx) => (
+                              <div
+                                key={idx}
+                                className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-purple-900/20 border border-purple-500/30 rounded-xl px-4 py-3"
+                              >
+                                <div className="flex-1">
+                                  <p className="text-white font-medium text-sm">
+                                    {cert.certificate}
+                                  </p>
+                                  {cert.reason && (
+                                    <p className="text-purple-200 text-xs mt-1">
+                                      {cert.reason}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <div className="text-right">
+                                    <p className="text-xs text-purple-200 mb-1">Worthiness Score</p>
+                                    <p className="text-lg font-semibold text-yellow-300">
+                                      {typeof cert.worthiness_score === "number"
+                                        ? cert.worthiness_score
+                                        : 0}
+                                      <span className="text-xs text-purple-300 ml-1">/ 100</span>
+                                    </p>
+                                  </div>
+
+                                  {cert.highlight && (
+                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-400/40">
+                                      Highlight
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>

@@ -1185,6 +1185,69 @@ const handleLogout = async () => {
             </div>
           </div>
 
+          {/* Certificate Evaluation (LLM) */}
+          {Array.isArray(data?.certificate_analysis) && data.certificate_analysis.length > 0 && (
+            <div style={{ marginTop: 20, background: "#111827", borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.25)", padding: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <span style={{ fontSize: 18 }}>🔑</span>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#e5e7eb" }}>
+                  Certificate Evaluation (LLM)
+                </h3>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {data.certificate_analysis.map((cert, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      borderRadius: 10,
+                      padding: "10px 14px",
+                      background: "linear-gradient(90deg, rgba(79,70,229,0.85), rgba(147,51,234,0.85))",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div style={{ flex: 1, marginRight: 12 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#f9fafb" }}>
+                        {cert.certificate}
+                      </div>
+                      {cert.reason && (
+                        <div style={{ fontSize: 12, color: "#e5e7eb", marginTop: 4 }}>
+                          {cert.reason}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ textAlign: "right", minWidth: 80 }}>
+                      <div style={{ fontSize: 11, color: "#e5e7eb", marginBottom: 2 }}>Worthiness Score</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "#facc15" }}>
+                        {typeof cert.worthiness_score === "number" ? cert.worthiness_score : 0}
+                        <span style={{ fontSize: 12, color: "#e5e7eb", marginLeft: 2 }}>/ 100</span>
+                      </div>
+                      {cert.highlight && (
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontSize: 11,
+                            padding: "2px 8px",
+                            borderRadius: 999,
+                            background: "#bbf7d0",
+                            color: "#15803d",
+                            fontWeight: 600,
+                            display: "inline-block",
+                          }}
+                        >
+                          Highlight
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Skills & ATS */}
           <div style={{ fontSize: 24, fontWeight: 700, margin: "30px 0 12px 0", color: "#1a237e" }}>
             Analysis Summary
