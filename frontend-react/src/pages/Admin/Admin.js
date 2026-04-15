@@ -52,6 +52,7 @@ const initialData = {
     hsc_percentage: "",
   },
   internships: [],
+  projects: [],
   skills: { technical: [], soft: [] },
   certificates: [],
   role_match: "",
@@ -74,6 +75,77 @@ export default function Admin() {
 const navigate = useNavigate();
 
   // small helpers
+  // Normalize languages on frontend similar to backend normalize_languages
+  function normalizeLanguagesClient(input) {
+    if (!input) return [];
+
+    if (Array.isArray(input)) {
+      return input.filter(Boolean);
+    }
+
+    let text = String(input);
+    const textLower = text.toLowerCase();
+
+    const languagePatterns = [
+      "english", "tamil", "hindi", "telugu", "malayalam", "kannada",
+      "french", "german", "spanish", "marathi", "bengali", "punjabi",
+      "gujarati", "urdu", "oriya", "nepali",
+    ];
+
+    const pattern = new RegExp("\\b(" + languagePatterns.join("|") + ")\\b\\s*(\\([^)]*\\))?", "g");
+
+    const results = [];
+    let match;
+    while ((match = pattern.exec(textLower)) !== null) {
+      const lang = match[1];
+      const prof = match[2];
+      const langClean = lang.charAt(0).toUpperCase() + lang.slice(1);
+      let value;
+      if (prof) {
+        const profClean = prof.replace(/\s+/g, "").toUpperCase();
+        value = `${langClean} ${profClean}`;
+      } else {
+        value = langClean;
+      }
+      if (!results.includes(value)) {
+        results.push(value);
+      }
+    }
+
+    // Fallback: if regex found nothing, try simple split
+    if (results.length === 0) {
+      return text
+        .split(/[;,]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    return results;
+  }
+
+  // Normalize technical skills on frontend (defensive) to avoid
+  // any combined entries like "Python, NumPy, Pandas" rendering
+  // as a single pill.
+  function normalizeTechnicalClient(input) {
+    if (!input) return [];
+
+    const source = Array.isArray(input) ? input : [input];
+    const result = [];
+
+    source.forEach((item) => {
+      String(item)
+        .split(/[,;/]|\s*\|\s*| and /i)
+        .forEach((part) => {
+          const value = part.trim();
+          if (value && !result.includes(value)) {
+            result.push(value);
+          }
+        });
+    });
+
+    return result;
+  }
+
 function addMsg(type, text, icon) {
   setMessages((prev) => {
     if (prev.length === 0) {
@@ -665,10 +737,10 @@ const handleLogout = async () => {
               </div>
               <div>
                 {(() => {
-                  const langs = data?.languages;
-                  if (!langs || (Array.isArray(langs) && langs.length === 0)) return <div style={{ color: "#6b7280", fontSize: 14 }}>No languages found</div>;
-                  const arr = typeof langs === "string" ? langs.split(/[,;]/).map((s) => s.trim()).filter(Boolean) : langs;
-                  if (!Array.isArray(arr) || arr.length === 0) return <div style={{ color: "#6b7280", fontSize: 14 }}>No languages found</div>;
+                  const arr = normalizeLanguagesClient(data?.languages);
+                  if (!arr || arr.length === 0) {
+                    return <div style={{ color: "#6b7280", fontSize: 14 }}>Not mentioned</div>;
+                  }
                   return <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{arr.map((l) => renderPill(l))}</div>;
                 })()}
               </div>
@@ -985,7 +1057,8 @@ const handleLogout = async () => {
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 24 }}>
               {[
-                ["🏫", "School Name", data?.education?.["12th"]?.school],
+                ["🏫", "SSLC School", data?.education?.["10th"]?.school],
+                ["🏫", "HSC School", data?.education?.["12th"]?.school],
                 ["📈", "SSLC %", data?.education?.["10th"]?.percentage],
                 ["📈", "HSC %", data?.education?.["12th"]?.percentage],
               ].map(([icon, label, value]) => (
@@ -1000,6 +1073,82 @@ const handleLogout = async () => {
             </div>
           )}
 
+          {/* Internships */}
+          <div style={{ fontSize: 24, fontWeight: 700, margin: "30px 0 20px 0", color: "#1a237e", display: "flex", alignItems: "center", gap: 10 }}>
+            Internships
+          </div>
+          <div style={{ background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+            {data?.internships && data.internships.length > 0 ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+                {data.internships.map((item, idx) => {
+                  const internship = typeof item === "string" ? { title: item } : item || {};
+                  return (
+                    <div key={idx} style={{ background: "#f0f9ff", padding: 14, borderRadius: 10, borderLeft: "4px solid #10b981" }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: "#065f46", marginBottom: 4 }}>
+                        {internship.title || internship.role || internship.position || "Internship"}
+                      </div>
+                      {(internship.company || internship.organization) && (
+                        <div style={{ fontSize: 13, color: "#047857" }}>
+                          {internship.company || internship.organization}
+                        </div>
+                      )}
+                      {(internship.duration || internship.period) && (
+                        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                          {internship.duration || internship.period}
+                        </div>
+                      )}
+                      {internship.description && (
+                        <div style={{ fontSize: 12, color: "#4b5563", marginTop: 6, lineHeight: 1.5 }}>
+                          {internship.description}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ color: "#6b7280", fontSize: 14 }}>Not mentioned</div>
+            )}
+          </div>
+
+          {/* Projects */}
+          <div style={{ fontSize: 24, fontWeight: 700, margin: "30px 0 20px 0", color: "#1a237e", display: "flex", alignItems: "center", gap: 10 }}>
+            Projects
+          </div>
+          <div style={{ background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+            {data?.projects && data.projects.length > 0 ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+                {data.projects.map((item, idx) => {
+                  const project = typeof item === "string" ? { title: item } : item || {};
+                  return (
+                    <div key={idx} style={{ background: "#eff6ff", padding: 14, borderRadius: 10, borderLeft: "4px solid #3b82f6" }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: "#1d4ed8", marginBottom: 4 }}>
+                        {project.title || project.name || "Project"}
+                      </div>
+                      {project.tech_stack && (
+                        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                          {Array.isArray(project.tech_stack) ? project.tech_stack.join(", ") : project.tech_stack}
+                        </div>
+                      )}
+                      {project.duration && (
+                        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                          {project.duration}
+                        </div>
+                      )}
+                      {project.description && (
+                        <div style={{ fontSize: 12, color: "#4b5563", marginTop: 6, lineHeight: 1.5 }}>
+                          {project.description}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ color: "#6b7280", fontSize: 14 }}>Not mentioned</div>
+            )}
+          </div>
+
           {/* Certificates */}
           <div style={{ fontSize: 24, fontWeight: 700, margin: "30px 0 20px 0", color: "#1a237e", display: "flex", alignItems: "center", gap: 10 }}>
             Certificates
@@ -1011,7 +1160,7 @@ const handleLogout = async () => {
                   <div style={{ fontWeight: 600, fontSize: 14, color: "#1e3a8a" }}>{c.role || c}</div>
                   <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{c.issuer || ""}</div>
                 </div>
-              )) : <div style={{ color: "#6b7280" }}>No certificates found</div>}
+              )) : <div style={{ color: "#6b7280" }}>Not mentioned</div>}
             </div>
           </div>
 
@@ -1026,13 +1175,20 @@ const handleLogout = async () => {
                 <div style={{ flex: 1, minWidth: 250 }}>
                   <h4 style={{ fontSize: 16, color: "#1f2937", marginBottom: 12 }}>Technical Skills</h4>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {(data?.skills?.technical && data.skills.technical.length > 0) ? data.skills.technical.map((s) => renderPill(s)) : <span style={{ color: "#6b7280" }}>—</span>}
+                    {(() => {
+                      const tech = normalizeTechnicalClient(data?.skills?.technical || []);
+                      return tech.length > 0
+                        ? tech.map((s) => renderPill(s))
+                        : <span style={{ color: "#6b7280" }}>—</span>;
+                    })()}
                   </div>
                 </div>
                 <div style={{ flex: 1, minWidth: 250 }}>
-                  <h4 style={{ fontSize: 16, color: "#1f2937", marginBottom: 12 }}>Soft Skills</h4>
+                  <h4 style={{ fontSize: 16, color: "#1f2937", marginBottom: 12 }}>Area of Interest</h4>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {(data?.skills?.soft && data.skills.soft.length > 0) ? data.skills.soft.map((s) => renderPill(s)) : <span style={{ color: "#6b7280" }}>—</span>}
+                    {(data?.skills?.area_of_interest && data.skills.area_of_interest.length > 0)
+                      ? data.skills.area_of_interest.map((s) => renderPill(s))
+                      : <span style={{ color: "#6b7280" }}>—</span>}
                   </div>
                 </div>
               </div>

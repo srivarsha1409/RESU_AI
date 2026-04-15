@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Upload, Target, Briefcase, MessageSquare, CheckCircle, AlertCircle, Info, TrendingUp, Award, FileText, User, Mail, Phone, Code, LogOut, Github } from 'lucide-react';
+import { Upload, Target, Briefcase, MessageSquare, CheckCircle, AlertCircle, Info, TrendingUp, Award, FileText, User, Mail, Phone, LogOut } from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8000';
 
@@ -15,11 +15,6 @@ export default function UserDashboard() {
   // Resume data
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeData, setResumeData] = useState(null);
-  
-  // Coding profiles
-  const [github, setGithub] = useState(null);
-  const [leetcode, setLeetcode] = useState(null);
-  const [codechef, setCodechef] = useState(null);
   
   // AI Chat
   const [chatMessages, setChatMessages] = useState([]);
@@ -49,26 +44,7 @@ export default function UserDashboard() {
     fetchUserData();
   }, []);
 
-  // Fetch coding profiles
-  useEffect(() => {
-    if (!email) return;
-    
-    const fetchProfiles = async () => {
-      try {
-        const [g, l, c] = await Promise.all([
-          fetch(`${API_BASE}/github/${email}`).then(r => r.json()),
-          fetch(`${API_BASE}/leetcode/${email}`).then(r => r.json()),
-          fetch(`${API_BASE}/codechef/${email}`).then(r => r.json()),
-        ]);
-        setGithub(g);
-        setLeetcode(l);
-        setCodechef(c);
-      } catch (err) {
-        console.warn("Profile fetch error:", err);
-      }
-    };
-    fetchProfiles();
-  }, [email]);
+  // Coding profiles removed from user portal
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -434,7 +410,7 @@ const getSuggestedSkills = () => {
               {resumeData ? (
                 <>
                   {/* Quick Stats */}
-                  <div className="grid md:grid-cols-4 gap-4 mb-6">
+                  <div className="grid md:grid-cols-5 gap-4 mb-6">
                     <div className="bg-gradient-to-br from-purple-600/30 to-purple-700/30 rounded-xl p-4 text-center">
                       <p className="text-purple-200 text-sm mb-1">ATS Score</p>
                       <p className="text-4xl font-bold text-white">{resumeData.ats_score || 0}</p>
@@ -455,6 +431,11 @@ const getSuggestedSkills = () => {
                       <p className="text-4xl font-bold text-white">{resumeData.data?.languages?.length || 0}</p>
                       <p className="text-purple-300 text-xs mt-1">languages</p>
                     </div>
+                    <div className="bg-gradient-to-br from-indigo-600/30 to-indigo-700/30 rounded-xl p-4 text-center">
+                      <p className="text-purple-200 text-sm mb-1">Areas of Interest</p>
+                      <p className="text-4xl font-bold text-white">{resumeData.data?.skills?.area_of_interest?.length || 0}</p>
+                      <p className="text-purple-300 text-xs mt-1">interests identified</p>
+                    </div>
                   </div>
 
                   {/* Personal Information */}
@@ -465,47 +446,22 @@ const getSuggestedSkills = () => {
                           <User size={20} />
                           Personal Information
                         </h3>
-                        {user.name && (
+                        {resumeData?.data?.name && (
                           <div className="flex items-center gap-3">
                             <User size={16} className="text-purple-400" />
                             <span className="text-white">{resumeData?.data?.name}</span>
                           </div>
                         )}
-                        {user.email && (
+                        {resumeData?.data?.email && (
                           <div className="flex items-center gap-3">
                             <Mail size={16} className="text-purple-400" />
                             <span className="text-white text-sm">{resumeData?.data?.email}</span>
                           </div>
                         )}
-                        {user.phone && (
+                        {resumeData?.data?.phone && (
                           <div className="flex items-center gap-3">
                             <Phone size={16} className="text-purple-400" />
                             <span className="text-white">{resumeData?.data?.phone}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="bg-white/5 rounded-xl p-5 space-y-3">
-                        <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
-                          <Code size={20} />
-                          Coding Profiles
-                        </h3>
-                        {github && (
-                          <div className="text-sm">
-                            <span className="text-purple-300">GitHub: </span>
-                            <span className="text-white">{github.repos || 0} repos, {github.stars || 0} ⭐</span>
-                          </div>
-                        )}
-                        {leetcode && (
-                          <div className="text-sm">
-                            <span className="text-purple-300">LeetCode: </span>
-                            <span className="text-white">{leetcode.solved || 0} solved</span>
-                          </div>
-                        )}
-                        {codechef && (
-                          <div className="text-sm">
-                            <span className="text-purple-300">CodeChef: </span>
-                            <span className="text-white">{codechef.stars || 0}⭐ Stars</span>
                           </div>
                         )}
                       </div>
@@ -516,8 +472,28 @@ const getSuggestedSkills = () => {
                           <h3 className="text-lg font-semibold text-purple-300 mb-4">Technical Skills</h3>
                           <div className="flex flex-wrap gap-2">
                             {resumeData?.data?.skills.technical.map((skill, idx) => (
-                              <span key={idx} className="bg-purple-600/40 px-4 py-2 rounded-full text-white text-sm font-medium border border-purple-500/30">
+                              <span
+                                key={idx}
+                                className="bg-purple-600/40 px-4 py-2 rounded-full text-white text-sm font-medium border border-purple-500/30"
+                              >
                                 {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Area of Interest */}
+                      {resumeData?.data?.skills?.area_of_interest?.length > 0 && (
+                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-4">Area of Interest</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {resumeData?.data?.skills.area_of_interest.map((area, idx) => (
+                              <span
+                                key={idx}
+                                className="bg-blue-600/40 px-4 py-2 rounded-full text-white text-sm font-medium border border-blue-500/30"
+                              >
+                                {area}
                               </span>
                             ))}
                           </div>

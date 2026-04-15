@@ -1,16 +1,9 @@
 # app/routes/ai_routes.py
 from fastapi import APIRouter, HTTPException, Request
-from openai import OpenAI
-import os
+from app.config import openrouter_client as client
 import json
 
 router = APIRouter(prefix="/ai", tags=["AI Chat"])
-
-# ✅ Use the new OpenAI v1.0 client syntax with OpenRouter
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-)
 
 
 @router.post("/chat")
@@ -41,12 +34,13 @@ async def chat_ai(request: Request):
 
         # ✅ New syntax for chat completions
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # or "gpt-4.1-mini"
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Be clear, concise, and helpful."},
                 {"role": "user", "content": prompt},
             ],
             temperature=0.3,
+            max_tokens=512,
         )
 
         # ✅ Extract response safely

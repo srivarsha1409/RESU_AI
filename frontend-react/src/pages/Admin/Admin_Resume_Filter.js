@@ -8,42 +8,46 @@ const Admin_Resume_Filter = () => {
   const [resumes, setResumes] = useState([]);
   const [filters, setFilters] = useState({
     cgpa: "",
+    cgpa_max: "",
     tenth: "",
+    tenth_max: "",
     twelfth: "",
+    twelfth_max: "",
     skills: [],
     currentSkill: "",
     language: "",
     ats: "",
     departments: [],
     degree: "",
+    area_of_interest: "",
     results: [],
   });
-const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   // handle file upload
-const handleFileChange = (e) => {
-  const files = Array.from(e.target.files);
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
 
-  const newFiles = files.map((file) => ({
-    file,
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    previewUrl: URL.createObjectURL(file), // ✅ temporary local URL
-  }));
+    const newFiles = files.map((file) => ({
+      file,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      previewUrl: URL.createObjectURL(file), // temporary local URL
+    }));
 
-  setResumes((prev) => {
-    const filtered = newFiles.filter(
-      (nf) => !prev.some((pf) => pf.name === nf.name && pf.size === nf.size)
-    );
-    return [...prev, ...filtered];
-  });
-};
+    setResumes((prev) => {
+      const filtered = newFiles.filter(
+        (nf) => !prev.some((pf) => pf.name === nf.name && pf.size === nf.size)
+      );
+      return [...prev, ...filtered];
+    });
+  };
 
-
-const removeFile = (filename) => {
-  setResumes((prev) => prev.filter((file) => file.name !== filename));
-};
-
+  // handle file removal
+  const removeFile = (filename) => {
+    setResumes((prev) => prev.filter((file) => file.name !== filename));
+  };
 
   // handle input filter change
   const handleChange = (e) => {
@@ -71,235 +75,259 @@ const removeFile = (filename) => {
   };
 
   const departmentMap = {
-  CSE: "Computer Science and Engineering",
-  AIDS: "Artificial Intelligence and Data Science",
-  IT: "Information Technology",
-  ECE: "Electronics and Communication Engineering",
-  EEE: "Electrical and Electronics Engineering",
-  EIE: "Electronics and Instrumentation Engineering",
-  MECH: "Mechanical Engineering",
-  MCT: "Mechatronics Engineering",
-  AUTO: "Automobile Engineering",
-  CIVIL: "Civil Engineering",
-  AGRI: "Agricultural Engineering",
-  CHEM: "Chemical Engineering",
-  BT: "Bio-Technology",
-  TEXTILE: "Textile Technology",
-  FT: "Fashion Technology",
-  FOOD: "Food Technology",
-  RA: "Robotics and Automation",
-  CSBS: "Computer Science and Business Systems",
-};
+    CSE: "Computer Science and Engineering",
+    AIDS: "Artificial Intelligence and Data Science",
+    IT: "Information Technology",
+    ECE: "Electronics and Communication Engineering",
+    EEE: "Electrical and Electronics Engineering",
+    EIE: "Electronics and Instrumentation Engineering",
+    MECH: "Mechanical Engineering",
+    MCT: "Mechatronics Engineering",
+    AUTO: "Automobile Engineering",
+    CIVIL: "Civil Engineering",
+    AGRI: "Agricultural Engineering",
+    CHEM: "Chemical Engineering",
+    BT: "Bio-Technology",
+    TEXTILE: "Textile Technology",
+    FT: "Fashion Technology",
+    FOOD: "Food Technology",
+    RA: "Robotics and Automation",
+    CSBS: "Computer Science and Business Systems",
+  };
 
-// ✅ Add department
-const addDepartment = (shortCode) => {
-  if (!shortCode || filters.departments.some((d) => d.short === shortCode)) return;
-  const full = departmentMap[shortCode];
-  setFilters((prev) => ({
-    ...prev,
-    departments: [...prev.departments, { short: shortCode, full }],
-  }));
-};
+  // Add department
+  const addDepartment = (shortCode) => {
+    if (!shortCode || filters.departments.some((d) => d.short === shortCode)) return;
+    const full = departmentMap[shortCode];
+    setFilters((prev) => ({
+      ...prev,
+      departments: [...prev.departments, { short: shortCode, full }],
+    }));
+  };
 
-const removeDepartment = (shortCode) => {
-  setFilters((prev) => ({
-    ...prev,
-    departments: prev.departments.filter((d) => d.short !== shortCode),
-  }));
-};
-
+  const removeDepartment = (shortCode) => {
+    setFilters((prev) => ({
+      ...prev,
+      departments: prev.departments.filter((d) => d.short !== shortCode),
+    }));
+  };
 
   // handle form submit
   const handleFilter = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setFilters((prev) => ({ ...prev, results: [] }));
-  setTotalFiles(resumes.length);
-  setProcessedFiles(0);
+    e.preventDefault();
+    setLoading(true);
+    setFilters((prev) => ({ ...prev, results: [] }));
+    setTotalFiles(resumes.length);
+    setProcessedFiles(0);
 
-  const formData = new FormData();
-  resumes.forEach((fileObj) => formData.append("files", fileObj.file));
-Object.entries(filters).forEach(([key, value]) => {
-  if (
-    key !== "skills" &&
-    key !== "currentSkill" &&
-    key !== "departments" &&
-    value
-  )
-    formData.append(key, value);
-});
-
-if (filters.skills.length > 0)
-  formData.append("skills", filters.skills.join(","));
-
-if (filters.departments.length > 0)
-  formData.append(
-    "department",
-    filters.departments.map((d) => d.full).join(",")
-  );
-
-
-  try {
-    const response = await fetch("http://127.0.0.1:8000/admin/filter_uploaded_resumes_stream", {
-      method: "POST",
-      body: formData,
+    const formData = new FormData();
+    resumes.forEach((fileObj) => formData.append("files", fileObj.file));
+    Object.entries(filters).forEach(([key, value]) => {
+      if (
+        key !== "skills" &&
+        key !== "currentSkill" &&
+        key !== "departments" &&
+        value
+      )
+        formData.append(key, value);
     });
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-    let currentResults = [];
+    if (filters.skills.length > 0)
+      formData.append("skills", filters.skills.join(","));
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+    if (filters.departments.length > 0)
+      formData.append(
+        "department",
+        filters.departments.map((d) => d.full).join(",")
+      );
 
-      const events = buffer.split("\n\n");
-      buffer = events.pop();
+    try {
+      const response = await fetch("http://127.0.0.1:8000/admin/filter_uploaded_resumes", {
+        method: "POST",
+        body: formData,
+      });
 
-      for (const event of events) {
-        if (event.startsWith("data: ")) {
-          const data = JSON.parse(event.replace("data: ", ""));
-
-          // 🔹 Update live progress
-          if (data.progress) {
-            setProcessedFiles(data.progress);
-            setTotalFiles(data.total);
-
-            if (data.results_so_far) {
-              currentResults = data.results_so_far;
-              setFilters((prev) => ({ ...prev, results: [...currentResults] }));
-            }
-          }
-
-          // 🔹 When done, finalize the results
-          if (data.done) {
-  // Merge backend data (real ATS, education, etc.) with the original uploaded files
-  const mergedResults = data.results.map((res) => {
-    const matchingFile = resumes.find((f) => f.name === res.filename);
-    return {
-      ...res,
-      previewUrl: matchingFile ? matchingFile.previewUrl : null, // 🔥 connect with real local file
-    };
-  });
-
-  setFilters((prev) => ({ ...prev, results: mergedResults }));
-  setProcessedFiles(data.count);
-}
-
-        }
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Filter request failed:", errText);
+        throw new Error("Filter request failed");
       }
-    }
-  } catch (err) {
-    console.error("Error streaming resumes:", err);
-    alert("⚠️ Error while processing resumes. Check console for details.");
-  } finally {
-    setLoading(false);
-  }
-};
 
-// Only revoke URLs when component unmounts
-React.useEffect(() => {
-  return () => {
-    filters.results.forEach((r) => {
-      if (r.previewUrl) URL.revokeObjectURL(r.previewUrl);
+      const data = await response.json();
+
+      // Merge backend data with the original uploaded files to keep previewUrl
+      const mergedResults = (data.results || []).map((res) => {
+        const matchingFile = resumes.find((f) => f.name === res.filename);
+        return {
+          ...res,
+          previewUrl: matchingFile ? matchingFile.previewUrl : null,
+        };
+      });
+
+      setFilters((prev) => ({ ...prev, results: mergedResults }));
+      setProcessedFiles(mergedResults.length);
+      setTotalFiles(resumes.length);
+    } catch (err) {
+      console.error("Error streaming resumes:", err);
+      alert("Error while processing resumes. Check console for details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Only revoke URLs when component unmounts
+  React.useEffect(() => {
+    return () => {
+      filters.results.forEach((r) => {
+        if (r.previewUrl) URL.revokeObjectURL(r.previewUrl);
+      });
+    };
+  }, []);
+
+  const downloadReport = async () => {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Resume Filter Report", 14, 20);
+    doc.setFontSize(10);
+
+    let y = 30;
+    filters.results.forEach((res, index) => {
+      doc.text(`${index + 1}. ${res.name || "N/A"} (${res.filename || "-"})`, 14, y);
+      y += 6;
+
+      if (res.email || res.phone) {
+        doc.text(`${res.email || "-"}    ${res.phone || "-"}`, 14, y);
+        y += 6;
+      }
+
+      doc.text(
+        `CGPA: ${res.education?.bachelor?.cgpa || "-"} | ATS: ${res.ats_score}%`,
+        14,
+        y
+      );
+      y += 6;
+
+      doc.text(
+        `Skills: ${res.skills?.technical?.slice(0, 4).join(", ") || "-"}`,
+        14,
+        y
+      );
+      y += 10;
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    doc.save("Filtered_Resume_Report.pdf");
+  };
+
+  const sortedResults = React.useMemo(() => {
+    if (!filters.results || filters.results.length === 0) return [];
+
+    const sorted = [...filters.results];
+    if (sortConfig.key) {
+      sorted.sort((a, b) => {
+        const getVal = (obj, key) => {
+          switch (key) {
+            case "name": return (obj.name || "").toLowerCase();
+            case "filename": return (obj.filename || "").toLowerCase();
+            case "department": return (obj.education?.bachelor?.degree || "").toLowerCase();
+            case "cgpa": return parseFloat(obj.education?.bachelor?.cgpa || 0);
+            case "ats": return parseFloat(obj.ats_score || 0);
+            default: return "";
+          }
+        };
+
+        const aVal = getVal(a, sortConfig.key);
+        const bVal = getVal(b, sortConfig.key);
+
+        if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return sorted;
+  }, [filters.results, sortConfig]);
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      return { key, direction: "asc" };
     });
   };
-}, []);
-
-
-
-const downloadReport = async () => {
-  const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF();
-
-  doc.setFontSize(16);
-  doc.text("Resume Filter Report", 14, 20);
-  doc.setFontSize(10);
-
-  let y = 30;
-  filters.results.forEach((res, index) => {
-  doc.text(`${index + 1}. ${res.name || "N/A"} (${res.filename || "-"})`, 14, y);
-  y += 6;
-
-  if (res.email || res.phone) {
-    doc.text(`${res.email || "-"}    ${res.phone || "-"}`, 14, y);
-    y += 6;
-  }
-
-  doc.text(
-    `CGPA: ${res.education?.bachelor?.cgpa || "-"} | ATS: ${res.ats_score}%`,
-    14,
-    y
-  );
-  y += 6;
-
-  doc.text(
-    `Skills: ${res.skills?.technical?.slice(0, 4).join(", ") || "-"}`,
-    14,
-    y
-  );
-  y += 10;
-
-  if (y > 270) {
-    doc.addPage();
-    y = 20;
-  }
-});
-
-
-  doc.save("Filtered_Resume_Report.pdf");
-};
-
-const sortedResults = React.useMemo(() => {
-  if (!filters.results || filters.results.length === 0) return [];
-
-  const sorted = [...filters.results];
-  if (sortConfig.key) {
-    sorted.sort((a, b) => {
-      const getVal = (obj, key) => {
-        switch (key) {
-          case "name": return (obj.name || "").toLowerCase();
-          case "filename": return (obj.filename || "").toLowerCase();
-          case "department": return (obj.education?.bachelor?.degree || "").toLowerCase();
-          case "cgpa": return parseFloat(obj.education?.bachelor?.cgpa || 0);
-          case "ats": return parseFloat(obj.ats_score || 0);
-          default: return "";
-        }
-      };
-
-      const aVal = getVal(a, sortConfig.key);
-      const bVal = getVal(b, sortConfig.key);
-
-      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
-  }
-
-  return sorted;
-}, [filters.results, sortConfig]);
-
-const handleSort = (key) => {
-  setSortConfig((prev) => {
-    if (prev.key === key) {
-      return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
-    }
-    return { key, direction: "asc" };
-  });
-};
 
   const activeFiltersCount = [
     filters.cgpa,
+    filters.cgpa_max,
     filters.tenth,
+    filters.tenth_max,
     filters.twelfth,
+    filters.twelfth_max,
     filters.departments.length > 0,
     filters.language,
     filters.ats,
     filters.department,
-    filters.degree
+    filters.degree,
+    filters.area_of_interest,
   ].filter(Boolean).length;
+
+  // Academic stats: min/max CGPA and 10th/12th percentages from filtered results
+  const academicStats = React.useMemo(() => {
+    if (!filters.results || filters.results.length === 0) return null;
+
+    const cgpaValues = [];
+    const tenthValues = [];
+    const twelfthValues = [];
+
+    filters.results.forEach((res) => {
+      const edu = res.education || {};
+
+      const cgpaRaw = edu.bachelor?.cgpa;
+      if (cgpaRaw !== undefined && cgpaRaw !== null && cgpaRaw !== "") {
+        const match = String(cgpaRaw).match(/\d+(\.\d+)?/);
+        if (match) cgpaValues.push(parseFloat(match[0]));
+      }
+
+      const tenthRaw = edu["10th"]?.percentage;
+      if (tenthRaw !== undefined && tenthRaw !== null && tenthRaw !== "") {
+        const val = parseFloat(String(tenthRaw).replace("%", "").trim());
+        if (!Number.isNaN(val)) tenthValues.push(val);
+      }
+
+      const twelfthRaw = edu["12th"]?.percentage;
+      if (twelfthRaw !== undefined && twelfthRaw !== null && twelfthRaw !== "") {
+        const val = parseFloat(String(twelfthRaw).replace("%", "").trim());
+        if (!Number.isNaN(val)) twelfthValues.push(val);
+      }
+    });
+
+    if (
+      cgpaValues.length === 0 &&
+      tenthValues.length === 0 &&
+      twelfthValues.length === 0
+    ) {
+      return null;
+    }
+
+    const safeMin = (arr) => (arr.length ? Math.min(...arr) : null);
+    const safeMax = (arr) => (arr.length ? Math.max(...arr) : null);
+
+    return {
+      cgpaMin: safeMin(cgpaValues),
+      cgpaMax: safeMax(cgpaValues),
+      tenthMin: safeMin(tenthValues),
+      tenthMax: safeMax(tenthValues),
+      twelfthMin: safeMin(twelfthValues),
+      twelfthMax: safeMax(twelfthValues),
+    };
+  }, [filters.results]);
 
   return (
     <div style={{
@@ -466,6 +494,46 @@ const handleSort = (key) => {
             </div>
             <p style={{ fontSize: "14px", opacity: 0.9, margin: 0 }}>Avg ATS Score</p>
           </div>
+
+          {/* Academic Range Stats */}
+          <div style={{
+            background: "linear-gradient(135deg, #1d976c 0%, #93f9b9 100%)",
+            padding: "24px",
+            borderRadius: "16px",
+            color: "#fff",
+            boxShadow: "0 4px 12px rgba(29, 151, 108, 0.3)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+              <Users size={32} />
+              <span style={{ fontSize: "18px", fontWeight: "700" }}>Academic Range</span>
+            </div>
+            {academicStats ? (
+              <div style={{ fontSize: "13px", lineHeight: 1.6 }}>
+                <div>
+                  <strong>CGPA:</strong>{" "}
+                  {academicStats.cgpaMin !== null && academicStats.cgpaMax !== null
+                    ? `${academicStats.cgpaMin.toFixed(2)} - ${academicStats.cgpaMax.toFixed(2)}`
+                    : "—"}
+                </div>
+                <div>
+                  <strong>10th %:</strong>{" "}
+                  {academicStats.tenthMin !== null && academicStats.tenthMax !== null
+                    ? `${academicStats.tenthMin.toFixed(1)} - ${academicStats.tenthMax.toFixed(1)}`
+                    : "—"}
+                </div>
+                <div>
+                  <strong>12th %:</strong>{" "}
+                  {academicStats.twelfthMin !== null && academicStats.twelfthMax !== null
+                    ? `${academicStats.twelfthMin.toFixed(1)} - ${academicStats.twelfthMax.toFixed(1)}`
+                    : "—"}
+                </div>
+              </div>
+            ) : (
+              <p style={{ fontSize: "13px", opacity: 0.9, margin: 0 }}>
+                Run a filter to see CGPA and 10th/12th ranges.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Main Content Grid */}
@@ -577,7 +645,7 @@ const handleSort = (key) => {
                   gap: "8px"
                 }}>
                     {[...resumes]
-  .sort((a, b) => a.name.localeCompare(b.name)) // ✅ Sort filenames A→Z
+  .sort((a, b) => a.name.localeCompare(b.name)) // 
   .map((file, idx) => (
     <div
       key={idx}
@@ -606,7 +674,7 @@ const handleSort = (key) => {
           whiteSpace: "nowrap",
         }}
       >
-        📄 {file.name}
+        {file.name}
       </a>
 
       <X
@@ -655,7 +723,7 @@ const handleSort = (key) => {
             <form onSubmit={handleFilter}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
                 
-                {/* CGPA */}
+                {/* Minimum CGPA */}
                 <div>
                   <label style={{
                     display: "block",
@@ -664,7 +732,7 @@ const handleSort = (key) => {
                     fontWeight: "600",
                     fontSize: "13px"
                   }}>
-                    📊 Minimum CGPA
+                    Minimum CGPA
                   </label>
                   <input
                     type="number"
@@ -688,7 +756,7 @@ const handleSort = (key) => {
                   />
                 </div>
 
-                {/* 10th */}
+                {/* Maximum CGPA */}
                 <div>
                   <label style={{
                     display: "block",
@@ -697,7 +765,40 @@ const handleSort = (key) => {
                     fontWeight: "600",
                     fontSize: "13px"
                   }}>
-                    📈 10th Percentage
+                    Maximum CGPA
+                  </label>
+                  <input
+                    type="number"
+                    name="cgpa_max"
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    value={filters.cgpa_max}
+                    onChange={handleChange}
+                    style={{
+                      border: "2px solid #e2e8f0",
+                      borderRadius: "8px",
+                      padding: "10px 12px",
+                      width: "100%",
+                      fontSize: "14px",
+                      transition: "border-color 0.2s"
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = "#667eea"}
+                    onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                    placeholder="e.g., 9.5"
+                  />
+                </div>
+
+                {/* Minimum 10th */}
+                <div>
+                  <label style={{
+                    display: "block",
+                    color: "#475569",
+                    marginBottom: "8px",
+                    fontWeight: "600",
+                    fontSize: "13px"
+                  }}>
+                    Minimum 10th Percentage
                   </label>
                   <input
                     type="number"
@@ -718,7 +819,7 @@ const handleSort = (key) => {
                   />
                 </div>
 
-                {/* 12th */}
+                {/* Maximum 10th */}
                 <div>
                   <label style={{
                     display: "block",
@@ -727,7 +828,37 @@ const handleSort = (key) => {
                     fontWeight: "600",
                     fontSize: "13px"
                   }}>
-                    📈 12th Percentage
+                    Maximum 10th Percentage
+                  </label>
+                  <input
+                    type="number"
+                    name="tenth_max"
+                    value={filters.tenth_max}
+                    onChange={handleChange}
+                    style={{
+                      border: "2px solid #e2e8f0",
+                      borderRadius: "8px",
+                      padding: "10px 12px",
+                      width: "100%",
+                      fontSize: "14px",
+                      transition: "border-color 0.2s"
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = "#667eea"}
+                    onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                    placeholder="e.g., 99"
+                  />
+                </div>
+
+                {/* Minimum 12th */}
+                <div>
+                  <label style={{
+                    display: "block",
+                    color: "#475569",
+                    marginBottom: "8px",
+                    fontWeight: "600",
+                    fontSize: "13px"
+                  }}>
+                    Minimum 12th Percentage
                   </label>
                   <input
                     type="number"
@@ -745,6 +876,36 @@ const handleSort = (key) => {
                     onFocus={(e) => e.target.style.borderColor = "#667eea"}
                     onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
                     placeholder="e.g., 90"
+                  />
+                </div>
+
+                {/* Maximum 12th */}
+                <div>
+                  <label style={{
+                    display: "block",
+                    color: "#475569",
+                    marginBottom: "8px",
+                    fontWeight: "600",
+                    fontSize: "13px"
+                  }}>
+                    Maximum 12th Percentage
+                  </label>
+                  <input
+                    type="number"
+                    name="twelfth_max"
+                    value={filters.twelfth_max}
+                    onChange={handleChange}
+                    style={{
+                      border: "2px solid #e2e8f0",
+                      borderRadius: "8px",
+                      padding: "10px 12px",
+                      width: "100%",
+                      fontSize: "14px",
+                      transition: "border-color 0.2s"
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = "#667eea"}
+                    onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                    placeholder="e.g., 99"
                   />
                 </div>
 
@@ -901,6 +1062,35 @@ const handleSort = (key) => {
                     <option value="B.Tech">B.Tech</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Area of Interest */}
+              <div>
+                <label style={{
+                  display: "block",
+                  color: "#475569",
+                  marginBottom: "8px",
+                  fontWeight: "600",
+                  fontSize: "13px"
+                }}>
+                  📚 Area of Interest
+                </label>
+                <input
+                  type="text"
+                  name="area_of_interest"
+                  value={filters.area_of_interest}
+                  onChange={handleChange}
+                  placeholder="e.g., Artificial Intelligence, Machine Learning"
+                  style={{
+                    border: "2px solid #e2e8f0",
+                    borderRadius: "8px",
+                    padding: "10px 12px",
+                    width: "100%",
+                    fontSize: "14px"
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = "#667eea"}
+                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                />
               </div>
 
               {/* Skills - Full Width */}
@@ -1222,6 +1412,18 @@ const handleSort = (key) => {
                     >
                       Key Skills
                     </th>
+                    <th
+                      style={{
+                        border: "1px solid #e2e8f0",
+                        padding: "14px",
+                        textAlign: "left",
+                        fontWeight: "700",
+                        color: "#1f2937",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Area of Interest
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1346,6 +1548,18 @@ const handleSort = (key) => {
                       >
                         {res.skills?.technical?.slice(0, 4).join(", ") || "-"}
                         {res.skills?.technical?.length > 4 && "..."}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid #e2e8f0",
+                          padding: "14px",
+                          color: "#64748b",
+                        }}
+                      >
+                        {(res.area_of_interest && res.area_of_interest.length
+                          ? res.area_of_interest
+                          : res.skills?.area_of_interest || []
+                        ).join(", ") || "-"}
                       </td>
                     </tr>
                   ))}

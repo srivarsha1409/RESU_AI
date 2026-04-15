@@ -15,38 +15,44 @@ from app.config import db, openrouter_client  # config.py defines db and openrou
 # -------------------------
 # Helper: normalize languages
 # -------------------------
-def normalize_languages(languages):
-    """Normalize language names to a consistent format."""
-    standard_langs = {
-        "english": "English", "tamil": "Tamil", "hindi": "Hindi",
-        "telugu": "Telugu", "malayalam": "Malayalam", "kannada": "Kannada",
-        "french": "French", "german": "German", "spanish": "Spanish",
-        "bengali": "Bengali", "marathi": "Marathi", "punjabi": "Punjabi",
-        "gujarati": "Gujarati", "urdu": "Urdu", "oriya": "Oriya", "nepali": "Nepali"
-    }
-    normalized = []
-    for lang in (languages or []):
-        if not lang:
-            continue
-        key = str(lang).strip().lower()
-        # some AI outputs might be like "Tamil (native), English (fluent)"
-        key = re.sub(r"[\(\)\d%]", "", key).strip()
-        # try splitting composite tokens
-        parts = re.split(r"[,;/\|]+", key)
-        for p in parts:
-            pkey = p.strip().lower()
-            # handle common alternatives
-            if pkey in standard_langs:
-                val = standard_langs[pkey]
-                if val not in normalized:
-                    normalized.append(val)
-            else:
-                # sometimes AI outputs short forms or capitalized forms
-                for k, v in standard_langs.items():
-                    if pkey == k or pkey == v.lower():
-                        if v not in normalized:
-                            normalized.append(v)
-    return normalized
+import re
+
+def normalize_languages(text):
+    """Extract languages with proficiency from text or list input."""
+    
+    if not text:
+        return []
+
+    # If input is a list, join everything into one string
+    if isinstance(text, list):
+        text = " ".join(str(t) for t in text if t)
+
+    text_lower = text.lower()
+
+    language_patterns = [
+        "english", "tamil", "hindi", "telugu", "malayalam", "kannada",
+        "french", "german", "spanish", "marathi", "bengali", "punjabi",
+        "gujarati", "urdu", "oriya", "nepali"
+    ]
+
+    pattern = r"\b(" + "|".join(language_patterns) + r")\b\s*(\([^)]+\))?"
+
+    matches = re.findall(pattern, text_lower)
+
+    results = []
+    for lang, prof in matches:
+        lang_clean = lang.capitalize()
+        if prof:
+            prof_clean = re.sub(r"\s+", "", prof.upper())
+            result = f"{lang_clean} {prof_clean}"
+        else:
+            result = lang_clean
+
+        if result not in results:
+            results.append(result)
+
+    return results
+
 
 
 # -------------------------
@@ -74,137 +80,84 @@ def extract_username_from_input(input_str: str):
 # -------------------------
 import re
 
-def calculate_ats_score(data, text, job_description=None, normalized_languages=None):
+def calculate_ats_score(data, text, normalized_languages=None):
     score_details = {}
 
-    # Pre-normalize text
     text_lower = (text or "").lower()
 
-    # Lists
-    action_verbs = r"\b(developed|built|designed|implemented|managed|optimized|increased|reduced|led|collaborated|deployed|created|trained|improved|tested|analyzed|automated|integrated|streamlined)\b"
-    metrics_regex = r"\b(\d+%|\d+\s+(users|clients|projects|transactions|systems)|\$\d+|\d+\s+(x|times|months|years))\b"
+    action_verbs = r"\b(developed|built|designed|implemented|managed|optimized|increased|reduced|led|collaborated|deployed|created|trained|improved|tested|analyzed|automated|integrated|streamlined|orchestrated|debugged|resolved|scaled|architected)\b"
+    metrics_regex = r"\b(\d+%|\d+\s+(users|clients|projects|years|months)|\$\d+|\d+\s+(x|times))\b"
 
     tech_keywords = [
-        "python","java","c++","node","react","mongodb","mysql","aws","azure","gcp",
-        "docker","kubernetes","tensorflow","pytorch","devops","fastapi","django",
-        "flask","typescript","postgres","rest","graphql"
+        "python","java","c++","c#","go","node","react","angular","vue","javascript","typescript",
+        "mongodb","mysql","postgres","sql","redis",
+        "aws","azure","gcp","docker","kubernetes","terraform",
+        "tensorflow","pytorch","scikit-learn","pandas","numpy",
+        "fastapi","django","flask","spring","express",
+        "rest","graphql","microservices"
     ]
-    tools_keywords = [
-        "git","github","jira","jenkins","figma","linux","bash","tableau",
-        "power bi","excel","visual studio","colab"
-    ]
-    soft_skills = ["leadership","communication","teamwork","problem solving","ownership"]
-    cert_keywords = ["aws","azure","gcp","oracle","pmp","cisco","scrum","microsoft certified"]
 
-    # 1. Section coverage (max 20)
+    tools_keywords = [
+        "git","github","gitlab","jira","jenkins","figma","linux","bash","shell",
+        "tableau","power bi","excel","visual studio","vscode","colab"
+    ]
+
+    soft_skills = ["leadership","communication","teamwork","problem solving","ownership","adaptability"]
+    cert_keywords = ["certified","certificate","aws","azure","gcp","oracle","pmp","scrum","cisco"]
+
+    # 1️⃣ Section coverage (max 20)
     required_sections = ["experience", "education", "skills", "projects"]
-    section_score = 0
-    for section in required_sections:
-        content = data.get(section) or ""
-        if isinstance(content, str) and len(content.strip()) > 50:
-            section_score += 5
-        elif isinstance(content, list) and len(content) > 0:
-            section_score += 5
+    section_score = sum(
+        5 for section in required_sections if data.get(section)
+    )
     score_details["Section Coverage"] = min(section_score, 20)
 
-    # 2. Contact info (max 5)
+    # 2️⃣ Contact info (max 10)
     contact_score = 0
-    if data.get("email"): contact_score += 1
-    if data.get("phone"): contact_score += 1
-    if re.search(r"linkedin\.com", text_lower): contact_score += 1
-    if re.search(r"github\.com", text_lower): contact_score += 1
-    # add one more if address/location exists maybe
-    if data.get("location"): contact_score += 1
-    score_details["Contact Info"] = min(contact_score, 5)
+    if re.search(r"[a-z0-9._%+-]+@[a-z0-9.-]+\.\w+", text_lower): contact_score += 5
+    if re.search(r"(linkedin\.com|github\.com)", text_lower): contact_score += 5
+    score_details["Contact Info"] = min(contact_score, 10)
 
-    # 3. Word count (max 5)
-    word_count = len((text or "").split())
-    if 500 <= word_count <= 1200:
-        wc_score = 5
-    elif word_count >= 300:
-        wc_score = 3
-    else:
-        wc_score = 0
+    # 3️⃣ Word count (max 5)
+    word_count = len(text.split())
+    wc_score = 5 if 500 <= word_count <= 1200 else 3 if word_count >= 300 else 0
     score_details["Word Count"] = wc_score
 
-    # 4. Bullet points (max 5)
-    bullet_patterns = [r"•", r"◦", r"\*", r"-\s", r"→"]
-    bullet_count = sum(len(re.findall(pattern, text or "")) for pattern in bullet_patterns)
-    if bullet_count >= 8:
-        bp_score = 5
-    elif bullet_count >= 3:
-        bp_score = 3
-    else:
-        bp_score = 0
+    # 4️⃣ Bullet points (max 10)
+    bullet_count = len(re.findall(r"(\n\s*[-•*])", text))
+    bp_score = 10 if bullet_count >= 10 else 5 if bullet_count >= 4 else 0
     score_details["Bullet Points"] = bp_score
 
-    # 5. Action verbs (max 10)
+    # 5️⃣ Action verbs + metrics (max 20)
     action_count = len(re.findall(action_verbs, text_lower))
-    if action_count >= 12:
-        av_score = 10
-    elif action_count >= 5:
-        av_score = 5
-    else:
-        av_score = 0
-    score_details["Action Verbs"] = av_score
+    metric_count = len(re.findall(metrics_regex, text_lower))
+    achievement_score = min(action_count*1 + metric_count*2, 20)
+    score_details["Action + Achievements"] = achievement_score
 
-    # 6. Achievements (metrics) (max 10)
-    metrics_count = len(re.findall(metrics_regex, text_lower))
-    if metrics_count >= 8:
-        ach_score = 10
-    elif metrics_count >= 3:
-        ach_score = 5
-    else:
-        ach_score = 0
-    score_details["Achievements"] = ach_score
-
-    # 7. Technical skills (max 15)
+    # 6️⃣ Technical skills + tools (max 30)
     tech_match = sum(1 for kw in tech_keywords if kw in text_lower)
-    tech_score = min(tech_match * 1.0, 15)
-    score_details["Technical Skills"] = tech_score
+    tools_match = sum(1 for kw in tools_keywords if kw in text_lower)
+    skill_score = min((tech_match * 1.5) + (tools_match * 1), 30)
+    score_details["Skills Strength"] = skill_score
 
-    # 8. Tools & platforms (max 10)
-    tool_match = sum(1 for kw in tools_keywords if kw in text_lower)
-    tool_score = min(tool_match * 0.8, 10)
-    score_details["Tools & Platforms"] = tool_score
+    # 7️⃣ Soft skills + certifications (max 5)
+    soft_score = min(sum(1 for kw in soft_skills if kw in text_lower), 2)
+    cert_score = min(sum(1 for kw in cert_keywords if kw in text_lower), 3)
+    score_details["Soft Skills & Certs"] = soft_score + cert_score
 
-    # 9. Soft skills (max 5)
-    soft_match = sum(1 for kw in soft_skills if kw in text_lower)
-    soft_score = min(soft_match * 1.0, 5)
-    score_details["Soft Skills Mention"] = soft_score
-
-    # 10. Certifications (max 5)
-    cert_count = sum(1 for kw in cert_keywords if kw in text_lower)
-    cert_score = min(cert_count * 1.0, 5)
-    score_details["Certifications"] = cert_score
-
-    # 11. Formatting & layout penalty (max deduction 5)
-    formatting_penalty = 0
-    if re.search(r"<table|</table>", text_lower): formatting_penalty += 2
-    if re.search(r"\.(png|jpg|jpeg|svg)", text_lower): formatting_penalty += 2
+    # 8️⃣ Formatting Penalty (-5)
+    penalty = 0
+    if re.search(r"\.(png|jpg|jpeg|svg)", text_lower): penalty += 2
     try:
-        if len(max(text.split("\n"), key=len)) > 160:
-            formatting_penalty += 1
-    except Exception:
+        if len(max(text.split("\n"), key=len)) > 150: penalty += 1
+    except:
         pass
-    formatting_score = 5 - min(formatting_penalty, 5)
-    score_details["Formatting and Layout"] = formatting_score
+    score_details["Formatting Penalty"] = -min(penalty, 5)
 
-    # 12. Job description matching (if provided) (max 25)
-    jd_score = 0
-    if job_description:
-        jd_lower = job_description.lower()
-        jd_keywords = set(re.findall(r"[a-zA-Z]+", jd_lower))
-        resume_words = set(re.findall(r"[a-zA-Z]+", text_lower))
-        match_count = len(jd_keywords.intersection(resume_words))
-        # scale to 25
-        jd_score = min(match_count * 0.2, 25)
-    score_details["JD Match"] = jd_score
-
-    # Total
+    # Final score (cap at 100)
     total_score = sum(score_details.values())
-    if total_score > 100:
-        total_score = 100
+    total_score = max(min(total_score, 100), 0)
+
     score_details["Total ATS Score"] = round(total_score, 2)
 
     return {
@@ -271,9 +224,12 @@ Extract structured resume info and return valid JSON ONLY:
       }}
   }},
   "skills": {{
-      "technical": [], 
-      "soft": []
+      "technical": [],
+      "soft": [],
+      "area_of_interest": []
   }},
+  "internships": [],
+  "projects": [],
   "certificates": [], 
   "role_match": "", 
   "summary": ""
@@ -304,29 +260,27 @@ Resume text:
         except Exception as e:
             return {"error": f"Failed to parse AI JSON: {str(e)}", "raw": ai_output}
 
-        # ---- Normalize languages (robust) ----
+        # ---- Normalize technical skills (split combined strings) ----
+        skills_block = data.get("skills", {}) or {}
+        raw_tech_skills = skills_block.get("technical", []) or []
+        normalized_tech = []
+        for item in raw_tech_skills:
+            for part in re.split(r"[,;/]|\s*\|\s*| and ", str(item)):
+                part_clean = part.strip()
+                if part_clean and part_clean not in normalized_tech:
+                    normalized_tech.append(part_clean)
+        skills_block["technical"] = normalized_tech
+        data["skills"] = skills_block
+
+        # ---- Normalize languages (robust, but no guessing) ----
+        # Use only what the AI explicitly returns in the languages field.
         raw_langs = data.get("languages", [])
         if isinstance(raw_langs, str):
             raw_langs = re.split(r"[,;/]| and ", raw_langs)
         langs = normalize_languages([lang.strip() for lang in raw_langs if lang and str(lang).strip()])
 
-        # If AI missed languages or returned unexpected value, detect from text
-        if not langs:
-            detected = []
-            standard_langs = {
-                "english": "English", "tamil": "Tamil", "hindi": "Hindi",
-                "telugu": "Telugu", "malayalam": "Malayalam", "kannada": "Kannada",
-                "french": "French", "german": "German", "spanish": "Spanish",
-                "bengali": "Bengali", "marathi": "Marathi", "punjabi": "Punjabi",
-                "gujarati": "Gujarati", "urdu": "Urdu", "oriya": "Oriya", "nepali": "Nepali"
-            }
-            tlower = text.lower()
-            for key, val in standard_langs.items():
-                # match exact language token in resume text (word boundary)
-                if re.search(rf"\b{re.escape(key)}\b", tlower):
-                    detected.append(val)
-            langs = detected if detected else ["English"]
-
+        # If the resume does not contain a languages section, leave this empty.
+        # Do NOT guess or default to English/Tamil/etc.
         data["languages"] = langs
 
         # ---- Compute ATS ----
@@ -408,26 +362,12 @@ Resume text:
         print("⚠️ Invalid JSON returned by AI (extract_resume_data):", raw_clean)
         return {}
 
-    # Normalize languages same as process function
+    # Normalize languages same as process function, without guessing
     raw_langs = data.get("languages", [])
     if isinstance(raw_langs, str):
         raw_langs = re.split(r"[,;/]| and ", raw_langs)
     langs = normalize_languages([lang.strip() for lang in raw_langs if lang and str(lang).strip()])
 
-    if not langs:
-        detected = []
-        standard_langs = {
-            "english": "English", "tamil": "Tamil", "hindi": "Hindi",
-            "telugu": "Telugu", "malayalam": "Malayalam", "kannada": "Kannada",
-            "french": "French", "german": "German", "spanish": "Spanish",
-            "bengali": "Bengali", "marathi": "Marathi", "punjabi": "Punjabi",
-            "gujarati": "Gujarati", "urdu": "Urdu", "oriya": "Oriya", "nepali": "Nepali"
-        }
-        tlower = text.lower()
-        for key, val in standard_langs.items():
-            if re.search(rf"\b{re.escape(key)}\b", tlower):
-                detected.append(val)
-        langs = detected if detected else ["English"]
-
+    # If AI did not return languages, leave this empty instead of guessing.
     data["languages"] = langs
     return data

@@ -7,14 +7,19 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   useEffect(() => {
     const verify = async () => {
       try {
+        const token = localStorage.getItem("access_token");
+        if (!token) throw new Error("No token");
+
         const res = await fetch("http://localhost:8000/auth/verify_token", {
           method: "GET",
-          credentials: "include", // ✅ send cookies
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
         if (!res.ok) throw new Error("Token invalid");
 
         const data = await res.json();
-        const userRole = data.user?.role || "user";
+        const userRole = data.data?.role || "user";
 
         if (allowedRoles.includes(userRole)) {
           setAuth({ loading: false, authorized: true, role: userRole });

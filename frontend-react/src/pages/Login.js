@@ -30,10 +30,22 @@ export default function Login() {
 
       alert(`✅ ${data.message}`);
 
-      // Step 2: Verify token from secure cookie
+      const token = data.access_token;
+      if (!token) {
+        alert("No access token received ❌");
+        setLoading(false);
+        return;
+      }
+
+      // persist token for subsequent protected requests
+      localStorage.setItem("access_token", token);
+
+      // Step 2: Verify token using Authorization header
       const verify = await fetch("http://localhost:8000/auth/verify_token", {
         method: "GET",
-        credentials: "include", // ✅ must include cookies
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!verify.ok) {
@@ -43,7 +55,7 @@ export default function Login() {
       }
 
       const verifyData = await verify.json();
-      const role = verifyData.user?.role || "user";
+      const role = verifyData.data?.role || "user";
 
       // Step 3: Redirect based on secure verified role
       if (role === "admin") navigate("/admin");
