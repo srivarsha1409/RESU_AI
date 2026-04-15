@@ -124,55 +124,55 @@ The Admin Module is designed for recruiters and HR teams to streamline the hirin
 
 **Skill-to-Role Matching**: Suggests suitable job roles based on candidate skills and experience.
 
-Guidance & Recommendations: Offers personalized recommendations to candidates for improving their profiles.
+**Guidance & Recommendations:** Offers personalized recommendations to candidates for improving their profiles.
 
-Impact: Reduces manual workload for HR, improves accuracy in candidate shortlisting, and accelerates the hiring process by presenting clear, structured insights.
+**Impact:** Reduces manual workload for HR, improves accuracy in candidate shortlisting, and accelerates the hiring process by presenting clear, structured insights.
 
 **🔹 Trainer Module (Placement Trainers & Coordinators)**
 
 The Trainer Module serves as a comprehensive student evaluation and guidance tool. Trainers and placement coordinators can now monitor student performance, identify skill gaps, and provide tailored advice to improve career readiness.
 
-Key Features:
+**Key Features:**
 
-Filtering & Shortlisting: Quickly identify students suitable for specific companies or roles based on their resumes and skill profiles.
+**Filtering & Shortlisting:** Quickly identify students suitable for specific companies or roles based on their resumes and skill profiles.
 
-Structured Insights: Provides a detailed analysis of students’ strengths, weaknesses, and potential improvement areas.
+**Structured Insights:** Provides a detailed analysis of students’ strengths, weaknesses, and potential improvement areas.
 
-Resume Improvement Guidance: Offers actionable suggestions to help students create professional, ATS-compliant resumes.
+**Resume Improvement Guidance:** Offers actionable suggestions to help students create professional, ATS-compliant resumes.
 
-Impact: Helps trainers systematically prepare students for campus placements, bridging the gap between academic learning and industry expectations.
+**Impact:** Helps trainers systematically prepare students for campus placements, bridging the gap between academic learning and industry expectations.
 
 **🔹 User Module (Job Seekers)**
 
 The User Module empowers individuals to create high-quality, impactful resumes with ease. It provides instant feedback and AI-driven suggestions, ensuring their resume is optimized for both humans and ATS systems.
 
-Key Features:
+**Key Features:**
 
-Resume Builder: Enables users to create structured, professional resumes quickly and efficiently.
+**Resume Builder:** Enables users to create structured, professional resumes quickly and efficiently.
 
-Smart Suggestions: Guides users on improving format, structure, and skills presentation.
+**Smart Suggestions**: Guides users on improving format, structure, and skills presentation.
 
-Instant Resume Evaluation: Offers real-time feedback based on modern hiring standards and industry best practices.
+**Instant Resume Evaluation:** Offers real-time feedback based on modern hiring standards and industry best practices.
 
-Impact: Users gain confidence in their resumes, ensuring better chances of getting noticed by recruiters and increasing their employability.
+**Impact:** Users gain confidence in their resumes, ensuring better chances of getting noticed by recruiters and increasing their employability.
 
 **🔹 Additional Highlights**
 
-Automation & Intelligence: Integrates advanced AI algorithms to analyze resumes accurately and provide actionable insights.
+**Automation & Intelligence:** Integrates advanced AI algorithms to analyze resumes accurately and provide actionable insights.
 
-Comprehensive Evaluation: Combines academic records, certifications, coding activity, and skill sets to generate a holistic candidate profile.
+**Comprehensive Evaluation:** Combines academic records, certifications, coding activity, and skill sets to generate a holistic candidate profile.
 
-User-Friendly Design: Intuitive interface ensures all users—HR, trainers, or job seekers—can navigate and utilize the system effortlessly.
+**User-Friendly Design:** Intuitive interface ensures all users—HR, trainers, or job seekers—can navigate and utilize the system effortlessly.
 
-Scalable Solution: Supports organizations of any size, making it suitable for both corporate hiring and educational institutions.
+**Scalable Solution:** Supports organizations of any size, making it suitable for both corporate hiring and educational institutions.
 
 **🔹 Why Resume Insight Matters**
 
-For Recruiters: Reduces repetitive manual evaluation, ensures accurate shortlisting, and accelerates hiring.
+**For Recruiters**: Reduces repetitive manual evaluation, ensures accurate shortlisting, and accelerates hiring.
 
-For Trainers: Provides structured evaluation tools, identifies skill gaps, and supports students with personalized guidance.
+**For Trainers:** Provides structured evaluation tools, identifies skill gaps, and supports students with personalized guidance.
 
-For Job Seekers: Enables the creation of ATS-compliant, professional resumes, improving employability and confidence.
+**For Job Seekers:** Enables the creation of ATS-compliant, professional resumes, improving employability and confidence.
 
 Resume Insight is more than a tool—it is a career companion that bridges the gap between candidates, educators, and recruiters. By automating evaluation and providing smart recommendations, it ensures everyone in the hiring ecosystem can make informed, data-driven decisions.
 
