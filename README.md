@@ -3,7 +3,8 @@
 Resume Insight is a cutting-edge AI-powered platform designed to transform the hiring and career preparation process. It integrates intelligent automation, resume analysis, and personalized guidance to serve three distinct audiences: HR professionals, placement trainers, and job seekers. The platform simplifies complex tasks, ensures accuracy, and empowers users to make informed career decisions.
 
 
-<img width="1600" height="771" alt="image" src="https://github.com/user-attachments/assets/b55bb15f-d4a5-4a92-bb0f-1e0cdfb6fa73" />
+<img width="1600" height="771" alt="image" src=""C:\Users\HP\Downloads\Screenshot 2026-04-15 101133.png"
+" />
 
 <img width="1061" height="1081" alt="image" src="https://github.com/user-attachments/assets/694f7ecc-0922-4b74-bcb8-e423d685722c" />
 
@@ -194,9 +195,7 @@ This project was conceptualized, designed, and developed by:
 
 **Srivarsha**
 
-**Arjun Hareesh**
 
-**Manoj**
 
 Together, the team combined expertise in AI, software development, and user experience to create a comprehensive career assistance platform that serves HR, trainers, and job seekers alike.
 
