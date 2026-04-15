@@ -31,7 +31,7 @@ export default function Contact() {
               <span className="text-2xl group-hover:rotate-12 transition-transform">📞</span> Phone Contact
             </h3>
             <p className="text-lg font-medium text-slate-700 pl-9">
-              7010404284 <span className="text-slate-400 mx-2">|</span> 7548842310
+              7339381960 <span className="text-slate-400 mx-2">|</span> 7548842310
             </p>
           </div>
         </div>

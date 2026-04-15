@@ -65,8 +65,6 @@ export default function Login() {
         return;
       }
 
-      const verifyData = await verify.json();
-
       // Google Sign-In is only for users, redirect to user dashboard
       navigate("/user");
     } catch (err) {

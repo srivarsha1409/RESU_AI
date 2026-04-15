@@ -384,7 +384,7 @@ async def evaluate_projects(project_list):
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,
-            max_tokens=800,
+            max_tokens=2000,  # Increased from 800 to prevent truncation
         )
         raw = response.choices[0].message.content or ""
     except Exception as exc:
@@ -393,11 +393,68 @@ async def evaluate_projects(project_list):
 
     raw_clean = raw.strip().replace("```json", "").replace("```", "").strip()
 
+    # Try to fix common JSON issues before parsing
     try:
+        # Fix common issues with unterminated strings
+        if raw_clean.count('"') % 2 != 0:
+            # Add missing quotes at the end if odd number of quotes
+            raw_clean += '"'
+        
+        # Fix trailing commas before closing brackets/braces
+        raw_clean = raw_clean.replace(',]', ']').replace(',}', '}')
+        
+        # Handle truncated JSON by attempting to complete it
+        if raw_clean.count('{') > raw_clean.count('}'):
+            # Add missing closing braces
+            missing_braces = raw_clean.count('{') - raw_clean.count('}')
+            raw_clean += '}' * missing_braces
+        
+        if raw_clean.count('[') > raw_clean.count(']'):
+            # Add missing closing brackets
+            missing_brackets = raw_clean.count('[') - raw_clean.count(']')
+            raw_clean += ']' * missing_brackets
+        
+        # Fix incomplete arrays/objects by adding missing commas
+        raw_clean = raw_clean.replace(']"', '],"').replace('}"', '},"')
+        
         parsed = json.loads(raw_clean)
     except Exception as exc:
         print("⚠️ Project evaluation JSON parse failed:", exc, "Raw:", raw_clean[:300])
-        return []
+        # Try one more time with basic cleanup
+        try:
+            # More aggressive cleanup
+            cleaned = raw_clean.encode('utf-8', errors='ignore').decode('utf-8')
+            cleaned = cleaned.replace('\n', ' ').replace('\r', '')
+            cleaned = cleaned.replace('\\n', ' ').replace('\\r', '')
+            
+            # Try to extract JSON array if wrapped in extra text
+            import re
+            json_match = re.search(r'\[.*\]', cleaned, re.DOTALL)
+            if json_match:
+                cleaned = json_match.group(0)
+            
+            # Final attempt to complete truncated JSON
+            if cleaned.count('{') > cleaned.count('}'):
+                missing_braces = cleaned.count('{') - cleaned.count('}')
+                cleaned += '}' * missing_braces
+            
+            if cleaned.count('[') > cleaned.count(']'):
+                missing_brackets = cleaned.count('[') - cleaned.count(']')
+                cleaned += ']' * missing_brackets
+            
+            # Fix incomplete strings at the end
+            if cleaned.endswith(',"'):
+                cleaned = cleaned[:-2] + '"'
+            elif cleaned.endswith(',['):
+                cleaned = cleaned[:-2] + ']'
+            elif cleaned.endswith(',{'):
+                cleaned = cleaned[:-2] + '}'
+            
+            parsed = json.loads(cleaned)
+            print("✅ JSON parsing succeeded after cleanup")
+        except Exception as exc2:
+            print("⚠️ Project evaluation JSON parse failed after cleanup:", exc2)
+            return []
 
     if isinstance(parsed, dict) and "results" in parsed:
         items = parsed.get("results", [])
@@ -601,10 +658,35 @@ Resume text:
 
         # ---- Parse JSON ----
         ai_output = ai_output.strip().replace("```json", "").replace("```", "")
+        
+        # Try to fix common JSON issues before parsing
         try:
+            # Fix common issues with unterminated strings
+            if ai_output.count('"') % 2 != 0:
+                # Add missing quotes at the end if odd number of quotes
+                ai_output += '"'
+            
+            # Fix trailing commas before closing brackets/braces
+            ai_output = ai_output.replace(',]', ']').replace(',}', '}')
+            
             data = json.loads(ai_output)
         except Exception as e:
-            return {"error": f"Failed to parse AI JSON: {str(e)}", "raw": ai_output}
+            # Try one more time with basic cleanup
+            try:
+                # More aggressive cleanup
+                cleaned = ai_output.encode('utf-8', errors='ignore').decode('utf-8')
+                cleaned = cleaned.replace('\n', ' ').replace('\r', '')
+                cleaned = cleaned.replace('\\n', ' ').replace('\\r', '')
+                
+                # Try to extract JSON object if wrapped in extra text
+                json_match = re.search(r'\{.*\}', cleaned, re.DOTALL)
+                if json_match:
+                    cleaned = json_match.group(0)
+                
+                data = json.loads(cleaned)
+                print("✅ Resume JSON parsing succeeded after cleanup")
+            except Exception as e2:
+                return {"error": f"Failed to parse AI JSON: {str(e2)}", "raw": ai_output}
 
         # ---- Certificate worthiness evaluation (non-blocking fallback on failure) ----
         cert_list = data.get("certificates", []) or []
@@ -690,7 +772,7 @@ Resume text:
 
         # ---- Save to MongoDB ----
         try:
-            await db.reports.insert_one({
+            db.reports.insert_one({
                 "filename": getattr(upload_file, "filename", "uploaded_resume"),
                 "data": data,
                 "ats_breakdown": ats["ats_breakdown"],
