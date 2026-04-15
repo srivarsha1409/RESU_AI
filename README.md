@@ -190,9 +190,9 @@ Personalized career growth suggestions based on industry trends and AI predictio
 
 This project was conceptualized, designed, and developed by:
 
-**Srivarsha**
-
 **Yuvashri**
+
+**Srivarsha**
 
 **Arjun Hareesh**
 
