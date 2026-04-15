@@ -745,9 +745,12 @@ TECH_SKILL_HEADINGS = [
     "technical proficiencies","technical proficiency","technical expertise",
     "software skills","tools & technologies","tools and technologies",
     "technologies","tech stack","technical toolkit","programming skills",
+    "programming languages","programming language",
     "it skills","computer skills","domain skills","specialized skills",
     "primary skills","relevant skills","development skills",
-    "technical competencies","skill highlights","skills highlights","languages","language","programming languages","Programming languages","Languages","Language",
+    "technical competencies","skill highlights","skills highlights",
+    "languages","language","Languages","Language",
+    "tools","tool","technical tools","software tools","developer tools",
 ]
 
 AREA_INTEREST_HEADINGS = [
@@ -799,8 +802,9 @@ RULES:
 
    Technical Skills:
    - Extract ONLY if a valid technical-skills heading exists.
-   - Extract ONLY items listed under that heading.
-   - DO NOT extract technical skills from summary, experience, projects, certifications, AOI section.
+   - Treat headings like: "TECHNICAL SKILLS", "TECHNICAL SKILL", "SKILLS", "TOOLS", "SOFTWARE TOOLS", "PROGRAMMING LANGUAGES" as technical-skill sections.
+   - Extract ONLY items listed under those headings.
+   - DO NOT extract technical skills from summary, experience, projects, CERTIFICATIONS, COURSES, or AOI sections.
 
    Areas of Interest:
    - Extract ONLY if a valid area-of-interest heading exists.
@@ -833,8 +837,10 @@ def llm_extract_resume_details(raw_text: str, found_skill_heading: bool, found_i
     prompt = build_resume_prompt(raw_text, found_skill_heading, found_interest_heading)
 
     response = openrouter_client.chat.completions.create(
-        model="openai/gpt-4.1",
-        messages=[{"role": "user", "content": prompt}]
+        model="gpt-4.1-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+        max_tokens=600,
     )
 
     content = (
@@ -867,3 +873,168 @@ def extract_resume_details(file_bytes: bytes):
     found_interest_heading = heading_exists(raw, AREA_INTEREST_HEADINGS)
 
     return llm_extract_resume_details(raw, found_skill_heading, found_interest_heading)
+
+
+# ---------------------------------------------------------
+# PROGRAMMING LANGUAGES MASTER LIST
+# ---------------------------------------------------------
+PROGRAMMING_LANGUAGES = {
+    "c": ["c language", "c lang"],
+    "c++": ["cpp", "c plus plus"],
+    "java": ["core java", "advanced java"],
+    "python": ["python programming"],
+    "javascript": ["js", "nodejs", "node js"],
+    "typescript": [],
+    "ruby": [],
+    "go": ["golang"],
+    "swift": [],
+    "kotlin": [],
+    "php": ["php language"],
+    "r": ["r language"],
+    "matlab": [],
+    "scala": [],
+    "perl": [],
+}
+
+
+PROGRAMMING_SYNONYMS = {}
+for canonical, aliases in PROGRAMMING_LANGUAGES.items():
+    PROGRAMMING_SYNONYMS[canonical] = canonical
+    for al in aliases:
+        PROGRAMMING_SYNONYMS[al] = canonical
+
+
+# ---------------------------------------------------------
+# PROGRAMMING LANGUAGE EXTRACTOR
+# ---------------------------------------------------------
+def extract_programming_languages(text):
+    text = text.lower()
+    found = set()
+
+    # 1. Direct canonical match
+    for lang in PROGRAMMING_LANGUAGES.keys():
+        if lang in text:
+            found.add(lang.capitalize())
+
+    # 2. Synonym match
+    for syn, canonical in PROGRAMMING_SYNONYMS.items():
+        if syn in text:
+            found.add(canonical.capitalize())
+
+    # 3. Pattern-based extraction
+    pat = r"\b(c|c\+\+|java|python|javascript|typescript|php|r|go|ruby|swift|kotlin|scala|perl)\b"
+    matches = re.findall(pat, text)
+    for m in matches:
+        found.add(m.capitalize())
+
+    # 4. Fix ambiguous "R"
+    cleaned = []
+    for item in found:
+        if item == "R":
+            if "r " not in text and " r," not in text and "language" not in text:
+                continue
+        cleaned.append(item)
+
+    return sorted(list(set(cleaned)))
+
+
+# ---------------------------------------------------------
+# IMPROVED TECH SKILL EXTRACTOR
+# ---------------------------------------------------------
+SKILL_SYNONYMS = {
+    "excel": ["ms excel", "microsoft excel"],
+    "power bi": ["powerbi"],
+    "mysql": ["my sql", "my-sql"],
+    "html": ["html5"],
+    "css": ["css3"],
+    "react": ["reactjs", "react js"],
+    "node": ["nodejs", "node js"],
+    "git": ["git version control"],
+}
+
+
+def normalize_skill(skill):
+    s = skill.lower().strip()
+
+    # Replace synonyms
+    for canonical, aliases in SKILL_SYNONYMS.items():
+        if s == canonical or s in aliases:
+            return canonical
+
+    return s
+
+
+def extract_technical_skills(text):
+    text = text.replace("|", ",")
+    parts = re.split(r"[,/;]", text)
+
+    clean = []
+    for p in parts:
+        p = p.strip()
+        if not p:
+            continue
+        s = normalize_skill(p)
+        clean.append(s.capitalize())
+
+    return sorted(list(set(clean)))
+
+
+# ---------------------------------------------------------
+# FINAL SKILL MERGER: PROGRAMMING → TECHNICAL
+# ---------------------------------------------------------
+def merge_programming_into_technical(prog, tech):
+    merged = set(tech)
+
+    for lang in prog:
+        if lang not in merged:
+            merged.add(lang)
+
+    return sorted(list(merged))
+
+
+# ---------------------------------------------------------
+# IMPROVED ATS SCORING (LIGHTWEIGHT)
+# ---------------------------------------------------------
+def compute_ats_score(skills, programming_languages, area_of_interest):
+    score = 0
+
+    # More weight to programming languages
+    score += len(programming_languages) * 2
+
+    # Technical skills
+    score += len(skills) * 1
+
+    # AOI helps
+    score += len(area_of_interest) * 1
+
+    # Cap at 100
+    return min(score, 100)
+
+
+# ---------------------------------------------------------
+# MAIN RESUME PARSER ENTRY (TEXT-ONLY, LIGHTWEIGHT)
+# ---------------------------------------------------------
+def parse_resume_sections(raw_text):
+    raw_text = raw_text.lower()
+
+    programming_languages = extract_programming_languages(raw_text)
+    technical_skills = extract_technical_skills(raw_text)
+
+    technical_skills_final = merge_programming_into_technical(
+        programming_languages, technical_skills
+    )
+
+    area_of_interest = []
+
+    ats_score = compute_ats_score(
+        technical_skills_final, programming_languages, area_of_interest
+    )
+
+    return {
+        "skills": {
+            "technical": technical_skills_final,
+            "programming_languages": programming_languages,
+            "area_of_interest": area_of_interest,
+        },
+        "ats_score": ats_score,
+    }

@@ -1308,37 +1308,110 @@ const handleLogout = async () => {
             Projects
           </div>
           <div style={{ background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
-            {data?.projects && data.projects.length > 0 ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
-                {data.projects.map((item, idx) => {
-                  const project = typeof item === "string" ? { title: item } : item || {};
-                  return (
-                    <div key={idx} style={{ background: "#eff6ff", padding: 14, borderRadius: 10, borderLeft: "4px solid #3b82f6" }}>
+            {(() => {
+              const analyzed = Array.isArray(data?.project_analysis) ? data.project_analysis : [];
+              const hasAnalyzed = analyzed.length > 0;
+
+              const baseProjects = Array.isArray(data?.projects) ? data.projects : [];
+
+              if (!hasAnalyzed && baseProjects.length === 0) {
+                return <div style={{ color: "#6b7280", fontSize: 14 }}>Not mentioned</div>;
+              }
+
+              const cards = hasAnalyzed
+                ? analyzed.map((p, idx) => ({
+                    key: p.project_title || p.summary || idx,
+                    title: p.project_title || "Project",
+                    summary: p.summary || "",
+                    technologies: Array.isArray(p.technologies) ? p.technologies : [],
+                    domain: p.domain || "",
+                    features: Array.isArray(p.features) ? p.features : [],
+                    impact: p.impact || "",
+                    complexity: p.complexity_level || "",
+                    relevance: typeof p.relevance_score === "number" ? p.relevance_score : null,
+                    role_mapping: Array.isArray(p.role_mapping) ? p.role_mapping : [],
+                  }))
+                : baseProjects.map((item, idx) => {
+                    const project = typeof item === "string" ? { title: item } : item || {};
+                    return {
+                      key: project.title || project.name || idx,
+                      title: project.title || project.name || "Project",
+                      summary: project.description || "",
+                      technologies: Array.isArray(project.tech_stack) ? project.tech_stack : [],
+                      domain: "",
+                      features: [],
+                      impact: "",
+                      complexity: "",
+                      relevance: null,
+                      role_mapping: [],
+                    };
+                  });
+
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+                  {cards.map((p, idx) => (
+                    <div key={p.key || idx} style={{ background: "#eff6ff", padding: 14, borderRadius: 10, borderLeft: "4px solid #3b82f6" }}>
                       <div style={{ fontWeight: 600, fontSize: 14, color: "#1d4ed8", marginBottom: 4 }}>
-                        {project.title || project.name || "Project"}
+                        {p.title}
                       </div>
-                      {project.tech_stack && (
+
+                      {p.technologies.length > 0 && (
                         <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                          {Array.isArray(project.tech_stack) ? project.tech_stack.join(", ") : project.tech_stack}
+                          <strong>Tech:</strong> {p.technologies.join(", ")}
                         </div>
                       )}
-                      {project.duration && (
+
+                      {p.domain && (
                         <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                          {project.duration}
+                          <strong>Domain:</strong> {p.domain}
                         </div>
                       )}
-                      {project.description && (
+
+                      {p.complexity && (
+                        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                          <strong>Complexity:</strong> {p.complexity}
+                        </div>
+                      )}
+
+                      {p.relevance !== null && (
+                        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                          <strong>Relevance:</strong> {p.relevance}%
+                        </div>
+                      )}
+
+                      {p.summary && (
                         <div style={{ fontSize: 12, color: "#4b5563", marginTop: 6, lineHeight: 1.5 }}>
-                          {project.description}
+                          {p.summary}
+                        </div>
+                      )}
+
+                      {p.features.length > 0 && (
+                        <div style={{ fontSize: 12, color: "#4b5563", marginTop: 6 }}>
+                          <strong>Features:</strong>
+                          <ul style={{ paddingLeft: 18, marginTop: 4 }}>
+                            {p.features.slice(0, 4).map((f, fi) => (
+                              <li key={fi}>{f}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {p.impact && (
+                        <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>
+                          <strong>Impact:</strong> {p.impact}
+                        </div>
+                      )}
+
+                      {p.role_mapping.length > 0 && (
+                        <div style={{ fontSize: 11, color: "#2563eb", marginTop: 6 }}>
+                          <strong>Suggested roles:</strong> {p.role_mapping.join(", ")}
                         </div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={{ color: "#6b7280", fontSize: 14 }}>Not mentioned</div>
-            )}
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Certificates */}
