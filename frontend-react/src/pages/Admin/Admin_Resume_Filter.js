@@ -270,10 +270,10 @@ const Admin_Resume_Filter = () => {
     filters.tenth_max,
     filters.twelfth,
     filters.twelfth_max,
+    filters.skills.length > 0,
     filters.departments.length > 0,
     filters.language,
     filters.ats,
-    filters.department,
     filters.degree,
     filters.area_of_interest,
   ].filter(Boolean).length;
@@ -495,7 +495,7 @@ const Admin_Resume_Filter = () => {
             <p style={{ fontSize: "14px", opacity: 0.9, margin: 0 }}>Avg ATS Score</p>
           </div>
 
-          {/* Academic Range Stats */}
+          {/* Academic Stats (informational only) */}
           <div style={{
             background: "linear-gradient(135deg, #1d976c 0%, #93f9b9 100%)",
             padding: "24px",
@@ -505,32 +505,32 @@ const Admin_Resume_Filter = () => {
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
               <Users size={32} />
-              <span style={{ fontSize: "18px", fontWeight: "700" }}>Academic Range</span>
+              <span style={{ fontSize: "18px", fontWeight: "700" }}>Academic Stats</span>
             </div>
             {academicStats ? (
               <div style={{ fontSize: "13px", lineHeight: 1.6 }}>
                 <div>
-                  <strong>CGPA:</strong>{" "}
+                  <strong>CGPA Range:</strong>{" "}
                   {academicStats.cgpaMin !== null && academicStats.cgpaMax !== null
                     ? `${academicStats.cgpaMin.toFixed(2)} - ${academicStats.cgpaMax.toFixed(2)}`
-                    : "—"}
+                    : "Not available"}
                 </div>
                 <div>
-                  <strong>10th %:</strong>{" "}
+                  <strong>10th % Range:</strong>{" "}
                   {academicStats.tenthMin !== null && academicStats.tenthMax !== null
                     ? `${academicStats.tenthMin.toFixed(1)} - ${academicStats.tenthMax.toFixed(1)}`
-                    : "—"}
+                    : "Not available"}
                 </div>
                 <div>
-                  <strong>12th %:</strong>{" "}
+                  <strong>12th % Range:</strong>{" "}
                   {academicStats.twelfthMin !== null && academicStats.twelfthMax !== null
                     ? `${academicStats.twelfthMin.toFixed(1)} - ${academicStats.twelfthMax.toFixed(1)}`
-                    : "—"}
+                    : "Not available"}
                 </div>
               </div>
             ) : (
               <p style={{ fontSize: "13px", opacity: 0.9, margin: 0 }}>
-                Run a filter to see CGPA and 10th/12th ranges.
+                After filtering, this card will just show overall min/max academics for the results.
               </p>
             )}
           </div>
@@ -1388,6 +1388,30 @@ const Admin_Resume_Filter = () => {
                         color: "#1f2937",
                         fontSize: "13px"
                       }}
+                    >
+                      10th %
+                    </th>
+                    <th
+                      style={{
+                        border: "1px solid #e2e8f0",
+                        padding: "14px",
+                        textAlign: "left",
+                        fontWeight: "700",
+                        color: "#1f2937",
+                        fontSize: "13px"
+                      }}
+                    >
+                      12th %
+                    </th>
+                    <th
+                      style={{
+                        border: "1px solid #e2e8f0",
+                        padding: "14px",
+                        textAlign: "left",
+                        fontWeight: "700",
+                        color: "#1f2937",
+                        fontSize: "13px"
+                      }}
                       onClick={() => handleSort("cgpa")}
                     >
                       CGPA{sortConfig.key === "cgpa" && (sortConfig.direction === "asc" ? "▲" : "▼")}
@@ -1414,7 +1438,7 @@ const Admin_Resume_Filter = () => {
                         textAlign: "left",
                         fontWeight: "700",
                         color: "#1f2937",
-                        fontSize: "13px"
+                        fontSize: "13px",
                       }}
                     >
                       Languages
@@ -1511,6 +1535,26 @@ const Admin_Resume_Filter = () => {
                           border: "1px solid #e2e8f0",
                           padding: "14px",
                           color: "#1f2937",
+                        }}
+                      >
+                        {res.education?.["10th"]?.percentage || "-"}
+                      </td>
+
+                      <td
+                        style={{
+                          border: "1px solid #e2e8f0",
+                          padding: "14px",
+                          color: "#1f2937",
+                        }}
+                      >
+                        {res.education?.["12th"]?.percentage || "-"}
+                      </td>
+
+                      <td
+                        style={{
+                          border: "1px solid #e2e8f0",
+                          padding: "14px",
+                          color: "#1f2937",
                           fontWeight: "600"
                         }}
                       >
@@ -1565,8 +1609,7 @@ const Admin_Resume_Filter = () => {
                           color: "#64748b",
                         }}
                       >
-                        {res.skills?.technical?.slice(0, 4).join(", ") || "-"}
-                        {res.skills?.technical?.length > 4 && "..."}
+                        {res.skills?.technical?.join(", ") || "-"}
                       </td>
                       <td
                         style={{

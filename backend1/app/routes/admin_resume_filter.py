@@ -230,9 +230,11 @@ async def filter_uploaded_resumes(
     language: Optional[str] = Form(None),
     department: Optional[str] = Form(None),
     degree: Optional[str] = Form(None),
+    area_of_interest: Optional[str] = Form(None),
 ):
     results = []
     skill_list = [s.strip().lower() for s in skills.split(",")] if skills else []
+    area_filters = [a.strip().lower() for a in area_of_interest.split(",")] if area_of_interest else []
 
     # Normalize filters
     language = language.lower().strip() if language else None
@@ -247,11 +249,26 @@ async def filter_uploaded_resumes(
         data = parsed.get("data", {})
         ats_score = parsed.get("ats_score", 0)
         edu = data.get("education", {}) or {}
+
+        # Human languages (lowercased for filtering)
         langs = [lang.lower().strip() for lang in data.get("languages", []) if lang]
-        tech_skills = [
-            s.lower().strip()
-            for s in (data.get("skills", {}) or {}).get("technical", [])
-            if s
+
+        # Normalize technical skills similarly to streaming endpoint: split on '|', lowercase, dedupe
+        raw_tech_skills = (data.get("skills", {}) or {}).get("technical", []) or []
+        normalized_tech_skills = []
+        for item in raw_tech_skills:
+            for part in re.split(r"\s*\|\s*", str(item)):
+                part_clean = part.strip()
+                if part_clean and part_clean.lower() not in normalized_tech_skills:
+                    normalized_tech_skills.append(part_clean.lower())
+
+        tech_skills = normalized_tech_skills
+
+        # Areas of interest from skills block
+        interest_areas = [
+            a.lower().strip()
+            for a in (data.get("skills", {}) or {}).get("area_of_interest", [])
+            if a
         ]
 
         # Convert numeric fields
@@ -290,15 +307,26 @@ async def filter_uploaded_resumes(
         if skill_list and not all(any(skill in s for s in tech_skills) for skill in skill_list):
             continue
 
+        # Area of interest filter: any match across AOI list
+        if area_filters and not any(
+            any(af in area for af in area_filters) for area in interest_areas
+        ):
+            continue
+
+        email = data.get("email") or parsed.get("email")
+        phone = data.get("phone") or parsed.get("phone")
+
         results.append(
             {
                 "filename": file.filename,
                 "name": data.get("name"),
+                "email": email,
+                "phone": phone,
                 "ats_score": ats_score,
                 "education": edu,
                 "skills": data.get("skills", {}),
                 "languages": langs,
-                "areas_of_interest": data.get("areas_of_interest", []),
+                "area_of_interest": interest_areas,
             }
         )
 
