@@ -733,3 +733,137 @@ Resume text:
     # If AI did not return languages, leave this empty instead of guessing.
     data["languages"] = langs
     return data
+
+
+# ---------------------------------------------------------
+# STRICT MODE – Extract ONLY when headings exist
+# ---------------------------------------------------------
+
+TECH_SKILL_HEADINGS = [
+    "technical skills","technical skill","skills","skillset","tech skills",
+    "core skills","key skills","hard skills","professional skills",
+    "technical proficiencies","technical proficiency","technical expertise",
+    "software skills","tools & technologies","tools and technologies",
+    "technologies","tech stack","technical toolkit","programming skills",
+    "it skills","computer skills","domain skills","specialized skills",
+    "primary skills","relevant skills","development skills",
+    "technical competencies","skill highlights","skills highlights","languages","language","programming languages",
+]
+
+AREA_INTEREST_HEADINGS = [
+    "area of interest","areas of interest","interests","interest areas",
+    "technical interests","professional interests","career interests",
+    "domain interests","engineering interests","fields of interest",
+    "preferred domains","preferred areas","preferred technical areas",
+    "specialization areas","preferred fields","passion","my interests"
+]
+
+
+def extract_text_from_pdf(file_bytes: bytes):
+    try:
+        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+            text = "\n".join([page.extract_text() or "" for page in pdf.pages])
+        return text
+    except Exception as e:
+        print("PDF EXTRACT ERROR:", e)
+        return ""
+
+
+def normalize_text(text: str) -> str:
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def heading_exists(text: str, heading_list: list):
+    text_lower = text.lower()
+    for h in heading_list:
+        if h in text_lower:
+            return True
+    return False
+
+
+def build_resume_prompt(extracted_text: str, found_skill_heading: bool, found_interest_heading: bool):
+    return f"""
+### STRICT EXTRACTION MODE
+
+Below is RAW resume text. You MUST follow all strict rules:
+
+RAW RESUME TEXT:
+{extracted_text}
+
+------------------------------------------------
+RULES:
+------------------------------------------------
+
+1. You must extract ONLY from the correct heading section.
+
+   Technical Skills:
+   - Extract ONLY if a valid technical-skills heading exists.
+   - Extract ONLY items listed under that heading.
+   - DO NOT extract technical skills from summary, experience, projects, certifications, AOI section.
+
+   Areas of Interest:
+   - Extract ONLY if a valid area-of-interest heading exists.
+   - Extract ONLY items listed under that heading.
+   - DO NOT extract AOI from summary, career objective, projects, experience, skills section.
+
+2. TECH-SKILL VS AOI SEPARATION RULE:
+   - If an item appears under AOI heading → treat as AOI (even if technical)
+   - If an item appears under TECH-SKILL heading → treat as a technical skill
+   - DO NOT mix the two categories
+   - DO NOT infer missing items
+
+3. If heading is NOT found:
+   - Return "not found" for that section.
+   - DO NOT guess or infer.
+
+------------------------------------------------
+EXPECTED OUTPUT FORMAT:
+{{
+  "technical_skills": [... OR "not found"],
+  "areas_of_interest": [... OR "not found"]
+}}
+------------------------------------------------
+
+Extract now.
+"""
+
+
+def llm_extract_resume_details(raw_text: str, found_skill_heading: bool, found_interest_heading: bool):
+    prompt = build_resume_prompt(raw_text, found_skill_heading, found_interest_heading)
+
+    response = openrouter_client.chat.completions.create(
+        model="openai/gpt-4.1",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    content = (
+        response.choices[0].message["content"]
+        if isinstance(response.choices[0].message, dict)
+        else response.choices[0].message.content
+    )
+
+    try:
+        parsed = json.loads(content)
+    except Exception:
+        match = re.search(r"\{.*\}", content, re.DOTALL)
+        parsed = json.loads(match.group(0)) if match else {}
+
+    tech = parsed.get("technical_skills", "not found")
+    aoi = parsed.get("areas_of_interest", "not found")
+
+    # return clean strict output
+    return {
+        "technical_skills": tech,
+        "areas_of_interest": aoi
+    }
+
+
+def extract_resume_details(file_bytes: bytes):
+    raw = extract_text_from_pdf(file_bytes)
+    raw = normalize_text(raw)
+
+    found_skill_heading = heading_exists(raw, TECH_SKILL_HEADINGS)
+    found_interest_heading = heading_exists(raw, AREA_INTEREST_HEADINGS)
+
+    return llm_extract_resume_details(raw, found_skill_heading, found_interest_heading)
