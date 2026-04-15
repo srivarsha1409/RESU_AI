@@ -830,7 +830,7 @@ Return JSON in this exact structure:
       "12th": {{"school": "", "location": "", "year": "", "percentage": ""}},
       "bachelor": {{"institute": "", "location": "", "degree": "", "expected_graduation": "", "cgpa": ""}}
   }},
-  "skills": {{"technical": [], "soft": []}},
+  "skills": {{"technical": [], "soft": [], "area_of_interest": []}},
   "certificates": [],
   "role_match": "",
   "summary": ""
