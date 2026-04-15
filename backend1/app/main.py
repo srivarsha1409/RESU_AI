@@ -17,6 +17,7 @@ from app.routes.admin_resume_filter import router as admin_filter_router
 from app.routes.auth_routes import router as auth_router   # ✅ contains logout()
 from app.routes.user import router as user_router
 from app.routes.ai_routes import router as ai_router
+from app.routes.role_predictor import router as role_predictor_router
 
 # -------------------------
 # FastAPI App Initialization
@@ -57,6 +58,7 @@ app.include_router(admin_filter_router, prefix="/admin", tags=["Admin Filter"])
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])  # ✅ includes /logout
 app.include_router(user_router, tags=["User"])
 app.include_router(ai_router, tags=["AI"])
+app.include_router(role_predictor_router)
 
 # -------------------------
 # Run Server

@@ -15,6 +15,12 @@ export default function UserDashboard() {
   // Resume data
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeData, setResumeData] = useState(null);
+
+  // AI Fresher Role Prediction
+  const [aiRoles, setAiRoles] = useState([]);
+  const [aiConfidence, setAiConfidence] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
   
   // AI Chat
   const [chatMessages, setChatMessages] = useState([]);
@@ -23,17 +29,81 @@ export default function UserDashboard() {
 
   const email = localStorage.getItem("email");
 
-  // Fetch user info
+  const predictWithAI = async (skills = [], summary = "") => {
+    const textParts = [];
+
+    if (Array.isArray(skills) && skills.length > 0) {
+      textParts.push(`Skills: ${skills.join(", ")}`);
+    }
+    if (summary) {
+      textParts.push(`Summary: ${summary}`);
+    }
+
+    const combinedText = textParts.join(" | ").trim();
+    if (!combinedText) {
+      setAiRoles([]);
+      setAiConfidence(null);
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/predict-role`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputs: combinedText }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || "AI role prediction failed");
+      }
+
+      setAiRoles(data.recommended_roles || []);
+      setAiConfidence(typeof data.confidence === "number" ? data.confidence : null);
+    } catch (err) {
+      console.error("AI role prediction error:", err);
+      setAiError(err.message || "Failed to predict roles");
+      setAiRoles([]);
+      setAiConfidence(null);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // Fetch user info and hydrate resume data (so role tab works after reload)
   useEffect(() => {
     const fetchUserData = async () => {
       const storedEmail = localStorage.getItem("email");
       if (!storedEmail) return;
-      
+
       try {
         setLoading(true);
         const res = await fetch(`${API_BASE}/user/info/${storedEmail}`);
         const data = await res.json();
-        setUser(data.user);
+        const userDoc = data.user || {};
+        setUser(userDoc);
+
+        // If backend already has resume analysis, hydrate resumeData and trigger AI predictor
+        if (userDoc.structured_info) {
+          setResumeData({
+            ats_score: userDoc.ats_score || 0,
+            word_count: userDoc.word_count || 0,
+            data: userDoc.structured_info,
+            ats_breakdown: userDoc.ats_breakdown || {},
+            detected_role: userDoc.detected_role || null,
+            suggested_skills: userDoc.suggested_skills || [],
+          });
+
+          const technicalSkills = userDoc?.structured_info?.skills?.technical || [];
+          const summaryText = userDoc?.structured_info?.summary || "";
+          predictWithAI(technicalSkills, summaryText);
+        }
       } catch (err) {
         console.error("User fetch error:", err);
         setError("Failed to load user data");
@@ -41,6 +111,7 @@ export default function UserDashboard() {
         setLoading(false);
       }
     };
+
     fetchUserData();
   }, []);
 
@@ -81,8 +152,13 @@ export default function UserDashboard() {
           word_count: result.word_count,
           data: result.structured_info,
           ats_breakdown: result.ats_breakdown,
-          suggested_skills: result.suggested_skills || []
+          detected_role: result.detected_role || null,
+          suggested_skills: result.suggested_skills || [],
         });
+
+        const technicalSkills = result?.structured_info?.skills?.technical || [];
+        const summaryText = result?.structured_info?.summary || "";
+        predictWithAI(technicalSkills, summaryText);
       } else {
         setError(result.error || 'Failed to upload resume');
       }
@@ -718,39 +794,96 @@ const getSuggestedSkills = () => {
                       </div>
                     ))}
                   </div>
+
                   {resumeData.detected_role && (
-  <div className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 rounded-xl p-5 mb-6 border border-purple-500/30">
-    <p className="text-purple-200 text-sm mb-1">AI-Detected Role</p>
-    <p className="text-white text-xl font-semibold">{resumeData.detected_role}</p>
-  </div>
-)}
+                    <div className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 rounded-xl p-5 mb-6 border border-purple-500/30">
+                      <p className="text-purple-200 text-sm mb-1">AI-Detected Role</p>
+                      <p className="text-white text-xl font-semibold">{resumeData.detected_role}</p>
+                    </div>
+                  )}
 
                   {/* Suggested Skills Section */}
-{getSuggestedSkills().length > 0 && (
-  <div className="mt-8 bg-gradient-to-r from-purple-700/20 to-pink-700/20 rounded-xl p-6 border border-purple-500/30">
-    <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-  <TrendingUp size={20} className="text-purple-300" />
-  Suggested Skills to Strengthen Your {resumeData.detected_role || "Career"}
-</h3>
-<p className="text-purple-200 text-sm mb-4">
-  Based on your current resume, here are additional skills recommended for your role:
-  <span className="font-semibold text-purple-400 ml-1">
-    {resumeData.detected_role || "General Developer"}
-  </span>
-</p>
+                  {getSuggestedSkills().length > 0 && (
+                    <div className="mt-8 bg-gradient-to-r from-purple-700/20 to-pink-700/20 rounded-xl p-6 border border-purple-500/30">
+                      <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                        <TrendingUp size={20} className="text-purple-300" />
+                        Suggested Skills to Strengthen Your {resumeData.detected_role || "Career"}
+                      </h3>
+                      <p className="text-purple-200 text-sm mb-4">
+                        Based on your current resume, here are additional skills recommended for your role:
+                        <span className="font-semibold text-purple-400 ml-1">
+                          {resumeData.detected_role || "General Developer"}
+                        </span>
+                      </p>
 
-    <div className="flex flex-wrap gap-2">
-      {getSuggestedSkills().map((skill, i) => (
-        <span
-          key={i}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-full text-sm font-medium border border-purple-400/30 shadow-sm"
-        >
-          {skill}
-        </span>
-      ))}
-    </div>
-  </div>
-)}
+                      <div className="flex flex-wrap gap-2">
+                        {getSuggestedSkills().map((skill, i) => (
+                          <span
+                            key={i}
+                            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-full text-sm font-medium border border-purple-400/30 shadow-sm"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Fresher Role Predictor */}
+                  <div className="mt-10 bg-white/5 rounded-xl p-6 border border-purple-500/30">
+                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <Briefcase size={20} className="text-purple-300" />
+                      AI Fresher Role Prediction
+                    </h3>
+
+                    {aiLoading && (
+                      <p className="text-purple-200 text-sm">
+                        Analyzing your resume for fresher job roles...
+                      </p>
+                    )}
+
+                    {!aiLoading && aiError && (
+                      <p className="text-red-300 text-sm">
+                        {aiError}
+                      </p>
+                    )}
+
+                    {!aiLoading && !aiError && aiRoles.length === 0 && (
+                      <p className="text-purple-200 text-sm">
+                        No specific fresher roles were detected yet. Try adding more clear skills
+                        and a concise summary to your resume.
+                      </p>
+                    )}
+
+                    {!aiLoading && !aiError && aiRoles.length > 0 && (
+                      <div className="space-y-3">
+                        {aiConfidence != null && (
+                          <p className="text-purple-200 text-sm">
+                            Model confidence:&nbsp;
+                            <span className="font-semibold text-purple-400">
+                              {Math.round(aiConfidence * 100)}%
+                            </span>
+                          </p>
+                        )}
+
+                        <ul className="space-y-2">
+                          {aiRoles.map((role, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-center justify-between bg-purple-700/20 border border-purple-500/40 rounded-lg px-4 py-2"
+                            >
+                              <span className="text-white text-sm font-medium">
+                                {role}
+                              </span>
+                              <span className="text-xs text-purple-200">
+                                Fresher Role
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
 
                 </>
               ) : (
