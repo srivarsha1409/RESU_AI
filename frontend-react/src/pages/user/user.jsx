@@ -1181,34 +1181,117 @@ const getSuggestedSkills = () => {
                       {/* LLM-based Certificate Evaluation */}
                       {Array.isArray(resumeData?.data?.certificate_analysis) &&
                        resumeData.data.certificate_analysis.length > 0 && (
-                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
-                            <Award size={20} className="text-yellow-300" />
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe',
+                          gridColumn: '1 / -1'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}>
+                            <Award size={20} style={{ color: '#fbbf24' }} />
                             Certificate Evaluation (LLM)
                           </h3>
 
-                          <div className="space-y-3">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {resumeData.data.certificate_analysis.map((cert, idx) => (
                               <div
                                 key={idx}
-                                className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-purple-900/20 border border-purple-500/30 rounded-xl px-4 py-3"
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '8px',
+                                  background: 'white',
+                                  border: '1px solid #e0f2fe',
+                                  borderRadius: '12px',
+                                  padding: '16px'
+                                }}
                               >
-                                <div className="flex-1">
-                                  <p className="text-white font-medium text-sm">
+                                <div style={{ flex: 1 }}>
+                                  <p style={{
+                                    color: '#1e293b',
+                                    fontWeight: '500',
+                                    fontSize: '14px',
+                                    margin: 0
+                                  }}>
                                     {cert.certificate}
                                   </p>
                                   {cert.reason && (
-                                    <p className="text-purple-200 text-xs mt-1">
+                                    <p style={{
+                                      color: '#64748b',
+                                      fontSize: '12px',
+                                      marginTop: '4px',
+                                      margin: '4px 0 0 0'
+                                    }}>
                                       {cert.reason}
                                     </p>
                                   )}
                                 </div>
-                                <div className="text-right text-xs text-purple-200">
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  fontSize: '12px',
+                                  flexWrap: 'wrap'
+                                }}>
                                   {typeof cert.value_level === 'string' && (
-                                    <p className="capitalize">Value: {cert.value_level}</p>
+                                    <span style={{
+                                      padding: '4px 8px',
+                                      borderRadius: '6px',
+                                      background: cert.value_level === 'high' ? '#f0fdf4' :
+                                                   cert.value_level === 'medium' ? '#fef3c7' : '#fef2f2',
+                                      color: cert.value_level === 'high' ? '#14532d' :
+                                             cert.value_level === 'medium' ? '#92400e' : '#991b1b',
+                                      fontWeight: '500',
+                                      textTransform: 'capitalize'
+                                    }}>
+                                      Value: {cert.value_level}
+                                    </span>
                                   )}
                                   {typeof cert.recommendation === 'string' && (
-                                    <p className="capitalize">Action: {cert.recommendation}</p>
+                                    <span style={{
+                                      padding: '4px 8px',
+                                      borderRadius: '6px',
+                                      background: cert.recommendation === 'keep' ? '#f0fdf4' :
+                                                   cert.recommendation === 'remove' ? '#fef2f2' : '#f3f4f6',
+                                      color: cert.recommendation === 'keep' ? '#14532d' :
+                                             cert.recommendation === 'remove' ? '#991b1b' : '#374151',
+                                      fontWeight: '500',
+                                      textTransform: 'capitalize'
+                                    }}>
+                                      Action: {cert.recommendation}
+                                    </span>
+                                  )}
+                                  {typeof cert.worthscore === 'number' && (
+                                    <span style={{
+                                      padding: '4px 8px',
+                                      borderRadius: '6px',
+                                      background: '#e0f2fe',
+                                      color: '#0c4a6e',
+                                      fontWeight: '600'
+                                    }}>
+                                      Score: {cert.worthscore}/100
+                                    </span>
+                                  )}
+                                  {cert.highlight && (
+                                    <span style={{
+                                      padding: '4px 8px',
+                                      borderRadius: '6px',
+                                      background: '#fbbf24',
+                                      color: '#78350f',
+                                      fontWeight: '500',
+                                      fontSize: '11px'
+                                    }}>
+                                      ⭐ {cert.highlight}
+                                    </span>
                                   )}
                                 </div>
                               </div>
