@@ -16,11 +16,9 @@ export default function UserDashboard() {
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeData, setResumeData] = useState(null);
 
-  // AI Fresher Role Prediction
-  const [aiRoles, setAiRoles] = useState([]);
-  const [aiConfidence, setAiConfidence] = useState(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState(null);
+  const [guidance, setGuidance] = useState(null);
+  const [guidanceLoading, setGuidanceLoading] = useState(false);
+  const [guidanceError, setGuidanceError] = useState(null);
   
   // AI Chat
   const [chatMessages, setChatMessages] = useState([]);
@@ -29,50 +27,41 @@ export default function UserDashboard() {
 
   const email = localStorage.getItem("email");
 
-  const predictWithAI = async (skills = [], summary = "") => {
-    const textParts = [];
+  const fetchGuidance = async () => {
+    if (!resumeData?.data || guidanceLoading) return;
 
-    if (Array.isArray(skills) && skills.length > 0) {
-      textParts.push(`Skills: ${skills.join(", ")}`);
-    }
-    if (summary) {
-      textParts.push(`Summary: ${summary}`);
-    }
-
-    const combinedText = textParts.join(" | ").trim();
-    if (!combinedText) {
-      setAiRoles([]);
-      setAiConfidence(null);
-      return;
-    }
-
-    setAiLoading(true);
-    setAiError(null);
+    setGuidanceLoading(true);
+    setGuidanceError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/predict-role`, {
+      const res = await fetch(`${API_BASE}/guidance/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ inputs: combinedText }),
+        body: JSON.stringify({ resume_data: resumeData.data }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || data.error || "AI role prediction failed");
+        throw new Error(data.detail || data.error || "Failed to generate guidance");
       }
 
-      setAiRoles(data.recommended_roles || []);
-      setAiConfidence(typeof data.confidence === "number" ? data.confidence : null);
+      setGuidance(data.guidance || {});
     } catch (err) {
-      console.error("AI role prediction error:", err);
-      setAiError(err.message || "Failed to predict roles");
-      setAiRoles([]);
-      setAiConfidence(null);
+      console.error("Guidance error:", err);
+      setGuidanceError(err.message || "Failed to generate guidance");
+      setGuidance(null);
     } finally {
-      setAiLoading(false);
+      setGuidanceLoading(false);
+    }
+  };
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (tabId === 'guidance' && resumeData?.data && !guidance && !guidanceLoading) {
+      fetchGuidance();
     }
   };
 
@@ -89,7 +78,7 @@ export default function UserDashboard() {
         const userDoc = data.user || {};
         setUser(userDoc);
 
-        // If backend already has resume analysis, hydrate resumeData and trigger AI predictor
+        // If backend already has resume analysis, hydrate resumeData
         if (userDoc.structured_info) {
           setResumeData({
             ats_score: userDoc.ats_score || 0,
@@ -100,9 +89,6 @@ export default function UserDashboard() {
             suggested_skills: userDoc.suggested_skills || [],
           });
 
-          const technicalSkills = userDoc?.structured_info?.skills?.technical || [];
-          const summaryText = userDoc?.structured_info?.summary || "";
-          predictWithAI(technicalSkills, summaryText);
         }
       } catch (err) {
         console.error("User fetch error:", err);
@@ -156,9 +142,6 @@ export default function UserDashboard() {
           suggested_skills: result.suggested_skills || [],
         });
 
-        const technicalSkills = result?.structured_info?.skills?.technical || [];
-        const summaryText = result?.structured_info?.summary || "";
-        predictWithAI(technicalSkills, summaryText);
       } else {
         setError(result.error || 'Failed to upload resume');
       }
@@ -420,11 +403,12 @@ const getSuggestedSkills = () => {
             { id: 'analysis', label: 'Resume Analysis', icon: FileText },
             { id: 'ats', label: 'ATS Analysis', icon: Target },
             { id: 'roles', label: 'Role Recommendation', icon: Briefcase },
-            { id: 'assistant', label: 'AI Assistant', icon: MessageSquare }
+            { id: 'assistant', label: 'AI Assistant', icon: MessageSquare },
+            { id: 'guidance', label: 'Guidance', icon: TrendingUp }
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`px-6 py-3 rounded-xl font-medium capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
                 activeTab === tab.id
                   ? 'bg-purple-600 text-white shadow-lg'
@@ -1030,63 +1014,6 @@ const getSuggestedSkills = () => {
                       </div>
                     </div>
                   )}
-
-                  {/* AI Fresher Role Predictor */}
-                  <div className="mt-10 bg-white/5 rounded-xl p-6 border border-purple-500/30">
-                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-                      <Briefcase size={20} className="text-purple-300" />
-                      AI Fresher Role Prediction
-                    </h3>
-
-                    {aiLoading && (
-                      <p className="text-purple-200 text-sm">
-                        Analyzing your resume for fresher job roles...
-                      </p>
-                    )}
-
-                    {!aiLoading && aiError && (
-                      <p className="text-red-300 text-sm">
-                        {aiError}
-                      </p>
-                    )}
-
-                    {!aiLoading && !aiError && aiRoles.length === 0 && (
-                      <p className="text-purple-200 text-sm">
-                        No specific fresher roles were detected yet. Try adding more clear skills
-                        and a concise summary to your resume.
-                      </p>
-                    )}
-
-                    {!aiLoading && !aiError && aiRoles.length > 0 && (
-                      <div className="space-y-3">
-                        {aiConfidence != null && (
-                          <p className="text-purple-200 text-sm">
-                            Model confidence:&nbsp;
-                            <span className="font-semibold text-purple-400">
-                              {Math.round(aiConfidence * 100)}%
-                            </span>
-                          </p>
-                        )}
-
-                        <ul className="space-y-2">
-                          {aiRoles.map((role, idx) => (
-                            <li
-                              key={idx}
-                              className="flex items-center justify-between bg-purple-700/20 border border-purple-500/40 rounded-lg px-4 py-2"
-                            >
-                              <span className="text-white text-sm font-medium">
-                                {role}
-                              </span>
-                              <span className="text-xs text-purple-200">
-                                Fresher Role
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
                 </>
               ) : (
                 <div className="text-center py-12">
@@ -1177,6 +1104,343 @@ const getSuggestedSkills = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'guidance' && (
+          <div className="space-y-6">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                <TrendingUp size={24} />
+                Guidance
+              </h2>
+
+              {!resumeData && (
+                <div className="text-center py-12">
+                  <Info className="mx-auto text-purple-400 mb-4" size={48} />
+                  <p className="text-purple-200 text-lg mb-4">
+                    Upload your resume first in the Resume Analysis tab to get personalized guidance.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('analysis')}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl transition-colors"
+                  >
+                    Go to Resume Analysis
+                  </button>
+                </div>
+              )}
+
+              {resumeData && (
+                <>
+                  {guidanceLoading && (
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-5 h-5 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
+                      <p className="text-purple-200 text-sm">Generating your personalized guidance...</p>
+                    </div>
+                  )}
+
+                  {guidanceError && (
+                    <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-4 flex items-start gap-3">
+                      <AlertCircle className="text-red-400 mt-0.5" size={20} />
+                      <div className="flex-1">
+                        <p className="text-red-200 text-sm">{guidanceError}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {guidance && !guidanceLoading && !guidanceError && (
+                    <div className="space-y-6">
+                      {Array.isArray(guidance.technical_skills) && guidance.technical_skills.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Technical Skills & Levels</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {guidance.technical_skills.map((s, idx) => (
+                              <span
+                                key={idx}
+                                className="px-3 py-1 rounded-full text-sm border border-purple-500/40 bg-purple-700/30 text-white flex items-center gap-2"
+                              >
+                                <span>{s.name}</span>
+                                {s.level && (
+                                  <span className="text-xs text-purple-200 capitalize">({s.level})</span>
+                                )}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {Array.isArray(guidance.missing_skills) && guidance.missing_skills.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Missing / Recommended Skills</h3>
+                          <ul className="space-y-2 text-sm text-purple-100">
+                            {guidance.missing_skills.map((ms, idx) => (
+                              <li key={idx} className="flex gap-2">
+                                <span className="font-semibold text-white">{ms.name}:</span>
+                                <span className="text-purple-200">{ms.reason}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {Array.isArray(guidance.learning_paths) && guidance.learning_paths.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Learning Paths</h3>
+                          <div className="space-y-4">
+                            {guidance.learning_paths.map((lp, idx) => (
+                              <div key={idx} className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-4">
+                                <div className="flex justify-between items-start gap-3 mb-2">
+                                  <p className="text-white font-semibold text-sm">{lp.track}</p>
+                                  {typeof lp.estimated_time_weeks === 'number' && (
+                                    <p className="text-xs text-purple-200">~{lp.estimated_time_weeks} weeks</p>
+                                  )}
+                                </div>
+                                {Array.isArray(lp.topics) && lp.topics.length > 0 && (
+                                  <div className="mb-2">
+                                    <p className="text-xs text-purple-200 mb-1">Topics</p>
+                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                      {lp.topics.map((t, i) => (
+                                        <li key={i}>{t}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {Array.isArray(lp.tools) && lp.tools.length > 0 && (
+                                  <div className="mb-2">
+                                    <p className="text-xs text-purple-200 mb-1">Tools</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {lp.tools.map((t, i) => (
+                                        <span key={i} className="text-[11px] px-2 py-1 rounded-full bg-slate-900/40 text-purple-50 border border-purple-500/30">
+                                          {t}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {Array.isArray(lp.exercises) && lp.exercises.length > 0 && (
+                                  <div className="mb-2">
+                                    <p className="text-xs text-purple-200 mb-1">Practice Tasks</p>
+                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                      {lp.exercises.map((t, i) => (
+                                        <li key={i}>{t}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {Array.isArray(lp.projects) && lp.projects.length > 0 && (
+                                  <div>
+                                    <p className="text-xs text-purple-200 mb-1">Suggested Projects</p>
+                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                      {lp.projects.map((t, i) => (
+                                        <li key={i}>{t}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {Array.isArray(guidance.project_ideas) && guidance.project_ideas.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Personalized Project Ideas</h3>
+                          <div className="space-y-3 text-sm text-purple-100">
+                            {guidance.project_ideas.map((p, idx) => (
+                              <div key={idx} className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
+                                <p className="text-white font-semibold text-sm mb-1">{p.title}</p>
+                                {p.type && (
+                                  <p className="text-[11px] text-purple-200 mb-1">Type: {p.type}</p>
+                                )}
+                                {p.description && (
+                                  <p className="text-xs text-purple-100">{p.description}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {Array.isArray(guidance.certificate_recommendations) && guidance.certificate_recommendations.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Certificate Recommendations</h3>
+                          <div className="space-y-2 text-sm text-purple-100">
+                            {guidance.certificate_recommendations.map((c, idx) => (
+                              <div key={idx} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
+                                <div>
+                                  <p className="text-white font-semibold text-sm">{c.name}</p>
+                                  {c.reason && (
+                                    <p className="text-xs text-purple-200 mt-1">{c.reason}</p>
+                                  )}
+                                </div>
+                                <div className="text-xs text-right text-purple-200">
+                                  {c.value_level && (
+                                    <p className="capitalize">Value: {c.value_level}</p>
+                                  )}
+                                  {c.recommendation && (
+                                    <p className="capitalize">Action: {c.recommendation}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {Array.isArray(guidance.role_matching) && guidance.role_matching.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Role Match Analysis</h3>
+                          <div className="space-y-3">
+                            {guidance.role_matching.map((r, idx) => (
+                              <div key={idx} className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-white font-semibold text-sm">{r.role}</p>
+                                  {typeof r.match_percentage === 'number' && (
+                                    <p className="text-sm font-semibold text-yellow-300">{r.match_percentage}% match</p>
+                                  )}
+                                </div>
+                                <div className="grid md:grid-cols-3 gap-3 text-xs text-purple-100">
+                                  <div>
+                                    <p className="font-semibold mb-1">Matched Skills</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {(r.matched_skills || []).map((s, i) => (
+                                        <span key={i} className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-100 border border-green-400/40">
+                                          {s}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold mb-1">Missing Skills</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {(r.missing_skills || []).map((s, i) => (
+                                        <span key={i} className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-100 border border-red-400/40">
+                                          {s}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold mb-1">Additional Skills To Learn</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {(r.additional_skills_to_learn || []).map((s, i) => (
+                                        <span key={i} className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/40">
+                                          {s}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {Array.isArray(guidance.weak_skills) && guidance.weak_skills.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Low-value / Weak Skills</h3>
+                          <ul className="space-y-2 text-sm text-purple-100">
+                            {guidance.weak_skills.map((ws, idx) => (
+                              <li key={idx} className="flex gap-2">
+                                <span className="font-semibold text-white">{ws.name}:</span>
+                                <span className="text-purple-200">{ws.reason}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {Array.isArray(guidance.recommended_tech_stacks) && guidance.recommended_tech_stacks.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Recommended Tech Stacks</h3>
+                          <div className="space-y-2 text-sm text-purple-100">
+                            {guidance.recommended_tech_stacks.map((ts, idx) => (
+                              <div key={idx} className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
+                                <p className="text-white font-semibold text-sm mb-1">{ts.stack}</p>
+                                {ts.reason && (
+                                  <p className="text-xs text-purple-200">{ts.reason}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {guidance.career_clarity_summary && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Career Clarity Summary</h3>
+                          <div className="space-y-2 text-sm text-purple-100">
+                            {guidance.career_clarity_summary.primary_alignment && (
+                              <p><span className="font-semibold text-white">Primary Alignment:</span> {guidance.career_clarity_summary.primary_alignment}</p>
+                            )}
+                            {Array.isArray(guidance.career_clarity_summary.aligned_roles) && guidance.career_clarity_summary.aligned_roles.length > 0 && (
+                              <p>
+                                <span className="font-semibold text-white">Good Roles:</span>{' '}
+                                {guidance.career_clarity_summary.aligned_roles.join(', ')}
+                              </p>
+                            )}
+                            {Array.isArray(guidance.career_clarity_summary.roles_to_avoid) && guidance.career_clarity_summary.roles_to_avoid.length > 0 && (
+                              <p>
+                                <span className="font-semibold text-white">Roles to Avoid:</span>{' '}
+                                {guidance.career_clarity_summary.roles_to_avoid.join(', ')}
+                              </p>
+                            )}
+                            {guidance.career_clarity_summary.reasoning && (
+                              <p className="text-xs text-purple-200">{guidance.career_clarity_summary.reasoning}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {Array.isArray(guidance.weekly_schedule) && guidance.weekly_schedule.length > 0 && (
+                        <div className="bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-3">4–8 Week Skill-Improvement Plan</h3>
+                          <div className="space-y-3 text-sm text-purple-100">
+                            {guidance.weekly_schedule.map((w, idx) => (
+                              <div key={idx} className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
+                                <p className="text-white font-semibold text-sm mb-1">Week {w.week || idx + 1}: {w.focus}</p>
+                                {Array.isArray(w.topics) && w.topics.length > 0 && (
+                                  <div className="mb-1">
+                                    <p className="text-xs text-purple-200 mb-1">Topics</p>
+                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                      {w.topics.map((t, i) => (
+                                        <li key={i}>{t}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {Array.isArray(w.practice_tasks) && w.practice_tasks.length > 0 && (
+                                  <div className="mb-1">
+                                    <p className="text-xs text-purple-200 mb-1">Practice Tasks</p>
+                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                      {w.practice_tasks.map((t, i) => (
+                                        <li key={i}>{t}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {Array.isArray(w.checkpoints) && w.checkpoints.length > 0 && (
+                                  <div>
+                                    <p className="text-xs text-purple-200 mb-1">Checkpoints</p>
+                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                      {w.checkpoints.map((t, i) => (
+                                        <li key={i}>{t}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}

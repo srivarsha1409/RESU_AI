@@ -18,6 +18,7 @@ from app.routes.auth_routes import router as auth_router   # ✅ contains logout
 from app.routes.user import router as user_router
 from app.routes.ai_routes import router as ai_router
 from app.routes.role_predictor import router as role_predictor_router
+from app.routes.guidance_routes import router as guidance_router
 
 # -------------------------
 # FastAPI App Initialization
@@ -59,6 +60,7 @@ app.include_router(auth_router, prefix="/auth", tags=["Authentication"])  # ✅ 
 app.include_router(user_router, tags=["User"])
 app.include_router(ai_router, tags=["AI"])
 app.include_router(role_predictor_router)
+app.include_router(guidance_router)
 
 # -------------------------
 # Run Server
