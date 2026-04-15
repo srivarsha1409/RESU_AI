@@ -399,7 +399,7 @@ const getSuggestedSkills = () => {
 
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
+    <div style={{ minHeight: '100vh', background: '#ffffff' }}>
       {/* Sidebar */}
       <Sidebar 
         activeTab={activeTab}
@@ -420,17 +420,17 @@ const getSuggestedSkills = () => {
       }}>
         {/* Top Header */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'white',
+          borderBottom: '1px solid #e0f2fe',
           padding: '20px 30px',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
         }}>
           <div>
             <h1 style={{
-              color: 'white',
+              color: '#1e293b',
               fontSize: '28px',
               fontWeight: '700',
               margin: 0,
@@ -441,7 +441,7 @@ const getSuggestedSkills = () => {
               Welcome, {resumeData?.data?.name || 'User'}!
             </h1>
             <p style={{
-              color: '#94a3b8',
+              color: '#64748b',
               fontSize: '14px',
               margin: '4px 0 0 0'
             }}>
@@ -451,12 +451,12 @@ const getSuggestedSkills = () => {
         </div>
 
         {/* Content Area */}
-        <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '30px', overflowY: 'auto', backgroundColor: '#f8fafc' }}>
           {/* Error Alert */}
           {error && (
             <div style={{
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
@@ -464,50 +464,124 @@ const getSuggestedSkills = () => {
               alignItems: 'flex-start',
               gap: '12px'
             }}>
-              <AlertCircle style={{ color: '#f87171', marginTop: '2px' }} size={20} />
+              <AlertCircle style={{ color: '#dc2626', marginTop: '2px' }} size={20} />
               <div style={{ flex: 1 }}>
-                <p style={{ color: '#fca5a5', fontWeight: '600', margin: '0 0 4px 0' }}>Error</p>
-                <p style={{ color: '#fecaca', fontSize: '14px', margin: 0 }}>{error}</p>
+                <p style={{ color: '#991b1b', fontWeight: '600', margin: '0 0 4px 0' }}>Error</p>
+                <p style={{ color: '#7f1d1d', fontSize: '14px', margin: 0 }}>{error}</p>
               </div>
             </div>
           )}
 
         {/* Referrals Tab */}
         {activeTab === 'referrals' && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 space-y-5">
-            <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-              <MessageSquare size={22} />
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid #e0f2fe',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+            marginBottom: '24px'
+          }}>
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              color: '#1e293b',
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <MessageSquare size={24} style={{ color: '#0ea5e9' }} />
               Referral Message Helper
             </h2>
-            <p className="text-purple-200 text-sm">
+            <p style={{
+              color: '#64748b',
+              fontSize: '14px',
+              marginBottom: '24px'
+            }}>
               Generate a LinkedIn connection note and referral request message using your resume details.
             </p>
 
             {!resumeData?.data && (
-              <div className="bg-yellow-500/20 border border-yellow-400/60 rounded-xl p-4 text-sm text-yellow-100">
-                Please upload your resume first in the <span className="font-semibold">Resume Analysis</span> tab to use this feature.
+              <div style={{
+                background: '#fef3c7',
+                border: '1px solid #fde68a',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px'
+              }}>
+                <p style={{
+                  color: '#92400e',
+                  fontSize: '14px',
+                  margin: 0
+                }}>
+                  Please upload your resume first in the <span style={{ fontWeight: '600' }}>Resume Analysis</span> tab to use this feature.
+                </p>
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <label className="block text-sm text-purple-100">Company</label>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '16px',
+              marginBottom: '24px'
+            }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '8px'
+                }}>
+                  Company
+                </label>
                 <input
                   type="text"
                   value={refCompany}
                   onChange={(e) => setRefCompany(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: 'white',
+                    color: '#1f2937',
+                    fontSize: '14px',
+                    transition: 'border-color 0.2s ease'
+                  }}
                   placeholder="e.g., Google, Infosys"
+                  onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 />
               </div>
-              <div className="space-y-3">
-                <label className="block text-sm text-purple-100">Target Role</label>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '8px'
+                }}>
+                  Target Role
+                </label>
                 <input
                   type="text"
                   value={refRole}
                   onChange={(e) => setRefRole(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: 'white',
+                    color: '#1f2937',
+                    fontSize: '14px',
+                    transition: 'border-color 0.2s ease'
+                  }}
                   placeholder="e.g., Software Engineer, Data Analyst"
+                  onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 />
               </div>
             </div>
@@ -515,22 +589,86 @@ const getSuggestedSkills = () => {
             <button
               onClick={generateReferralMessages}
               disabled={!resumeData?.data}
-              className="px-5 py-2.5 bg-purple-500/70 hover:bg-purple-500 text-white text-sm font-medium rounded-xl border border-purple-300/60 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                padding: '12px 24px',
+                background: '#0ea5e9',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: resumeData?.data ? 'pointer' : 'not-allowed',
+                opacity: resumeData?.data ? 1 : 0.5,
+                transition: 'all 0.2s ease',
+                marginBottom: '24px'
+              }}
+              onMouseEnter={(e) => {
+                if (resumeData?.data) {
+                  e.target.style.background = '#0284c7';
+                  e.target.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (resumeData?.data) {
+                  e.target.style.background = '#0ea5e9';
+                  e.target.style.transform = 'translateY(0)';
+                }
+              }}
             >
               Generate Messages
             </button>
 
             {(refLinkedInNote || refReferralDM) && (
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-black/30 rounded-xl p-4 border border-white/10">
-                  <h3 className="text-sm font-semibold text-purple-200 mb-2">LinkedIn Connection Note</h3>
-                  <p className="text-sm text-slate-100 whitespace-pre-line">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '16px'
+              }}>
+                <div style={{
+                  background: '#f8fafc',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  border: '1px solid #e0f2fe'
+                }}>
+                  <h3 style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#1e293b',
+                    marginBottom: '12px'
+                  }}>
+                    LinkedIn Connection Note
+                  </h3>
+                  <p style={{
+                    fontSize: '14px',
+                    color: '#475569',
+                    lineHeight: '1.6',
+                    margin: 0,
+                    whiteSpace: 'pre-line'
+                  }}>
                     {refLinkedInNote}
                   </p>
                 </div>
-                <div className="bg-black/30 rounded-xl p-4 border border-white/10">
-                  <h3 className="text-sm font-semibold text-purple-200 mb-2">Referral Request DM</h3>
-                  <p className="text-sm text-slate-100 whitespace-pre-line">
+                <div style={{
+                  background: '#f8fafc',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  border: '1px solid #e0f2fe'
+                }}>
+                  <h3 style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#1e293b',
+                    marginBottom: '12px'
+                  }}>
+                    Referral Request DM
+                  </h3>
+                  <p style={{
+                    fontSize: '14px',
+                    color: '#475569',
+                    lineHeight: '1.6',
+                    margin: 0,
+                    whiteSpace: 'pre-line'
+                  }}>
                     {refReferralDM}
                   </p>
                 </div>
@@ -541,44 +679,113 @@ const getSuggestedSkills = () => {
 
         {/* Resume Analysis Tab */}
         {activeTab === 'analysis' && (
-          <div className="space-y-6">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                <FileText size={24} />
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid #e0f2fe',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#1e293b',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <FileText size={24} style={{ color: '#0ea5e9' }} />
                 Resume Analysis Overview
               </h2>
 
               {/* Upload Section */}
-              <div className="border-2 border-dashed border-purple-400/50 rounded-xl p-8 mb-6 text-center hover:border-purple-400 transition-colors">
+              <div style={{
+                border: '2px dashed #0ea5e9',
+                borderRadius: '12px',
+                padding: '32px',
+                marginBottom: '24px',
+                textAlign: 'center',
+                transition: 'border-color 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.borderColor = '#0284c7'}
+              onMouseLeave={(e) => e.target.style.borderColor = '#0ea5e9'}
+              >
                 <input
                   type="file"
                   accept=".pdf"
                   onChange={handleFileChange}
-                  className="hidden"
+                  style={{ display: 'none' }}
                   id="resume-upload"
                 />
-                <label htmlFor="resume-upload" className="cursor-pointer">
-                  <div className="space-y-3">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-600/30 rounded-full mb-2">
-                      <Upload size={32} className="text-purple-300" />
+                <label htmlFor="resume-upload" style={{ cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '64px',
+                      height: '64px',
+                      background: '#e0f2fe',
+                      borderRadius: '50%',
+                      marginBottom: '8px'
+                    }}>
+                      <Upload size={32} style={{ color: '#0ea5e9' }} />
                     </div>
-                    <div className="text-purple-300">
+                    <div style={{ color: '#64748b' }}>
                       {resumeFile ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <FileText size={20} />
-                          <span className="font-medium">{resumeFile.name}</span>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px'
+                        }}>
+                          <FileText size={20} style={{ color: '#0ea5e9' }} />
+                          <span style={{ fontWeight: '500', color: '#1e293b' }}>{resumeFile.name}</span>
                         </div>
                       ) : (
                         <>
-                          <p className="text-lg font-medium">Click to upload your resume</p>
-                          <p className="text-sm opacity-75">PDF files only (Max 10MB)</p>
+                          <p style={{
+                            fontSize: '18px',
+                            fontWeight: '500',
+                            color: '#1e293b',
+                            margin: '0 0 4px 0'
+                          }}>
+                            Click to upload your resume
+                          </p>
+                          <p style={{
+                            fontSize: '14px',
+                            opacity: 0.75,
+                            margin: 0
+                          }}>
+                            PDF files only (Max 10MB)
+                          </p>
                         </>
                       )}
                     </div>
                     {loading && (
-                      <div className="flex items-center justify-center gap-2 mt-3">
-                        <div className="w-5 h-5 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
-                        <span className="text-purple-300 text-sm">Analyzing your resume...</span>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        marginTop: '12px'
+                      }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          border: '2px solid rgba(14, 165, 233, 0.3)',
+                          borderTop: '2px solid #0ea5e9',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }} />
+                        <span style={{
+                          color: '#64748b',
+                          fontSize: '14px'
+                        }}>
+                          Analyzing your resume...
+                        </span>
                       </div>
                     )}
                   </div>
@@ -588,58 +795,234 @@ const getSuggestedSkills = () => {
               {resumeData ? (
                 <>
                   {/* Quick Stats */}
-                  <div className="grid md:grid-cols-5 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-purple-600/30 to-purple-700/30 rounded-xl p-4 text-center">
-                      <p className="text-purple-200 text-sm mb-1">ATS Score</p>
-                      <p className="text-4xl font-bold text-white">{resumeData.ats_score || 0}</p>
-                      <p className="text-purple-300 text-xs mt-1">out of 100</p>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <div style={{
+                      background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                      border: '1px solid #0ea5e9'
+                    }}>
+                      <p style={{
+                        color: '#0c4a6e',
+                        fontSize: '14px',
+                        marginBottom: '4px'
+                      }}>
+                        ATS Score
+                      </p>
+                      <p style={{
+                        fontSize: '32px',
+                        fontWeight: '700',
+                        color: '#0284c7',
+                        margin: '0 0 4px 0'
+                      }}>
+                        {resumeData.ats_score || 0}
+                      </p>
+                      <p style={{
+                        color: '#64748b',
+                        fontSize: '12px',
+                        margin: 0
+                      }}>
+                        out of 100
+                      </p>
                     </div>
-                    <div className="bg-gradient-to-br from-pink-600/30 to-pink-700/30 rounded-xl p-4 text-center">
-                      <p className="text-purple-200 text-sm mb-1">Word Count</p>
-                      <p className="text-4xl font-bold text-white">{resumeData.word_count || 0}</p>
-                      <p className="text-purple-300 text-xs mt-1">words</p>
+                    <div style={{
+                      background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                      border: '1px solid #fbbf24'
+                    }}>
+                      <p style={{
+                        color: '#92400e',
+                        fontSize: '14px',
+                        marginBottom: '4px'
+                      }}>
+                        Word Count
+                      </p>
+                      <p style={{
+                        fontSize: '32px',
+                        fontWeight: '700',
+                        color: '#d97706',
+                        margin: '0 0 4px 0'
+                      }}>
+                        {resumeData.word_count || 0}
+                      </p>
+                      <p style={{
+                        color: '#64748b',
+                        fontSize: '12px',
+                        margin: 0
+                      }}>
+                        words
+                      </p>
                     </div>
-                    <div className="bg-gradient-to-br from-blue-600/30 to-blue-700/30 rounded-xl p-4 text-center">
-                      <p className="text-purple-200 text-sm mb-1">Technical Skills</p>
-                      <p className="text-4xl font-bold text-white">{resumeData.data?.skills?.technical?.length || 0}</p>
-                      <p className="text-purple-300 text-xs mt-1">skills identified</p>
+                    <div style={{
+                      background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                      border: '1px solid #3b82f6'
+                    }}>
+                      <p style={{
+                        color: '#1e3a8a',
+                        fontSize: '14px',
+                        marginBottom: '4px'
+                      }}>
+                        Technical Skills
+                      </p>
+                      <p style={{
+                        fontSize: '32px',
+                        fontWeight: '700',
+                        color: '#2563eb',
+                        margin: '0 0 4px 0'
+                      }}>
+                        {resumeData.data?.skills?.technical?.length || 0}
+                      </p>
+                      <p style={{
+                        color: '#64748b',
+                        fontSize: '12px',
+                        margin: 0
+                      }}>
+                        skills identified
+                      </p>
                     </div>
-                    <div className="bg-gradient-to-br from-green-600/30 to-green-700/30 rounded-xl p-4 text-center">
-                      <p className="text-purple-200 text-sm mb-1">Languages</p>
-                      <p className="text-4xl font-bold text-white">{resumeData.data?.languages?.length || 0}</p>
-                      <p className="text-purple-300 text-xs mt-1">languages</p>
+                    <div style={{
+                      background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                      border: '1px solid #22c55e'
+                    }}>
+                      <p style={{
+                        color: '#14532d',
+                        fontSize: '14px',
+                        marginBottom: '4px'
+                      }}>
+                        Languages
+                      </p>
+                      <p style={{
+                        fontSize: '32px',
+                        fontWeight: '700',
+                        color: '#16a34a',
+                        margin: '0 0 4px 0'
+                      }}>
+                        {resumeData.data?.languages?.length || 0}
+                      </p>
+                      <p style={{
+                        color: '#64748b',
+                        fontSize: '12px',
+                        margin: 0
+                      }}>
+                        languages
+                      </p>
                     </div>
-                    <div className="bg-gradient-to-br from-indigo-600/30 to-indigo-700/30 rounded-xl p-4 text-center">
-                      <p className="text-purple-200 text-sm mb-1">Areas of Interest</p>
-                      <p className="text-4xl font-bold text-white">{resumeData.data?.skills?.area_of_interest?.length || 0}</p>
-                      <p className="text-purple-300 text-xs mt-1">interests identified</p>
+                    <div style={{
+                      background: 'linear-gradient(135deg, #eef2ff, #e0e7ff)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                      border: '1px solid #6366f1'
+                    }}>
+                      <p style={{
+                        color: '#312e81',
+                        fontSize: '14px',
+                        marginBottom: '4px'
+                      }}>
+                        Areas of Interest
+                      </p>
+                      <p style={{
+                        fontSize: '32px',
+                        fontWeight: '700',
+                        color: '#4f46e5',
+                        margin: '0 0 4px 0'
+                      }}>
+                        {resumeData.data?.skills?.area_of_interest?.length || 0}
+                      </p>
+                      <p style={{
+                        color: '#64748b',
+                        fontSize: '12px',
+                        margin: 0
+                      }}>
+                        interests identified
+                      </p>
                     </div>
                   </div>
 
                   {/* Personal Information */}
                   {resumeData.data && (
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="bg-white/5 rounded-xl p-5 space-y-3">
-                        <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
-                          <User size={20} />
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                      gap: '24px'
+                    }}>
+                      <div style={{
+                        background: '#f8fafc',
+                        borderRadius: '12px',
+                        padding: '20px',
+                        border: '1px solid #e0f2fe'
+                      }}>
+                        <h3 style={{
+                          fontSize: '18px',
+                          fontWeight: '600',
+                          color: '#1e293b',
+                          marginBottom: '16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          <User size={20} style={{ color: '#0ea5e9' }} />
                           Personal Information
                         </h3>
                         {resumeData?.data?.name && (
-                          <div className="flex items-center gap-3">
-                            <User size={16} className="text-purple-400" />
-                            <span className="text-white">{resumeData?.data?.name}</span>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '12px'
+                          }}>
+                            <User size={16} style={{ color: '#0ea5e9' }} />
+                            <span style={{
+                              color: '#1e293b',
+                              fontSize: '14px'
+                            }}>
+                              {resumeData?.data?.name}
+                            </span>
                           </div>
                         )}
                         {resumeData?.data?.email && (
-                          <div className="flex items-center gap-3">
-                            <Mail size={16} className="text-purple-400" />
-                            <span className="text-white text-sm">{resumeData?.data?.email}</span>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '12px'
+                          }}>
+                            <Mail size={16} style={{ color: '#0ea5e9' }} />
+                            <span style={{
+                              color: '#475569',
+                              fontSize: '14px'
+                            }}>
+                              {resumeData?.data?.email}
+                            </span>
                           </div>
                         )}
                         {resumeData?.data?.phone && (
-                          <div className="flex items-center gap-3">
-                            <Phone size={16} className="text-purple-400" />
-                            <span className="text-white">{resumeData?.data?.phone}</span>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px'
+                          }}>
+                            <Phone size={16} style={{ color: '#0ea5e9' }} />
+                            <span style={{
+                              color: '#475569',
+                              fontSize: '14px'
+                            }}>
+                              {resumeData?.data?.phone}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -725,22 +1108,12 @@ const getSuggestedSkills = () => {
                                     </p>
                                   )}
                                 </div>
-
-                                <div className="flex items-center gap-3">
-                                  <div className="text-right">
-                                    <p className="text-xs text-purple-200 mb-1">Worthiness Score</p>
-                                    <p className="text-lg font-semibold text-yellow-300">
-                                      {typeof cert.worthiness_score === "number"
-                                        ? cert.worthiness_score
-                                        : 0}
-                                      <span className="text-xs text-purple-300 ml-1">/ 100</span>
-                                    </p>
-                                  </div>
-
-                                  {cert.highlight && (
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-400/40">
-                                      Highlight
-                                    </span>
+                                <div className="text-right text-xs text-purple-200">
+                                  {typeof cert.value_level === 'string' && (
+                                    <p className="capitalize">Value: {cert.value_level}</p>
+                                  )}
+                                  {typeof cert.recommendation === 'string' && (
+                                    <p className="capitalize">Action: {cert.recommendation}</p>
                                   )}
                                 </div>
                               </div>
@@ -916,27 +1289,53 @@ const getSuggestedSkills = () => {
 
         {/* ATS Analysis Tab */}
         {activeTab === 'ats' && (
-          <div className="space-y-6">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                <Target size={24} />
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid #e0f2fe',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#1e293b',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <Target size={24} style={{ color: '#0ea5e9' }} />
                 ATS Compatibility Analysis
               </h2>
 
               {resumeData ? (
                 <>
                   {/* ATS Score Gauge */}
-                  <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-8 mb-6">
-                    <div className="text-center">
-                      <p className="text-purple-200 text-sm mb-3">Your ATS Score</p>
-                      <div className="relative inline-block">
-                        <svg className="w-48 h-48">
+                  <div style={{
+                    background: 'linear-gradient(135deg, #e0f2fe, #f0f9ff)',
+                    borderRadius: '12px',
+                    padding: '32px',
+                    marginBottom: '24px',
+                    border: '1px solid #0ea5e9'
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{
+                        color: '#0c4a6e',
+                        fontSize: '14px',
+                        marginBottom: '12px'
+                      }}>
+                        Your ATS Score
+                      </p>
+                      <div style={{ display: 'inline-block', position: 'relative' }}>
+                        <svg width="192" height="192" style={{ display: 'block' }}>
                           <circle
                             cx="96"
                             cy="96"
                             r="88"
                             fill="none"
-                            stroke="rgba(255,255,255,0.1)"
+                            stroke="#e2e8f0"
                             strokeWidth="12"
                           />
                           <circle
@@ -952,19 +1351,46 @@ const getSuggestedSkills = () => {
                           />
                           <defs>
                             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor="#a855f7" />
-                              <stop offset="100%" stopColor="#ec4899" />
+                              <stop offset="0%" stopColor="#0ea5e9" />
+                              <stop offset="100%" stopColor="#0284c7" />
                             </linearGradient>
                           </defs>
                         </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
                           <div>
-                            <p className="text-5xl font-bold text-white">{resumeData.ats_score}</p>
-                            <p className="text-purple-300 text-sm">/ 100</p>
+                            <p style={{
+                              fontSize: '48px',
+                              fontWeight: '700',
+                              color: '#0284c7',
+                              margin: 0
+                            }}>
+                              {resumeData.ats_score}
+                            </p>
+                            <p style={{
+                              color: '#64748b',
+                              fontSize: '14px',
+                              margin: 0
+                            }}>
+                              / 100
+                            </p>
                           </div>
                         </div>
                       </div>
-                      <p className="text-white text-lg font-medium mt-4">
+                      <p style={{
+                        color: '#1e293b',
+                        fontSize: '18px',
+                        fontWeight: '500',
+                        marginTop: '16px'
+                      }}>
                         {resumeData.ats_score >= 75 ? '✨ Excellent' : 
                          resumeData.ats_score >= 50 ? '👍 Good' : '⚠️ Needs Improvement'}
                       </p>
@@ -972,60 +1398,165 @@ const getSuggestedSkills = () => {
                   </div>
 
                   {/* Recommendations */}
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-semibold text-white mb-4">Recommendations</h3>
-                    {getATSRecommendations().map((rec, idx) => (
-                      <div key={idx} className={`rounded-xl p-4 flex items-start gap-3 ${
-                        rec.color === 'red' ? 'bg-red-600/20 border border-red-500/30' :
-                        rec.color === 'yellow' ? 'bg-yellow-600/20 border border-yellow-500/30' :
-                        rec.color === 'green' ? 'bg-green-600/20 border border-green-500/30' :
-                        'bg-blue-600/20 border border-blue-500/30'
-                      }`}>
-                        <rec.icon className={`flex-shrink-0 mt-0.5 ${
-                          rec.color === 'red' ? 'text-red-400' :
-                          rec.color === 'yellow' ? 'text-yellow-400' :
-                          rec.color === 'green' ? 'text-green-400' :
-                          'text-blue-400'
-                        }`} size={20} />
-                        <p className="text-white">{rec.message}</p>
-                      </div>
-                    ))}
+                  <div style={{ marginBottom: '24px' }}>
+                    <h3 style={{
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                      marginBottom: '16px'
+                    }}>
+                      Recommendations
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {getATSRecommendations().map((rec, idx) => (
+                        <div key={idx} style={{
+                          borderRadius: '12px',
+                          padding: '16px',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                          ...(rec.color === 'red' ? {
+                            background: '#fef2f2',
+                            border: '1px solid #fecaca'
+                          } : rec.color === 'yellow' ? {
+                            background: '#fef3c7',
+                            border: '1px solid #fde68a'
+                          } : rec.color === 'green' ? {
+                            background: '#f0fdf4',
+                            border: '1px solid #bbf7d0'
+                          } : {
+                            background: '#eff6ff',
+                            border: '1px solid #dbeafe'
+                          })
+                        }}>
+                          <rec.icon style={{
+                            flexShrink: 0,
+                            marginTop: '2px',
+                            ...(rec.color === 'red' ? { color: '#dc2626' } :
+                              rec.color === 'yellow' ? { color: '#d97706' } :
+                              rec.color === 'green' ? { color: '#059669' } :
+                              { color: '#0ea5e9' })
+                          }} size={20} />
+                          <p style={{
+                            color: '#1e293b',
+                            fontSize: '14px',
+                            margin: 0,
+                            lineHeight: '1.5'
+                          }}>
+                            {rec.message}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* ATS Tips */}
-                  <div className="mt-6 bg-white/5 rounded-xl p-5">
-                    <h3 className="text-lg font-semibold text-purple-300 mb-3">ATS Optimization Tips</h3>
-                    <ul className="space-y-2 text-purple-100 text-sm">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                  <div style={{
+                    background: '#f8fafc',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    border: '1px solid #e0f2fe'
+                  }}>
+                    <h3 style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                      marginBottom: '12px'
+                    }}>
+                      ATS Optimization Tips
+                    </h3>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                      <li style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        marginBottom: '8px',
+                        fontSize: '14px',
+                        color: '#475569'
+                      }}>
+                        <CheckCircle size={16} style={{ color: '#059669', marginTop: '2px', flexShrink: 0 }} />
                         <span>Use standard section headings like "Work Experience" and "Education"</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                      <li style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        marginBottom: '8px',
+                        fontSize: '14px',
+                        color: '#475569'
+                      }}>
+                        <CheckCircle size={16} style={{ color: '#059669', marginTop: '2px', flexShrink: 0 }} />
                         <span>Include relevant keywords from job descriptions</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                      <li style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        marginBottom: '8px',
+                        fontSize: '14px',
+                        color: '#475569'
+                      }}>
+                        <CheckCircle size={16} style={{ color: '#059669', marginTop: '2px', flexShrink: 0 }} />
                         <span>Avoid using images, tables, or complex formatting</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                      <li style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        marginBottom: '8px',
+                        fontSize: '14px',
+                        color: '#475569'
+                      }}>
+                        <CheckCircle size={16} style={{ color: '#059669', marginTop: '2px', flexShrink: 0 }} />
                         <span>List your technical skills explicitly</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                      <li style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        fontSize: '14px',
+                        color: '#475569'
+                      }}>
+                        <CheckCircle size={16} style={{ color: '#059669', marginTop: '2px', flexShrink: 0 }} />
                         <span>Use standard fonts and clear formatting</span>
                       </li>
                     </ul>
                   </div>
                 </>
               ) : (
-                <div className="text-center py-12">
-                  <Target className="mx-auto text-purple-400 mb-4" size={48} />
-                  <p className="text-purple-200 text-lg mb-4">Upload your resume in the Resume Analysis tab first</p>
+                <div style={{
+                  textAlign: 'center',
+                  padding: '48px 0'
+                }}>
+                  <Target size={48} style={{ color: '#0ea5e9', marginBottom: '16px', margin: '0 auto' }} />
+                  <p style={{
+                    color: '#1e293b',
+                    fontSize: '18px',
+                    marginBottom: '16px'
+                  }}>
+                    Upload your resume in the Resume Analysis tab first
+                  </p>
                   <button
                     onClick={() => setActiveTab('analysis')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl transition-colors"
+                    style={{
+                      background: '#0ea5e9',
+                      color: 'white',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#0284c7';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = '#0ea5e9';
+                      e.target.style.transform = 'translateY(0)';
+                    }}
                   >
                     Go to Resume Analysis
                   </button>
@@ -1037,59 +1568,142 @@ const getSuggestedSkills = () => {
 
         {/* Role Recommendation Tab */}
         {activeTab === 'roles' && (
-          <div className="space-y-6">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                <Briefcase size={24} />
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid #e0f2fe',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#1e293b',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <Briefcase size={24} style={{ color: '#0ea5e9' }} />
                 Recommended Roles
               </h2>
 
               {resumeData ? (
                 <>
                   {resumeData.data?.role_match && (
-                    <div className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 rounded-xl p-5 mb-6 border border-purple-500/30">
-                      <p className="text-purple-200 text-sm mb-1">Suggested Role from Resume</p>
-                      <p className="text-white text-xl font-semibold">{resumeData.data.role_match}</p>
+                    <div style={{
+                      background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+                      borderRadius: '12px',
+                      padding: '20px',
+                      marginBottom: '24px',
+                      border: '1px solid #0ea5e9'
+                    }}>
+                      <p style={{
+                        color: '#0c4a6e',
+                        fontSize: '14px',
+                        marginBottom: '4px'
+                      }}>
+                        Suggested Role from Resume
+                      </p>
+                      <p style={{
+                        color: '#0284c7',
+                        fontSize: '20px',
+                        fontWeight: '700',
+                        margin: 0
+                      }}>
+                        {resumeData.data.role_match}
+                      </p>
                     </div>
                   )}
 
-                  <div className="space-y-4">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {getRoleRecommendations().map((role, idx) => (
-                      <div key={idx} className="bg-white/5 rounded-xl p-6 border border-white/10 hover:border-purple-500/50 transition-all">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold text-white mb-2">{role.title}</h3>
-                            <p className="text-purple-200 text-sm">{role.description}</p>
+                      <div key={idx} style={{
+                        background: '#f8fafc',
+                        borderRadius: '12px',
+                        padding: '24px',
+                        border: '1px solid #e0f2fe',
+                        transition: 'all 0.2s ease'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          marginBottom: '16px'
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{
+                              fontSize: '20px',
+                              fontWeight: '600',
+                              color: '#1e293b',
+                              marginBottom: '8px'
+                            }}>
+                              {role.title}
+                            </h3>
+                            <p style={{
+                              color: '#64748b',
+                              fontSize: '14px',
+                              margin: 0
+                            }}>
+                              {role.description}
+                            </p>
                           </div>
-                          <div className="text-right ml-4">
-                            <div className={`text-3xl font-bold ${
-                              role.match >= 85 ? 'text-green-400' :
-                              role.match >= 70 ? 'text-yellow-400' :
-                              'text-orange-400'
-                            }`}>
+                          <div style={{ textAlign: 'right', marginLeft: '16px' }}>
+                            <div style={{
+                              fontSize: '32px',
+                              fontWeight: '700',
+                              color: role.match >= 85 ? '#059669' : role.match >= 70 ? '#d97706' : '#ea580c'
+                            }}>
                               {role.match}%
                             </div>
-                            <p className="text-purple-300 text-xs">Match</p>
+                            <p style={{
+                              color: '#64748b',
+                              fontSize: '12px',
+                              margin: 0
+                            }}>
+                              Match
+                            </p>
                           </div>
                         </div>
                         
-                        <div className="mb-4">
-                          <div className="w-full bg-white/10 rounded-full h-2">
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={{
+                            width: '100%',
+                            height: '8px',
+                            backgroundColor: '#e2e8f0',
+                            borderRadius: '4px',
+                            overflow: 'hidden'
+                          }}>
                             <div 
-                              className={`h-2 rounded-full transition-all ${
-                                role.match >= 70 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
-                              'bg-gradient-to-r from-red-500 to-orange-500'
-                              }`}
-                              style={{ width: `${role.match}%` }}
+                              style={{
+                                height: '8px',
+                                borderRadius: '4px',
+                                transition: 'width 0.3s ease',
+                                background: role.match >= 70 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f97316)',
+                                width: `${role.match}%`
+                              }}
                             />
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: '8px'
+                        }}>
                           {role.skills.map((s, i) => (
                             <span
                               key={i}
-                              className="bg-purple-600/30 border border-purple-400/30 px-3 py-1 rounded-full text-sm text-white"
+                              style={{
+                                background: '#e0f2fe',
+                                border: '1px solid #0ea5e9',
+                                padding: '6px 12px',
+                                borderRadius: '20px',
+                                fontSize: '14px',
+                                color: '#0c4a6e',
+                                fontWeight: '500'
+                              }}
                             >
                               {s}
                             </span>
@@ -1100,31 +1714,81 @@ const getSuggestedSkills = () => {
                   </div>
 
                   {resumeData.detected_role && (
-                    <div className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 rounded-xl p-5 mb-6 border border-purple-500/30">
-                      <p className="text-purple-200 text-sm mb-1">AI-Detected Role</p>
-                      <p className="text-white text-xl font-semibold">{resumeData.detected_role}</p>
+                    <div style={{
+                      background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+                      borderRadius: '12px',
+                      padding: '20px',
+                      marginBottom: '24px',
+                      border: '1px solid #0ea5e9'
+                    }}>
+                      <p style={{
+                        color: '#0c4a6e',
+                        fontSize: '14px',
+                        marginBottom: '4px'
+                      }}>
+                        AI-Detected Role
+                      </p>
+                      <p style={{
+                        color: '#0284c7',
+                        fontSize: '20px',
+                        fontWeight: '700',
+                        margin: 0
+                      }}>
+                        {resumeData.detected_role}
+                      </p>
                     </div>
                   )}
 
                   {/* Suggested Skills Section */}
                   {getSuggestedSkills().length > 0 && (
-                    <div className="mt-8 bg-gradient-to-r from-purple-700/20 to-pink-700/20 rounded-xl p-6 border border-purple-500/30">
-                      <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-                        <TrendingUp size={20} className="text-purple-300" />
+                    <div style={{
+                      marginTop: '32px',
+                      background: 'linear-gradient(135deg, #e0f2fe, #f0f9ff)',
+                      borderRadius: '12px',
+                      padding: '24px',
+                      border: '1px solid #0ea5e9'
+                    }}>
+                      <h3 style={{
+                        fontSize: '20px',
+                        fontWeight: '600',
+                        color: '#1e293b',
+                        marginBottom: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <TrendingUp size={20} style={{ color: '#0ea5e9' }} />
                         Suggested Skills to Strengthen Your {resumeData.detected_role || "Career"}
                       </h3>
-                      <p className="text-purple-200 text-sm mb-4">
+                      <p style={{
+                        color: '#64748b',
+                        fontSize: '14px',
+                        marginBottom: '16px'
+                      }}>
                         Based on your current resume, here are additional skills recommended for your role:
-                        <span className="font-semibold text-purple-400 ml-1">
+                        <span style={{ fontWeight: '600', color: '#0ea5e9', marginLeft: '4px' }}>
                           {resumeData.detected_role || "General Developer"}
                         </span>
                       </p>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '8px'
+                      }}>
                         {getSuggestedSkills().map((skill, i) => (
                           <span
                             key={i}
-                            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-full text-sm font-medium border border-purple-400/30 shadow-sm"
+                            style={{
+                              background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                              color: 'white',
+                              padding: '8px 16px',
+                              borderRadius: '20px',
+                              fontSize: '14px',
+                              fontWeight: '500',
+                              border: '1px solid rgba(14, 165, 233, 0.3)',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
                           >
                             {skill}
                           </span>
@@ -1134,14 +1798,39 @@ const getSuggestedSkills = () => {
                   )}
                 </>
               ) : (
-                <div className="text-center py-12">
-                  <Briefcase className="mx-auto text-purple-400 mb-4" size={48} />
-                  <p className="text-purple-200 text-lg mb-4">
+                <div style={{
+                  textAlign: 'center',
+                  padding: '48px 0'
+                }}>
+                  <Briefcase size={48} style={{ color: '#0ea5e9', marginBottom: '16px', margin: '0 auto' }} />
+                  <p style={{
+                    color: '#1e293b',
+                    fontSize: '18px',
+                    marginBottom: '16px'
+                  }}>
                     Upload your resume first to get personalized role suggestions
                   </p>
                   <button
                     onClick={() => setActiveTab('analysis')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl transition-colors"
+                    style={{
+                      background: '#0ea5e9',
+                      color: 'white',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#0284c7';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = '#0ea5e9';
+                      e.target.style.transform = 'translateY(0)';
+                    }}
                   >
                     Go to Resume Analysis
                   </button>
@@ -1153,65 +1842,172 @@ const getSuggestedSkills = () => {
 
         {/* AI Assistant Tab */}
         {activeTab === 'assistant' && (
-          <div className="space-y-6">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 flex flex-col h-[70vh]">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                <MessageSquare size={24} />
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid #e0f2fe',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              height: '70vh'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#1e293b',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <MessageSquare size={24} style={{ color: '#0ea5e9' }} />
                 AI Career Assistant
               </h2>
 
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+              <div style={{
+                flex: 1,
+                overflowY: 'auto',
+                marginBottom: '16px',
+                paddingRight: '8px'
+              }}>
                 {chatMessages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center text-purple-200">
-                    <MessageSquare size={48} className="text-purple-400 mb-3" />
-                    <p className="text-lg font-medium">Start chatting with your AI assistant</p>
-                    <p className="text-sm text-purple-300 mt-1">
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    textAlign: 'center'
+                  }}>
+                    <MessageSquare size={48} style={{ color: '#0ea5e9', marginBottom: '12px' }} />
+                    <p style={{
+                      fontSize: '18px',
+                      fontWeight: '500',
+                      color: '#1e293b',
+                      marginBottom: '4px'
+                    }}>
+                      Start chatting with your AI assistant
+                    </p>
+                    <p style={{
+                      fontSize: '14px',
+                      color: '#64748b'
+                    }}>
                       Ask about resume improvement, job roles, or technical growth tips.
                     </p>
                   </div>
                 ) : (
-                  chatMessages.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex ${
-                        msg.role === 'user' ? 'justify-end' : 'justify-start'
-                      }`}
-                    >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {chatMessages.map((msg, idx) => (
                       <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm ${
-                          msg.role === 'user'
-                            ? 'bg-purple-600 text-white rounded-br-none'
-                            : 'bg-white/10 text-purple-100 rounded-bl-none border border-white/10'
-                        }`}
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start'
+                        }}
                       >
-                        {msg.content}
+                        <div
+                          style={{
+                            maxWidth: '75%',
+                            borderRadius: '16px',
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            lineHeight: '1.5',
+                            ...(msg.role === 'user'
+                              ? {
+                                  background: '#0ea5e9',
+                                  color: 'white',
+                                  borderBottomRightRadius: '4px'
+                                }
+                              : {
+                                  background: '#f8fafc',
+                                  color: '#1e293b',
+                                  border: '1px solid #e0f2fe',
+                                  borderBottomLeftRadius: '4px'
+                                })
+                          }}
+                        >
+                          {msg.content}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
 
-              <div className="border-t border-white/10 pt-3 flex items-center gap-3">
+              <div style={{
+                borderTop: '1px solid #e0f2fe',
+                paddingTop: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
                 <input
                   type="text"
                   value={userMessage}
                   onChange={(e) => setUserMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                   placeholder="Type your message..."
-                  className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  style={{
+                    flex: 1,
+                    background: 'white',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    color: '#1f2937',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 />
                 <button
                   onClick={sendMessage}
                   disabled={chatting}
-                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all ${
-                    chatting
-                      ? 'bg-purple-400/40 cursor-not-allowed text-purple-200'
-                      : 'bg-purple-600 hover:bg-purple-700 text-white'
-                  }`}
+                  style={{
+                    padding: '12px 20px',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                    cursor: chatting ? 'not-allowed' : 'pointer',
+                    ...(chatting
+                      ? {
+                          background: '#94a3b8',
+                          color: 'white'
+                        }
+                      : {
+                          background: '#0ea5e9',
+                          color: 'white'
+                        })
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!chatting) {
+                      e.target.style.background = '#0284c7';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!chatting) {
+                      e.target.style.background = '#0ea5e9';
+                      e.target.style.transform = 'translateY(0)';
+                    }
+                  }}
                 >
                   {chatting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid rgba(255, 255, 255, 0.3)',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
                       <span>Thinking...</span>
                     </>
                   ) : (
@@ -1227,22 +2023,61 @@ const getSuggestedSkills = () => {
         )}
 
         {activeTab === 'guidance' && (
-          <div className="space-y-6">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                <TrendingUp size={24} />
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid #e0f2fe',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#1e293b',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <TrendingUp size={24} style={{ color: '#0ea5e9' }} />
                 Guidance
               </h2>
 
               {!resumeData && (
-                <div className="text-center py-12">
-                  <Info className="mx-auto text-purple-400 mb-4" size={48} />
-                  <p className="text-purple-200 text-lg mb-4">
+                <div style={{
+                  textAlign: 'center',
+                  padding: '48px 0'
+                }}>
+                  <Info size={48} style={{ color: '#0ea5e9', marginBottom: '16px', margin: '0 auto' }} />
+                  <p style={{
+                    color: '#1e293b',
+                    fontSize: '18px',
+                    marginBottom: '16px'
+                  }}>
                     Upload your resume first in the Resume Analysis tab to get personalized guidance.
                   </p>
                   <button
                     onClick={() => setActiveTab('analysis')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl transition-colors"
+                    style={{
+                      background: '#0ea5e9',
+                      color: 'white',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#0284c7';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = '#0ea5e9';
+                      e.target.style.transform = 'translateY(0)';
+                    }}
                   >
                     Go to Resume Analysis
                   </button>
@@ -1252,35 +2087,99 @@ const getSuggestedSkills = () => {
               {resumeData && (
                 <>
                   {guidanceLoading && (
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-5 h-5 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
-                      <p className="text-purple-200 text-sm">Generating your personalized guidance...</p>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        border: '2px solid rgba(14, 165, 233, 0.3)',
+                        borderTop: '2px solid #0ea5e9',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      <p style={{
+                        color: '#64748b',
+                        fontSize: '14px'
+                      }}>
+                        Generating your personalized guidance...
+                      </p>
                     </div>
                   )}
 
                   {guidanceError && (
-                    <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-4 flex items-start gap-3">
-                      <AlertCircle className="text-red-400 mt-0.5" size={20} />
-                      <div className="flex-1">
-                        <p className="text-red-200 text-sm">{guidanceError}</p>
+                    <div style={{
+                      background: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      marginBottom: '16px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '12px'
+                    }}>
+                      <AlertCircle style={{ color: '#dc2626', marginTop: '2px' }} size={20} />
+                      <div style={{ flex: 1 }}>
+                        <p style={{
+                          color: '#991b1b',
+                          fontSize: '14px',
+                          margin: 0
+                        }}>
+                          {guidanceError}
+                        </p>
                       </div>
                     </div>
                   )}
 
                   {guidance && !guidanceLoading && !guidanceError && (
-                    <div className="space-y-6">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                       {Array.isArray(guidance.technical_skills) && guidance.technical_skills.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Technical Skills & Levels</h3>
-                          <div className="flex flex-wrap gap-2">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            Technical Skills & Levels
+                          </h3>
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px'
+                          }}>
                             {guidance.technical_skills.map((s, idx) => (
                               <span
                                 key={idx}
-                                className="px-3 py-1 rounded-full text-sm border border-purple-500/40 bg-purple-700/30 text-white flex items-center gap-2"
+                                style={{
+                                  padding: '6px 12px',
+                                  borderRadius: '20px',
+                                  fontSize: '14px',
+                                  border: '1px solid #0ea5e9',
+                                  background: '#e0f2fe',
+                                  color: '#0c4a6e',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
                               >
                                 <span>{s.name}</span>
                                 {s.level && (
-                                  <span className="text-xs text-purple-200 capitalize">({s.level})</span>
+                                  <span style={{
+                                    fontSize: '12px',
+                                    color: '#64748b',
+                                    textTransform: 'capitalize'
+                                  }}>
+                                    ({s.level})
+                                  </span>
                                 )}
                               </span>
                             ))}
@@ -1289,13 +2188,42 @@ const getSuggestedSkills = () => {
                       )}
 
                       {Array.isArray(guidance.missing_skills) && guidance.missing_skills.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Missing / Recommended Skills</h3>
-                          <ul className="space-y-2 text-sm text-purple-100">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            Missing / Recommended Skills
+                          </h3>
+                          <ul style={{
+                            margin: 0,
+                            padding: 0,
+                            listStyle: 'none',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px'
+                          }}>
                             {guidance.missing_skills.map((ms, idx) => (
-                              <li key={idx} className="flex gap-2">
-                                <span className="font-semibold text-white">{ms.name}:</span>
-                                <span className="text-purple-200">{ms.reason}</span>
+                              <li key={idx} style={{
+                                display: 'flex',
+                                gap: '8px',
+                                fontSize: '14px',
+                                color: '#475569'
+                              }}>
+                                <span style={{
+                                  fontWeight: '600',
+                                  color: '#1e293b'
+                                }}>
+                                  {ms.name}:
+                                </span>
+                                <span>{ms.reason}</span>
                               </li>
                             ))}
                           </ul>
@@ -1303,33 +2231,99 @@ const getSuggestedSkills = () => {
                       )}
 
                       {Array.isArray(guidance.learning_paths) && guidance.learning_paths.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Learning Paths</h3>
-                          <div className="space-y-4">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '16px'
+                          }}>
+                            Learning Paths
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {guidance.learning_paths.map((lp, idx) => (
-                              <div key={idx} className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-4">
-                                <div className="flex justify-between items-start gap-3 mb-2">
-                                  <p className="text-white font-semibold text-sm">{lp.track}</p>
+                              <div key={idx} style={{
+                                borderRadius: '12px',
+                                border: '1px solid #e0f2fe',
+                                background: 'white',
+                                padding: '16px'
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
+                                  gap: '12px',
+                                  marginBottom: '8px'
+                                }}>
+                                  <p style={{
+                                    color: '#1e293b',
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    margin: 0
+                                  }}>
+                                    {lp.track}
+                                  </p>
                                   {typeof lp.estimated_time_weeks === 'number' && (
-                                    <p className="text-xs text-purple-200">~{lp.estimated_time_weeks} weeks</p>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      margin: 0
+                                    }}>
+                                      ~{lp.estimated_time_weeks} weeks
+                                    </p>
                                   )}
                                 </div>
                                 {Array.isArray(lp.topics) && lp.topics.length > 0 && (
-                                  <div className="mb-2">
-                                    <p className="text-xs text-purple-200 mb-1">Topics</p>
-                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                  <div style={{ marginBottom: '8px' }}>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Topics
+                                    </p>
+                                    <ul style={{
+                                      margin: 0,
+                                      padding: 0,
+                                      paddingLeft: '16px',
+                                      listStyle: 'disc',
+                                      fontSize: '12px',
+                                      color: '#475569'
+                                    }}>
                                       {lp.topics.map((t, i) => (
-                                        <li key={i}>{t}</li>
+                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
                                       ))}
                                     </ul>
                                   </div>
                                 )}
                                 {Array.isArray(lp.tools) && lp.tools.length > 0 && (
-                                  <div className="mb-2">
-                                    <p className="text-xs text-purple-200 mb-1">Tools</p>
-                                    <div className="flex flex-wrap gap-2">
+                                  <div style={{ marginBottom: '8px' }}>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Tools
+                                    </p>
+                                    <div style={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: '4px'
+                                    }}>
                                       {lp.tools.map((t, i) => (
-                                        <span key={i} className="text-[11px] px-2 py-1 rounded-full bg-slate-900/40 text-purple-50 border border-purple-500/30">
+                                        <span key={i} style={{
+                                          fontSize: '11px',
+                                          padding: '2px 8px',
+                                          borderRadius: '12px',
+                                          background: '#e0f2fe',
+                                          color: '#0c4a6e',
+                                          border: '1px solid #0ea5e9'
+                                        }}>
                                           {t}
                                         </span>
                                       ))}
@@ -1337,21 +2331,47 @@ const getSuggestedSkills = () => {
                                   </div>
                                 )}
                                 {Array.isArray(lp.exercises) && lp.exercises.length > 0 && (
-                                  <div className="mb-2">
-                                    <p className="text-xs text-purple-200 mb-1">Practice Tasks</p>
-                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                  <div style={{ marginBottom: '8px' }}>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Practice Tasks
+                                    </p>
+                                    <ul style={{
+                                      margin: 0,
+                                      padding: 0,
+                                      paddingLeft: '16px',
+                                      listStyle: 'disc',
+                                      fontSize: '12px',
+                                      color: '#475569'
+                                    }}>
                                       {lp.exercises.map((t, i) => (
-                                        <li key={i}>{t}</li>
+                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
                                       ))}
                                     </ul>
                                   </div>
                                 )}
                                 {Array.isArray(lp.projects) && lp.projects.length > 0 && (
                                   <div>
-                                    <p className="text-xs text-purple-200 mb-1">Suggested Projects</p>
-                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Suggested Projects
+                                    </p>
+                                    <ul style={{
+                                      margin: 0,
+                                      padding: 0,
+                                      paddingLeft: '16px',
+                                      listStyle: 'disc',
+                                      fontSize: '12px',
+                                      color: '#475569'
+                                    }}>
                                       {lp.projects.map((t, i) => (
-                                        <li key={i}>{t}</li>
+                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
                                       ))}
                                     </ul>
                                   </div>
@@ -1363,17 +2383,53 @@ const getSuggestedSkills = () => {
                       )}
 
                       {Array.isArray(guidance.project_ideas) && guidance.project_ideas.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Personalized Project Ideas</h3>
-                          <div className="space-y-3 text-sm text-purple-100">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            Personalized Project Ideas
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {guidance.project_ideas.map((p, idx) => (
-                              <div key={idx} className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
-                                <p className="text-white font-semibold text-sm mb-1">{p.title}</p>
+                              <div key={idx} style={{
+                                border: '1px solid #e0f2fe',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                background: 'white'
+                              }}>
+                                <p style={{
+                                  color: '#1e293b',
+                                  fontWeight: '600',
+                                  fontSize: '14px',
+                                  margin: '0 0 4px 0'
+                                }}>
+                                  {p.title}
+                                </p>
                                 {p.type && (
-                                  <p className="text-[11px] text-purple-200 mb-1">Type: {p.type}</p>
+                                  <p style={{
+                                    fontSize: '11px',
+                                    color: '#64748b',
+                                    margin: '0 0 4px 0'
+                                  }}>
+                                    Type: {p.type}
+                                  </p>
                                 )}
                                 {p.description && (
-                                  <p className="text-xs text-purple-100">{p.description}</p>
+                                  <p style={{
+                                    fontSize: '12px',
+                                    color: '#475569',
+                                    margin: 0
+                                  }}>
+                                    {p.description}
+                                  </p>
                                 )}
                               </div>
                             ))}
@@ -1382,23 +2438,75 @@ const getSuggestedSkills = () => {
                       )}
 
                       {Array.isArray(guidance.certificate_recommendations) && guidance.certificate_recommendations.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Certificate Recommendations</h3>
-                          <div className="space-y-2 text-sm text-purple-100">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            Certificate Recommendations
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {guidance.certificate_recommendations.map((c, idx) => (
-                              <div key={idx} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
+                              <div key={idx} style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                                border: '1px solid #e0f2fe',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                background: 'white'
+                              }}>
                                 <div>
-                                  <p className="text-white font-semibold text-sm">{c.name}</p>
+                                  <p style={{
+                                    color: '#1e293b',
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    margin: 0
+                                  }}>
+                                    {c.name}
+                                  </p>
                                   {c.reason && (
-                                    <p className="text-xs text-purple-200 mt-1">{c.reason}</p>
+                                    <p style={{
+                                      color: '#64748b',
+                                      fontSize: '12px',
+                                      marginTop: '4px',
+                                      margin: '4px 0 0 0'
+                                    }}>
+                                      {c.reason}
+                                    </p>
                                   )}
                                 </div>
-                                <div className="text-xs text-right text-purple-200">
+                                <div style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'flex-end',
+                                  gap: '2px',
+                                  fontSize: '12px'
+                                }}>
                                   {c.value_level && (
-                                    <p className="capitalize">Value: {c.value_level}</p>
+                                    <p style={{
+                                      color: '#64748b',
+                                      margin: 0,
+                                      textTransform: 'capitalize'
+                                    }}>
+                                      Value: {c.value_level}
+                                    </p>
                                   )}
                                   {c.recommendation && (
-                                    <p className="capitalize">Action: {c.recommendation}</p>
+                                    <p style={{
+                                      color: '#64748b',
+                                      margin: 0,
+                                      textTransform: 'capitalize'
+                                    }}>
+                                      Action: {c.recommendation}
+                                    </p>
                                   )}
                                 </div>
                               </div>
@@ -1408,43 +2516,135 @@ const getSuggestedSkills = () => {
                       )}
 
                       {Array.isArray(guidance.role_matching) && guidance.role_matching.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Role Match Analysis</h3>
-                          <div className="space-y-3">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            Role Match Analysis
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {guidance.role_matching.map((r, idx) => (
-                              <div key={idx} className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
-                                <div className="flex items-center justify-between mb-2">
-                                  <p className="text-white font-semibold text-sm">{r.role}</p>
+                              <div key={idx} style={{
+                                border: '1px solid #e0f2fe',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                background: 'white'
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  marginBottom: '8px'
+                                }}>
+                                  <p style={{
+                                    color: '#1e293b',
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    margin: 0
+                                  }}>
+                                    {r.role}
+                                  </p>
                                   {typeof r.match_percentage === 'number' && (
-                                    <p className="text-sm font-semibold text-yellow-300">{r.match_percentage}% match</p>
+                                    <p style={{
+                                      fontSize: '14px',
+                                      fontWeight: '600',
+                                      color: '#d97706',
+                                      margin: 0
+                                    }}>
+                                      {r.match_percentage}% match
+                                    </p>
                                   )}
                                 </div>
-                                <div className="grid md:grid-cols-3 gap-3 text-xs text-purple-100">
+                                <div style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                  gap: '12px',
+                                  fontSize: '12px'
+                                }}>
                                   <div>
-                                    <p className="font-semibold mb-1">Matched Skills</p>
-                                    <div className="flex flex-wrap gap-1">
+                                    <p style={{
+                                      fontWeight: '600',
+                                      marginBottom: '4px',
+                                      color: '#1e293b'
+                                    }}>
+                                      Matched Skills
+                                    </p>
+                                    <div style={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: '4px'
+                                    }}>
                                       {(r.matched_skills || []).map((s, i) => (
-                                        <span key={i} className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-100 border border-green-400/40">
+                                        <span key={i} style={{
+                                          padding: '2px 6px',
+                                          borderRadius: '10px',
+                                          background: '#f0fdf4',
+                                          color: '#14532d',
+                                          border: '1px solid #bbf7d0',
+                                          fontSize: '11px'
+                                        }}>
                                           {s}
                                         </span>
                                       ))}
                                     </div>
                                   </div>
                                   <div>
-                                    <p className="font-semibold mb-1">Missing Skills</p>
-                                    <div className="flex flex-wrap gap-1">
+                                    <p style={{
+                                      fontWeight: '600',
+                                      marginBottom: '4px',
+                                      color: '#1e293b'
+                                    }}>
+                                      Missing Skills
+                                    </p>
+                                    <div style={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: '4px'
+                                    }}>
                                       {(r.missing_skills || []).map((s, i) => (
-                                        <span key={i} className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-100 border border-red-400/40">
+                                        <span key={i} style={{
+                                          padding: '2px 6px',
+                                          borderRadius: '10px',
+                                          background: '#fef2f2',
+                                          color: '#991b1b',
+                                          border: '1px solid #fecaca',
+                                          fontSize: '11px'
+                                        }}>
                                           {s}
                                         </span>
                                       ))}
                                     </div>
                                   </div>
                                   <div>
-                                    <p className="font-semibold mb-1">Additional Skills To Learn</p>
-                                    <div className="flex flex-wrap gap-1">
+                                    <p style={{
+                                      fontWeight: '600',
+                                      marginBottom: '4px',
+                                      color: '#1e293b'
+                                    }}>
+                                      Additional Skills To Learn
+                                    </p>
+                                    <div style={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: '4px'
+                                    }}>
                                       {(r.additional_skills_to_learn || []).map((s, i) => (
-                                        <span key={i} className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/40">
+                                        <span key={i} style={{
+                                          padding: '2px 6px',
+                                          borderRadius: '10px',
+                                          background: '#dbeafe',
+                                          color: '#1e3a8a',
+                                          border: '1px solid #93c5fd',
+                                          fontSize: '11px'
+                                        }}>
                                           {s}
                                         </span>
                                       ))}
@@ -1472,14 +2672,44 @@ const getSuggestedSkills = () => {
                       )}
 
                       {Array.isArray(guidance.recommended_tech_stacks) && guidance.recommended_tech_stacks.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Recommended Tech Stacks</h3>
-                          <div className="space-y-2 text-sm text-purple-100">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            Recommended Tech Stacks
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {guidance.recommended_tech_stacks.map((ts, idx) => (
-                              <div key={idx} className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
-                                <p className="text-white font-semibold text-sm mb-1">{ts.stack}</p>
+                              <div key={idx} style={{
+                                border: '1px solid #e0f2fe',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                background: 'white'
+                              }}>
+                                <p style={{
+                                  color: '#1e293b',
+                                  fontWeight: '600',
+                                  fontSize: '14px',
+                                  margin: '0 0 4px 0'
+                                }}>
+                                  {ts.stack}
+                                </p>
                                 {ts.reason && (
-                                  <p className="text-xs text-purple-200">{ts.reason}</p>
+                                  <p style={{
+                                    fontSize: '12px',
+                                    color: '#64748b',
+                                    margin: 0
+                                  }}>
+                                    {ts.reason}
+                                  </p>
                                 )}
                               </div>
                             ))}
@@ -1488,64 +2718,147 @@ const getSuggestedSkills = () => {
                       )}
 
                       {guidance.career_clarity_summary && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Career Clarity Summary</h3>
-                          <div className="space-y-2 text-sm text-purple-100">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            Career Clarity Summary
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {guidance.career_clarity_summary.primary_alignment && (
-                              <p><span className="font-semibold text-white">Primary Alignment:</span> {guidance.career_clarity_summary.primary_alignment}</p>
+                              <p style={{ margin: 0, color: '#475569', fontSize: '14px' }}>
+                                <span style={{ fontWeight: '600', color: '#1e293b' }}>Primary Alignment:</span> {guidance.career_clarity_summary.primary_alignment}
+                              </p>
                             )}
                             {Array.isArray(guidance.career_clarity_summary.aligned_roles) && guidance.career_clarity_summary.aligned_roles.length > 0 && (
-                              <p>
-                                <span className="font-semibold text-white">Good Roles:</span>{' '}
+                              <p style={{ margin: 0, color: '#475569', fontSize: '14px' }}>
+                                <span style={{ fontWeight: '600', color: '#1e293b' }}>Good Roles:</span>{' '}
                                 {guidance.career_clarity_summary.aligned_roles.join(', ')}
                               </p>
                             )}
                             {Array.isArray(guidance.career_clarity_summary.roles_to_avoid) && guidance.career_clarity_summary.roles_to_avoid.length > 0 && (
-                              <p>
-                                <span className="font-semibold text-white">Roles to Avoid:</span>{' '}
+                              <p style={{ margin: 0, color: '#475569', fontSize: '14px' }}>
+                                <span style={{ fontWeight: '600', color: '#1e293b' }}>Roles to Avoid:</span>{' '}
                                 {guidance.career_clarity_summary.roles_to_avoid.join(', ')}
                               </p>
                             )}
                             {guidance.career_clarity_summary.reasoning && (
-                              <p className="text-xs text-purple-200">{guidance.career_clarity_summary.reasoning}</p>
+                              <p style={{
+                                color: '#64748b',
+                                fontSize: '12px',
+                                margin: 0
+                              }}>
+                                {guidance.career_clarity_summary.reasoning}
+                              </p>
                             )}
                           </div>
                         </div>
                       )}
 
                       {Array.isArray(guidance.weekly_schedule) && guidance.weekly_schedule.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">4–8 Week Skill-Improvement Plan</h3>
-                          <div className="space-y-3 text-sm text-purple-100">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '12px'
+                          }}>
+                            4–8 Week Skill-Improvement Plan
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {guidance.weekly_schedule.map((w, idx) => (
-                              <div key={idx} className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/20">
-                                <p className="text-white font-semibold text-sm mb-1">Week {w.week || idx + 1}: {w.focus}</p>
+                              <div key={idx} style={{
+                                border: '1px solid #e0f2fe',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                background: 'white'
+                              }}>
+                                <p style={{
+                                  color: '#1e293b',
+                                  fontWeight: '600',
+                                  fontSize: '14px',
+                                  margin: '0 0 8px 0'
+                                }}>
+                                  Week {w.week || idx + 1}: {w.focus}
+                                </p>
                                 {Array.isArray(w.topics) && w.topics.length > 0 && (
-                                  <div className="mb-1">
-                                    <p className="text-xs text-purple-200 mb-1">Topics</p>
-                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                  <div style={{ marginBottom: '8px' }}>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Topics
+                                    </p>
+                                    <ul style={{
+                                      margin: 0,
+                                      padding: 0,
+                                      paddingLeft: '16px',
+                                      listStyle: 'disc',
+                                      fontSize: '12px',
+                                      color: '#475569'
+                                    }}>
                                       {w.topics.map((t, i) => (
-                                        <li key={i}>{t}</li>
+                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
                                       ))}
                                     </ul>
                                   </div>
                                 )}
                                 {Array.isArray(w.practice_tasks) && w.practice_tasks.length > 0 && (
-                                  <div className="mb-1">
-                                    <p className="text-xs text-purple-200 mb-1">Practice Tasks</p>
-                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
+                                  <div style={{ marginBottom: '8px' }}>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Practice Tasks
+                                    </p>
+                                    <ul style={{
+                                      margin: 0,
+                                      padding: 0,
+                                      paddingLeft: '16px',
+                                      listStyle: 'disc',
+                                      fontSize: '12px',
+                                      color: '#475569'
+                                    }}>
                                       {w.practice_tasks.map((t, i) => (
-                                        <li key={i}>{t}</li>
+                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
                                       ))}
                                     </ul>
                                   </div>
                                 )}
                                 {Array.isArray(w.checkpoints) && w.checkpoints.length > 0 && (
                                   <div>
-                                    <p className="text-xs text-purple-200 mb-1">Checkpoints</p>
-                                    <ul className="list-disc list-inside text-xs text-purple-50 space-y-1">
-                                      {w.checkpoints.map((t, i) => (
-                                        <li key={i}>{t}</li>
+                                    <p style={{
+                                      fontSize: '12px',
+                                      color: '#64748b',
+                                      marginBottom: '4px'
+                                    }}>
+                                      Checkpoints
+                                    </p>
+                                    <ul style={{
+                                      margin: 0,
+                                      padding: 0,
+                                      paddingLeft: '16px',
+                                      listStyle: 'disc',
+                                      fontSize: '12px',
+                                      color: '#475569'
+                                    }}>
+                                      {w.checkpoints.map((c, i) => (
+                                        <li key={i} style={{ marginBottom: '2px' }}>{c}</li>
                                       ))}
                                     </ul>
                                   </div>
