@@ -1029,13 +1029,38 @@ const getSuggestedSkills = () => {
 
                       {/* Technical Skills */}
                       {resumeData?.data?.skills?.technical?.length > 0 && (
-                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-4">Technical Skills</h3>
-                          <div className="flex flex-wrap gap-2">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe',
+                          gridColumn: '1 / -1'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '16px'
+                          }}>
+                            Technical Skills
+                          </h3>
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px'
+                          }}>
                             {resumeData?.data?.skills.technical.map((skill, idx) => (
                               <span
                                 key={idx}
-                                className="bg-purple-600/40 px-4 py-2 rounded-full text-white text-sm font-medium border border-purple-500/30"
+                                style={{
+                                  padding: '8px 16px',
+                                  borderRadius: '20px',
+                                  background: '#dbeafe',
+                                  color: '#1e3a8a',
+                                  fontSize: '14px',
+                                  fontWeight: '500',
+                                  border: '1px solid #93c5fd'
+                                }}
                               >
                                 {skill}
                               </span>
@@ -1046,13 +1071,38 @@ const getSuggestedSkills = () => {
 
                       {/* Area of Interest */}
                       {resumeData?.data?.skills?.area_of_interest?.length > 0 && (
-                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-4">Area of Interest</h3>
-                          <div className="flex flex-wrap gap-2">
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: '1px solid #e0f2fe',
+                          gridColumn: '1 / -1'
+                        }}>
+                          <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            marginBottom: '16px'
+                          }}>
+                            Area of Interest
+                          </h3>
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px'
+                          }}>
                             {resumeData?.data?.skills.area_of_interest.map((area, idx) => (
                               <span
                                 key={idx}
-                                className="bg-blue-600/40 px-4 py-2 rounded-full text-white text-sm font-medium border border-blue-500/30"
+                                style={{
+                                  padding: '8px 16px',
+                                  borderRadius: '20px',
+                                  background: '#e0f2fe',
+                                  color: '#0c4a6e',
+                                  fontSize: '14px',
+                                  fontWeight: '500',
+                                  border: '1px solid #bae6fd'
+                                }}
                               >
                                 {area}
                               </span>
