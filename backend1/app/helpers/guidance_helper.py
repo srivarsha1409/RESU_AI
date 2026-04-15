@@ -479,3 +479,261 @@ async def generate_guidance(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     except Exception:
         # On any runtime error, fall back instead of returning only an error
         return _build_fallback_guidance(cleaned_resume)
+
+
+def _build_fallback_role_roadmap(target_role: str, current_skills: list, experience_level: str) -> Dict[str, Any]:
+    """Fallback roadmap when LLM is unavailable."""
+    
+    # Define role requirements for common roles
+    role_requirements = {
+        "frontend developer": {
+            "required_skills": ["HTML", "CSS", "JavaScript", "React", "Git", "REST APIs", "Responsive Design"],
+            "nice_to_have": ["TypeScript", "Next.js", "Tailwind CSS", "Testing", "Redux"],
+            "projects": [
+                {"title": "Portfolio Website", "description": "Personal portfolio showcasing your work", "difficulty": "beginner"},
+                {"title": "E-commerce Product Page", "description": "Product listing with filters and cart", "difficulty": "intermediate"},
+                {"title": "Dashboard Application", "description": "Data visualization dashboard with charts", "difficulty": "advanced"},
+            ],
+        },
+        "backend developer": {
+            "required_skills": ["Python", "SQL", "REST APIs", "Git", "Linux basics", "Database Design", "Authentication"],
+            "nice_to_have": ["FastAPI/Django/Flask", "Docker", "Redis", "MongoDB", "AWS"],
+            "projects": [
+                {"title": "REST API Service", "description": "CRUD API with authentication", "difficulty": "beginner"},
+                {"title": "Task Queue System", "description": "Background job processing system", "difficulty": "intermediate"},
+                {"title": "Microservices Architecture", "description": "Multi-service backend with API gateway", "difficulty": "advanced"},
+            ],
+        },
+        "full stack developer": {
+            "required_skills": ["HTML", "CSS", "JavaScript", "Python/Node.js", "SQL", "React/Vue", "REST APIs", "Git"],
+            "nice_to_have": ["TypeScript", "Docker", "MongoDB", "AWS/GCP", "CI/CD"],
+            "projects": [
+                {"title": "Blog Platform", "description": "Full stack blog with authentication", "difficulty": "beginner"},
+                {"title": "Social Media Clone", "description": "Twitter/Instagram clone with real-time features", "difficulty": "intermediate"},
+                {"title": "SaaS Application", "description": "Subscription-based service with payments", "difficulty": "advanced"},
+            ],
+        },
+        "data scientist": {
+            "required_skills": ["Python", "Pandas", "NumPy", "SQL", "Statistics", "Machine Learning", "Data Visualization"],
+            "nice_to_have": ["TensorFlow/PyTorch", "Scikit-learn", "Spark", "Deep Learning", "NLP"],
+            "projects": [
+                {"title": "EDA Project", "description": "Exploratory data analysis on a dataset", "difficulty": "beginner"},
+                {"title": "Prediction Model", "description": "ML model for classification/regression", "difficulty": "intermediate"},
+                {"title": "End-to-end ML Pipeline", "description": "Complete ML system with deployment", "difficulty": "advanced"},
+            ],
+        },
+        "data analyst": {
+            "required_skills": ["SQL", "Excel", "Python", "Data Visualization", "Statistics", "Pandas"],
+            "nice_to_have": ["Tableau/Power BI", "R", "A/B Testing", "ETL", "Business Analytics"],
+            "projects": [
+                {"title": "Sales Dashboard", "description": "Interactive sales analytics dashboard", "difficulty": "beginner"},
+                {"title": "Customer Segmentation", "description": "Segment customers using clustering", "difficulty": "intermediate"},
+                {"title": "Business Intelligence Report", "description": "Comprehensive BI report with insights", "difficulty": "advanced"},
+            ],
+        },
+        "ml engineer": {
+            "required_skills": ["Python", "TensorFlow/PyTorch", "Scikit-learn", "SQL", "Docker", "MLOps basics", "Git"],
+            "nice_to_have": ["Kubernetes", "AWS/GCP ML Services", "Feature Engineering", "Model Optimization", "A/B Testing"],
+            "projects": [
+                {"title": "Image Classifier", "description": "CNN-based image classification", "difficulty": "beginner"},
+                {"title": "NLP Pipeline", "description": "Text processing and sentiment analysis", "difficulty": "intermediate"},
+                {"title": "ML System with Monitoring", "description": "Production ML with monitoring and retraining", "difficulty": "advanced"},
+            ],
+        },
+        "devops engineer": {
+            "required_skills": ["Linux", "Docker", "CI/CD", "Git", "Cloud (AWS/GCP/Azure)", "Scripting", "Kubernetes"],
+            "nice_to_have": ["Terraform", "Ansible", "Prometheus/Grafana", "Security", "Networking"],
+            "projects": [
+                {"title": "CI/CD Pipeline", "description": "Automated build and deploy pipeline", "difficulty": "beginner"},
+                {"title": "Container Orchestration", "description": "Kubernetes cluster setup", "difficulty": "intermediate"},
+                {"title": "Infrastructure as Code", "description": "Full infrastructure automation", "difficulty": "advanced"},
+            ],
+        },
+    }
+    
+    # Normalize role name
+    role_lower = target_role.lower().strip()
+    role_data = None
+    for key in role_requirements:
+        if key in role_lower or role_lower in key:
+            role_data = role_requirements[key]
+            break
+    
+    if not role_data:
+        role_data = role_requirements.get("full stack developer")
+    
+    # Compare skills
+    current_skills_lower = {s.lower().strip() for s in current_skills}
+    
+    skills_you_have = []
+    skills_to_learn = []
+    
+    for skill in role_data["required_skills"]:
+        skill_lower = skill.lower()
+        if any(skill_lower in cs or cs in skill_lower for cs in current_skills_lower):
+            skills_you_have.append({"name": skill, "status": "have"})
+        else:
+            skills_to_learn.append({"name": skill, "priority": "high", "reason": f"Core requirement for {target_role}"})
+    
+    for skill in role_data["nice_to_have"]:
+        skill_lower = skill.lower()
+        if any(skill_lower in cs or cs in skill_lower for cs in current_skills_lower):
+            skills_you_have.append({"name": skill, "status": "have"})
+        else:
+            skills_to_learn.append({"name": skill, "priority": "medium", "reason": f"Will make you stand out for {target_role}"})
+    
+    # Calculate match percentage
+    total_required = len(role_data["required_skills"])
+    matched_required = len([s for s in skills_you_have if s["name"] in role_data["required_skills"]])
+    match_percentage = int((matched_required / total_required) * 100) if total_required > 0 else 0
+    
+    # Build learning roadmap
+    high_priority = [s for s in skills_to_learn if s["priority"] == "high"]
+    medium_priority = [s for s in skills_to_learn if s["priority"] == "medium"]
+    
+    roadmap_phases = []
+    
+    if high_priority:
+        phase1_skills = high_priority[:3]
+        roadmap_phases.append({
+            "phase": 1,
+            "title": "Foundation Phase",
+            "duration": "4-6 weeks",
+            "focus": "Master the core fundamentals",
+            "skills": [s["name"] for s in phase1_skills],
+            "action_items": [
+                f"Study {s['name']} fundamentals with tutorials and documentation" for s in phase1_skills
+            ],
+            "milestone": "Complete foundational projects using these skills"
+        })
+        
+        if len(high_priority) > 3:
+            phase2_skills = high_priority[3:]
+            roadmap_phases.append({
+                "phase": 2,
+                "title": "Core Skills Phase",
+                "duration": "4-6 weeks",
+                "focus": "Build on your foundation",
+                "skills": [s["name"] for s in phase2_skills],
+                "action_items": [
+                    f"Deep dive into {s['name']} with hands-on projects" for s in phase2_skills
+                ],
+                "milestone": "Build intermediate-level projects"
+            })
+    
+    if medium_priority:
+        roadmap_phases.append({
+            "phase": len(roadmap_phases) + 1,
+            "title": "Advanced Skills Phase",
+            "duration": "4-8 weeks",
+            "focus": "Stand out from other candidates",
+            "skills": [s["name"] for s in medium_priority[:4]],
+            "action_items": [
+                f"Learn {s['name']} to enhance your profile" for s in medium_priority[:4]
+            ],
+            "milestone": "Build a portfolio-worthy project"
+        })
+    
+    # Always add final phase
+    roadmap_phases.append({
+        "phase": len(roadmap_phases) + 1,
+        "title": "Job Ready Phase",
+        "duration": "2-4 weeks",
+        "focus": "Prepare for interviews and applications",
+        "skills": ["System Design Basics", "Problem Solving", "Communication"],
+        "action_items": [
+            "Practice coding problems on LeetCode/HackerRank",
+            "Prepare for behavioral interviews",
+            "Polish your resume and LinkedIn",
+            "Apply to companies and prepare for technical rounds"
+        ],
+        "milestone": "Land your first job!"
+    })
+    
+    return {
+        "target_role": target_role,
+        "match_percentage": match_percentage,
+        "skills_you_have": skills_you_have,
+        "skills_to_learn": skills_to_learn,
+        "roadmap_phases": roadmap_phases,
+        "projects": role_data["projects"],
+        "estimated_timeline": f"{len(roadmap_phases) * 4}-{len(roadmap_phases) * 6} weeks",
+        "tips": [
+            f"Focus on building projects that demonstrate {target_role} skills",
+            "Contribute to open source to gain real-world experience",
+            "Network with professionals in your target role",
+            "Keep learning and stay updated with industry trends"
+        ]
+    }
+
+
+async def generate_role_roadmap(target_role: str, current_skills: list, experience_level: str = "fresher") -> Dict[str, Any]:
+    """Generate a personalized learning roadmap for a specific role."""
+    
+    try:
+        if openrouter_client is None:
+            return _build_fallback_role_roadmap(target_role, current_skills, experience_level)
+        
+        skills_text = ", ".join(current_skills) if current_skills else "No specific technical skills listed"
+        
+        prompt = f"""You are a senior career coach and technical mentor. 
+
+A {experience_level} wants to become a **{target_role}**.
+
+Their current technical skills are: {skills_text}
+
+Generate a comprehensive, personalized learning roadmap in JSON format with these sections:
+
+1. **target_role**: The role they want to achieve
+2. **match_percentage**: How ready they are (0-100) based on current skills vs requirements
+3. **skills_you_have**: Array of skills they already have that are relevant
+   - Each item: {{"name": "skill", "status": "have", "relevance": "high/medium/low"}}
+4. **skills_to_learn**: Array of skills they need to learn
+   - Each item: {{"name": "skill", "priority": "high/medium/low", "reason": "why needed", "learning_time": "X weeks"}}
+5. **roadmap_phases**: Step-by-step learning phases
+   - Each phase: {{"phase": 1, "title": "Phase name", "duration": "X weeks", "focus": "what to focus on", "skills": ["skill1", "skill2"], "action_items": ["action1", "action2"], "milestone": "what to achieve", "resources": ["resource1", "resource2"]}}
+6. **projects**: Project ideas to build
+   - Each project: {{"title": "name", "description": "what to build", "difficulty": "beginner/intermediate/advanced", "skills_used": ["skill1"], "duration": "X weeks"}}
+7. **estimated_timeline**: Total time needed
+8. **tips**: Array of actionable tips for success
+
+IMPORTANT:
+- Be specific and practical
+- Prioritize skills from most to least important
+- Include realistic time estimates
+- Suggest projects that will impress employers
+- Consider their current skill level when recommending resources
+
+Return ONLY valid JSON, no markdown or explanation."""
+
+        response = openrouter_client.chat.completions.create(
+            model="google/gemini-2.0-flash-001",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=3000,
+        )
+        
+        raw = response.choices[0].message.content.strip()
+        
+        # Clean JSON
+        if raw.startswith("```"):
+            lines = raw.split("\n")
+            lines = [l for l in lines if not l.strip().startswith("```")]
+            raw = "\n".join(lines)
+        
+        data = json.loads(raw)
+        
+        # Validate and return
+        return {
+            "target_role": data.get("target_role", target_role),
+            "match_percentage": data.get("match_percentage", 0),
+            "skills_you_have": data.get("skills_you_have", []),
+            "skills_to_learn": data.get("skills_to_learn", []),
+            "roadmap_phases": data.get("roadmap_phases", []),
+            "projects": data.get("projects", []),
+            "estimated_timeline": data.get("estimated_timeline", "12-16 weeks"),
+            "tips": data.get("tips", [])
+        }
+        
+    except Exception:
+        return _build_fallback_role_roadmap(target_role, current_skills, experience_level)

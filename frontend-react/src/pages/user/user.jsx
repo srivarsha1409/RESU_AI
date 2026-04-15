@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Upload, Target, Briefcase, MessageSquare, CheckCircle, AlertCircle, Info, TrendingUp, Award, FileText, User, Mail, Phone } from 'lucide-react';
+import { 
+  Upload, Target, Briefcase, MessageSquare, CheckCircle, AlertCircle, Info, 
+  TrendingUp, Award, FileText, User, Mail, Phone, Calendar, BookOpen, Rocket, 
+  Code, GraduationCap, Zap, ChevronDown, ChevronUp, PlayCircle, Star, Trophy,
+  Layers, GitBranch, Clock, ArrowRight, Lightbulb, PenTool, Wrench, FolderOpen
+} from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 
 const API_BASE = 'http://127.0.0.1:8000';
@@ -19,6 +24,16 @@ export default function UserDashboard() {
   const [guidance, setGuidance] = useState(null);
   const [guidanceLoading, setGuidanceLoading] = useState(false);
   const [guidanceError, setGuidanceError] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({});
+  const [completedSteps, setCompletedSteps] = useState({});
+  const [guidanceSubTab, setGuidanceSubTab] = useState('roadmap'); // 'roadmap' or 'direction'
+  
+  // Role Roadmap Generator
+  const [targetRole, setTargetRole] = useState('');
+  const [roleRoadmap, setRoleRoadmap] = useState(null);
+  const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [roadmapError, setRoadmapError] = useState(null);
+  
   const [refCompany, setRefCompany] = useState('');
   const [refRole, setRefRole] = useState('');
   const [refLinkedInNote, setRefLinkedInNote] = useState('');
@@ -35,16 +50,298 @@ export default function UserDashboard() {
   const [activeSkillsetTab, setActiveSkillsetTab] = useState(null);
   const [skillsetLoading, setSkillsetLoading] = useState(false);
   const [skillsetError, setSkillsetError] = useState(null);
+  const [eligibleCompanies, setEligibleCompanies] = useState([]);
+
+  // Function to match user skills and department with company requirements
+  const matchSkillsWithCompanies = useCallback((sheets, userSkills, userDepartment) => {
+    if (!sheets) return [];
+    
+    const eligible = [];
+    const userSkillsLower = (userSkills || []).map(s => s.toLowerCase().trim());
+    
+    // Normalize user department for matching
+    const userDeptLower = (userDepartment || '').toLowerCase().trim();
+    
+    // Department group mappings - each group contains equivalent terms
+    // User's department will be mapped to a group, then we check if company accepts that group
+    const deptGroups = {
+      'cse': ['cse', 'cs', 'computer science', 'computer science and engineering', 'computer engineering', 'comp sci', 'csbs'],
+      'it': ['it', 'information technology', 'info tech'],
+      'ece': ['ece', 'ec', 'electronics and communication', 'electronics & communication', 'electronics communication'],
+      'eee': ['eee', 'ee', 'electrical', 'electrical engineering', 'electrical and electronics', 'electrical & electronics'],
+      'mech': ['mech', 'me', 'mechanical', 'mechanical engineering'],
+      'civil': ['civil', 'ce', 'civil engineering'],
+      'aids': ['aids', 'ai & ds', 'ai and ds', 'ai and data science', 'ai&ds', 'artificial intelligence and data science', 'ad'],
+      'aiml': ['aiml', 'ai & ml', 'ai and ml', 'ai&ml', 'artificial intelligence and machine learning'],
+      'auto': ['auto', 'automobile', 'automobile engineering'],
+      'biotech': ['biotech', 'bt', 'biotechnology'],
+      'chemical': ['chemical', 'che', 'chemical engineering'],
+      'ct': ['ct', 'computer technology'],
+      'ise': ['ise', 'is', 'information science', 'information science and engineering'],
+      'ei': ['ei', 'electronics and instrumentation', 'eie'],
+      'mc': ['mc', 'mechatronics'],
+      'cb': ['cb', 'computer business'],
+      'cd': ['cd', 'computer design'],
+      'al': ['al', 'analytics'],
+    };
+    
+    // Find which group the user's department belongs to
+    const findUserDeptGroup = () => {
+      for (const [groupKey, aliases] of Object.entries(deptGroups)) {
+        // Check if user's department matches any alias in this group
+        for (const alias of aliases) {
+          if (userDeptLower.includes(alias) || alias.includes(userDeptLower)) {
+            return groupKey;
+          }
+        }
+      }
+      return null;
+    };
+    
+    const userDeptGroup = findUserDeptGroup();
+    
+    // Function to check if company department text accepts user's department
+    const checkDeptMatch = (companyDeptText) => {
+      if (!companyDeptText || !userDeptLower) return false;
+      const compDeptLower = String(companyDeptText).toLowerCase();
+      
+      // Check for "all" or "open to all" - matches everyone
+      if (compDeptLower.includes('all b.e') || 
+          compDeptLower.includes('all be') ||
+          compDeptLower.includes('all engineering') ||
+          compDeptLower.includes('open to all') ||
+          compDeptLower.includes('any branch') ||
+          compDeptLower.includes('any engineering') ||
+          compDeptLower === 'all') {
+        return true;
+      }
+      
+      // If user's department group is identified, check if company accepts it
+      if (userDeptGroup) {
+        const userGroupAliases = deptGroups[userDeptGroup];
+        
+        // Split company departments by common separators and check each
+        const companyDepts = compDeptLower.split(/[,;|\/&\n]+/).map(d => d.trim());
+        
+        for (const compDept of companyDepts) {
+          // Check if this company department matches any alias of user's group
+          for (const alias of userGroupAliases) {
+            // Use word boundary matching to avoid partial matches
+            // e.g., "AI" in "AIDS" shouldn't match "AI" alone
+            const aliasRegex = new RegExp(`\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+            if (aliasRegex.test(compDept)) {
+              return true;
+            }
+            // Also check if the company dept is exactly the alias
+            if (compDept.trim() === alias.trim()) {
+              return true;
+            }
+          }
+        }
+        
+        // Also check the full text for exact matches
+        for (const alias of userGroupAliases) {
+          const aliasRegex = new RegExp(`\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          if (aliasRegex.test(compDeptLower)) {
+            return true;
+          }
+        }
+      }
+      
+      // Direct match as fallback
+      if (compDeptLower.includes(userDeptLower)) {
+        return true;
+      }
+      
+      return false;
+    };
+    
+    // Iterate through all sheets to find companies
+    Object.entries(sheets).forEach(([sheetName, rows]) => {
+      if (!rows || rows.length === 0) return;
+      
+      rows.forEach((row, rowIndex) => {
+        // Try to find company name column
+        const companyNameKeys = ['Company', 'Company Name', 'company', 'company_name', 'Name', 'COMPANY', 'Organization'];
+        let companyName = null;
+        for (const key of companyNameKeys) {
+          if (row[key]) {
+            companyName = row[key];
+            break;
+          }
+        }
+        // If no company name column, try first column
+        if (!companyName) {
+          const firstKey = Object.keys(row)[0];
+          companyName = row[firstKey];
+        }
+        
+        if (!companyName || String(companyName).trim() === '') return;
+        
+        // STEP 1: Find and check department match FIRST
+        let departmentMatched = false;
+        let companyDepartments = [];
+        let foundDeptColumn = false;
+        
+        Object.entries(row).forEach(([col, val]) => {
+          const colLower = col.toLowerCase();
+          // Look for department-related columns ONLY (strict column matching)
+          if (colLower.includes('dept') || 
+              colLower.includes('branch') || 
+              colLower.includes('eligible') ||
+              colLower.includes('stream') ||
+              colLower.includes('discipline')) {
+            if (val && String(val).trim() !== '') {
+              foundDeptColumn = true;
+              const deptText = String(val);
+              const depts = deptText.split(/[,;|\n]+/).map(s => s.trim()).filter(s => s);
+              companyDepartments.push(...depts);
+              // Check if user's department matches THIS column value
+              if (checkDeptMatch(deptText)) {
+                departmentMatched = true;
+              }
+            }
+          }
+        });
+        
+        // If company has department requirements but user's department doesn't match, SKIP this company
+        if (foundDeptColumn && !departmentMatched) {
+          return; // Skip to next company - department doesn't match
+        }
+        
+        // STEP 2: Only if department matches (or no dept requirements), check skills
+        let requiredSkills = [];
+        Object.entries(row).forEach(([col, val]) => {
+          const colLower = col.toLowerCase();
+          // Look for skill-related columns ONLY
+          if (colLower.includes('skill') || colLower === 'skills required' || 
+              colLower === 'technology' || colLower === 'technologies' ||
+              colLower === 'tech stack' || colLower === 'tools') {
+            if (val && String(val).trim() !== '') {
+              // Split by common delimiters and clean each skill
+              const skills = String(val).split(/[,;\n]+/).map(s => s.trim().toLowerCase()).filter(s => s && s.length > 1);
+              requiredSkills.push(...skills);
+            }
+          }
+        });
+        
+        // Count matching skills - EXACT MATCH ONLY
+        let matchedSkills = [];
+        let matchCount = 0;
+        
+        userSkillsLower.forEach(userSkill => {
+          // EXACT MATCH: Check if user skill exactly matches any required skill
+          const skillMatched = requiredSkills.some(reqSkill => {
+            const reqLower = reqSkill.toLowerCase().trim();
+            const userLower = userSkill.toLowerCase().trim();
+            
+            // Exact match only - the skill must be exactly the same
+            // or the required skill contains the exact user skill as a separate word
+            if (reqLower === userLower) {
+              return true;
+            }
+            
+            // Check if user skill appears as a complete word in required skill
+            // e.g., "python" should match "python programming" but not "pythonic"
+            const wordRegex = new RegExp(`\\b${userLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+            if (wordRegex.test(reqLower)) {
+              return true;
+            }
+            
+            return false;
+          });
+          
+          if (skillMatched) {
+            matchedSkills.push(userSkill);
+            matchCount++;
+          }
+        });
+        
+        // Calculate match score
+        const skillMatchPercentage = requiredSkills.length > 0 
+          ? (matchCount / Math.min(requiredSkills.length, userSkillsLower.length)) * 100 
+          : (matchCount > 0 ? 50 : 0);
+        
+        // Check if company has skill requirements
+        const hasSkillRequirements = requiredSkills.length > 0;
+        
+        // STRICT Eligibility criteria:
+        // - Department already matched (we skipped non-matching ones above)
+        // - Now check if skills match
+        let isEligible = false;
+        
+        if (hasSkillRequirements) {
+          // Skills required - at least 1 must match
+          isEligible = matchCount >= 1;
+        } else if (foundDeptColumn) {
+          // No skill requirements listed but dept column exists - eligible based on department match
+          isEligible = departmentMatched;
+        } else {
+          // No dept or skill requirements - don't mark as eligible
+          isEligible = false;
+        }
+        
+        if (isEligible) {
+          eligible.push({
+            companyName: String(companyName),
+            sheetName,
+            rowIndex,
+            matchedSkills: [...new Set(matchedSkills)],
+            matchCount,
+            matchPercentage: Math.round(skillMatchPercentage),
+            departmentMatched,
+            companyDepartments: [...new Set(companyDepartments)].slice(0, 5),
+            requiredSkills: [...new Set(requiredSkills)].slice(0, 10),
+            row
+          });
+        }
+      });
+    });
+    
+    // Sort by: department match first, then by skill count
+    eligible.sort((a, b) => {
+      // Prioritize department + skills match
+      if (a.departmentMatched && !b.departmentMatched) return -1;
+      if (!a.departmentMatched && b.departmentMatched) return 1;
+      // Then by skill match count
+      return b.matchCount - a.matchCount;
+    });
+    
+    // Remove duplicates by company name
+    const seen = new Set();
+    return eligible.filter(e => {
+      const key = e.companyName.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, []);
 
   const email = localStorage.getItem("email");
 
-  const fetchGuidance = useCallback(async () => {
+  const fetchGuidance = useCallback(async (forceRegenerate = false) => {
     if (!resumeData?.data || guidanceLoading) return;
+    
+    const storedEmail = localStorage.getItem("email");
 
     setGuidanceLoading(true);
     setGuidanceError(null);
 
     try {
+      // First try to get cached guidance from user data (unless force regenerating)
+      if (!forceRegenerate && storedEmail) {
+        const cacheRes = await fetch(`${API_BASE}/user/guidance/${storedEmail}`);
+        if (cacheRes.ok) {
+          const cacheData = await cacheRes.json();
+          if (cacheData.guidance && Object.keys(cacheData.guidance).length > 0) {
+            setGuidance(cacheData.guidance);
+            setGuidanceLoading(false);
+            return;
+          }
+        }
+      }
+
+      // Generate fresh guidance
       const res = await fetch(`${API_BASE}/guidance/generate`, {
         method: "POST",
         headers: {
@@ -59,6 +356,15 @@ export default function UserDashboard() {
 
       const data = await res.json();
       setGuidance(data.guidance || {});
+      
+      // Cache the guidance in MongoDB
+      if (storedEmail && data.guidance) {
+        fetch(`${API_BASE}/user/guidance/${storedEmail}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ guidance: data.guidance }),
+        }).catch(err => console.warn("Failed to cache guidance:", err));
+      }
     } catch (err) {
       console.error("Guidance error:", err);
       setGuidanceError(err.message || "Failed to generate guidance");
@@ -90,6 +396,11 @@ export default function UserDashboard() {
             detected_role: data.user.detected_role || null,
             suggested_skills: data.user.suggested_skills || [],
           });
+          
+          // Load cached guidance if available
+          if (data.user.cached_guidance && Object.keys(data.user.cached_guidance).length > 0) {
+            setGuidance(data.user.cached_guidance);
+          }
         }
       } catch (err) {
         console.error("User fetch error:", err);
@@ -145,6 +456,30 @@ export default function UserDashboard() {
       setSkillsetData(currentUpload?.sheets || null);
     }
   }, [activeSkillsetTab, skillsetUploads]);
+
+  // Calculate eligible companies when skillset or resume data changes
+  useEffect(() => {
+    if (skillsetData && resumeData?.data) {
+      const userSkills = resumeData.data.skills?.technical || [];
+      // Extract department from education - could be in bachelor.degree, bachelor.branch, etc.
+      const userDepartment = resumeData.data.education?.bachelor?.degree || 
+                            resumeData.data.education?.bachelor?.branch ||
+                            resumeData.data.education?.degree ||
+                            resumeData.data.education?.branch ||
+                            '';
+      
+      // Debug log to see what's being extracted
+      console.log('=== ELIGIBILITY DEBUG ===');
+      console.log('User Department from Resume:', userDepartment);
+      console.log('User Skills:', userSkills);
+      console.log('========================');
+      
+      const eligible = matchSkillsWithCompanies(skillsetData, userSkills, userDepartment);
+      setEligibleCompanies(eligible);
+    } else {
+      setEligibleCompanies([]);
+    }
+  }, [skillsetData, resumeData, matchSkillsWithCompanies]);
 
   // Coding profiles removed from user portal
 
@@ -767,6 +1102,178 @@ const getSuggestedSkills = () => {
                 <div style={{ color: '#b91c1c' }}>Error loading skillset: {skillsetError}</div>
               )}
 
+              {/* Eligible Companies Section - Highlighted */}
+              {eligibleCompanies.length > 0 && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  marginBottom: '24px',
+                  border: '2px solid #10b981'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{
+                      background: '#10b981',
+                      borderRadius: '50%',
+                      padding: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <CheckCircle size={24} color="#fff" />
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#065f46', margin: 0 }}>
+                        🎯 You're Eligible for {eligibleCompanies.length} {eligibleCompanies.length === 1 ? 'Company' : 'Companies'}!
+                      </h3>
+                      <p style={{ fontSize: '14px', color: '#047857', margin: '4px 0 0 0' }}>
+                        Based on your skills & department match
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                    {eligibleCompanies.slice(0, 8).map((company, idx) => (
+                      <div key={idx} style={{
+                        background: '#fff',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        border: company.departmentMatched ? '2px solid #10b981' : '1px solid #a7f3d0',
+                        boxShadow: company.departmentMatched 
+                          ? '0 4px 12px rgba(16, 185, 129, 0.25)' 
+                          : '0 2px 8px rgba(16, 185, 129, 0.15)'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                          <div>
+                            <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                              {company.companyName}
+                            </h4>
+                            {company.departmentMatched && (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                background: '#dbeafe',
+                                color: '#1d4ed8',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                marginTop: '4px'
+                              }}>
+                                🎓 Department Match
+                              </span>
+                            )}
+                          </div>
+                          <span style={{
+                            background: company.departmentMatched && company.matchCount >= 2 
+                              ? '#10b981' 
+                              : company.matchCount >= 4 
+                                ? '#10b981' 
+                                : company.matchCount >= 2 
+                                  ? '#f59e0b' 
+                                  : '#6b7280',
+                            color: '#fff',
+                            padding: '4px 10px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {company.matchCount} {company.matchCount === 1 ? 'skill' : 'skills'}
+                          </span>
+                        </div>
+                        
+                        <div style={{ marginBottom: '10px' }}>
+                          <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 6px 0', fontWeight: '600' }}>
+                            Your Matching Skills:
+                          </p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                            {company.matchedSkills.slice(0, 6).map((skill, i) => (
+                              <span key={i} style={{
+                                background: '#d1fae5',
+                                color: '#065f46',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                textTransform: 'capitalize'
+                              }}>
+                                ✓ {skill}
+                              </span>
+                            ))}
+                            {company.matchedSkills.length > 6 && (
+                              <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                                +{company.matchedSkills.length - 6} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {company.companyDepartments && company.companyDepartments.length > 0 && (
+                          <div style={{ marginBottom: '8px' }}>
+                            <p style={{ fontSize: '11px', color: '#6366f1', margin: '0 0 4px 0', fontWeight: '600' }}>
+                              📚 Eligible Departments: {company.companyDepartments.slice(0, 4).join(', ')}
+                              {company.companyDepartments.length > 4 ? '...' : ''}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {company.requiredSkills.length > 0 && (
+                          <div>
+                            <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0 0 4px 0' }}>
+                              Company looks for: {company.requiredSkills.slice(0, 5).join(', ')}
+                              {company.requiredSkills.length > 5 ? '...' : ''}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {eligibleCompanies.length > 8 && (
+                    <p style={{ textAlign: 'center', color: '#047857', fontSize: '14px', marginTop: '16px' }}>
+                      And {eligibleCompanies.length - 8} more companies...
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* No Eligible Companies Message */}
+              {!skillsetLoading && skillsetData && eligibleCompanies.length === 0 && resumeData?.data?.skills?.technical && (
+                <div style={{
+                  background: '#fef3c7',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '20px',
+                  border: '1px solid #fcd34d'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <AlertCircle size={20} color="#d97706" />
+                    <p style={{ margin: 0, color: '#92400e', fontSize: '14px' }}>
+                      <strong>No exact matches found.</strong> Consider learning skills from the companies below to improve eligibility.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Resume Prompt if no resume data */}
+              {!resumeData?.data?.skills?.technical && (
+                <div style={{
+                  background: '#eff6ff',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '20px',
+                  border: '1px solid #bfdbfe'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Info size={20} color="#2563eb" />
+                    <p style={{ margin: 0, color: '#1e40af', fontSize: '14px' }}>
+                      <strong>Upload your resume</strong> in the Analysis tab to see which companies match your skills!
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Skillset Tabs */}
               {skillsetUploads.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
@@ -808,7 +1315,21 @@ const getSuggestedSkills = () => {
 
               {skillsetData && Object.keys(skillsetData).length > 0 && (
                 <div>
-                  {Object.entries(skillsetData).map(([sheetName, rows]) => (
+                  {Object.entries(skillsetData).map(([sheetName, rows]) => {
+                    // Helper function to check if a row is eligible
+                    const isRowEligible = (row, rowIdx) => {
+                      return eligibleCompanies.some(ec => 
+                        ec.sheetName === sheetName && ec.rowIndex === rowIdx
+                      );
+                    };
+                    
+                    const getEligibleInfo = (row, rowIdx) => {
+                      return eligibleCompanies.find(ec => 
+                        ec.sheetName === sheetName && ec.rowIndex === rowIdx
+                      );
+                    };
+                    
+                    return (
                     <div key={sheetName} style={{ marginBottom: '24px' }}>
                       <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: '#475569' }}>
                         {sheetName}
@@ -817,6 +1338,17 @@ const getSuggestedSkills = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                           <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                              <th style={{
+                                padding: '10px',
+                                textAlign: 'center',
+                                fontWeight: '600',
+                                color: '#475569',
+                                borderRight: '1px solid #e2e8f0',
+                                background: '#f8fafc',
+                                width: '50px'
+                              }}>
+                                Match
+                              </th>
                               {rows.length > 0 && Object.keys(rows[0]).map(col => (
                                 <th key={col} style={{
                                   padding: '10px',
@@ -832,19 +1364,56 @@ const getSuggestedSkills = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {rows.map((row, idx) => (
-                              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                            {rows.map((row, idx) => {
+                              const eligible = isRowEligible(row, idx);
+                              const eligibleInfo = getEligibleInfo(row, idx);
+                              const hasDeptMatch = eligibleInfo?.departmentMatched;
+                              return (
+                              <tr key={idx} style={{ 
+                                borderBottom: '1px solid #e2e8f0', 
+                                background: eligible 
+                                  ? hasDeptMatch 
+                                    ? 'linear-gradient(90deg, #dbeafe 0%, #ecfdf5 30%, #fff 100%)'
+                                    : 'linear-gradient(90deg, #ecfdf5 0%, #d1fae5 30%, #fff 100%)' 
+                                  : (idx % 2 === 0 ? '#fff' : '#f8fafc'),
+                                borderLeft: eligible 
+                                  ? hasDeptMatch 
+                                    ? '4px solid #3b82f6' 
+                                    : '4px solid #10b981' 
+                                  : 'none'
+                              }}>
+                                <td style={{
+                                  padding: '10px',
+                                  textAlign: 'center',
+                                  borderRight: '1px solid #e2e8f0'
+                                }}>
+                                  {eligible ? (
+                                    <div 
+                                      title={`${hasDeptMatch ? '🎓 Dept Match + ' : ''}${eligibleInfo?.matchCount || 0} skills: ${eligibleInfo?.matchedSkills?.join(', ') || ''}`}
+                                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}
+                                    >
+                                      <CheckCircle size={18} color={hasDeptMatch ? '#3b82f6' : '#10b981'} />
+                                      {hasDeptMatch && (
+                                        <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '600' }}>🎓</span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span style={{ color: '#d1d5db' }}>—</span>
+                                  )}
+                                </td>
                                 {Object.entries(row).map(([col, val]) => (
                                   <td key={col} style={{
                                     padding: '10px',
-                                    color: '#334155',
+                                    color: eligible ? '#065f46' : '#334155',
+                                    fontWeight: eligible ? '500' : 'normal',
                                     borderRight: '1px solid #e2e8f0'
                                   }}>
                                     {String(val ?? '')}
                                   </td>
                                 ))}
                               </tr>
-                            ))}
+                            );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -852,7 +1421,8 @@ const getSuggestedSkills = () => {
                         Total: {rows.length} rows
                       </p>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
 
@@ -2745,737 +3315,2425 @@ const getSuggestedSkills = () => {
 
                   {guidance && !guidanceLoading && !guidanceError && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      {Array.isArray(guidance.technical_skills) && guidance.technical_skills.length > 0 && (
-                        <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
-                        }}>
-                          <h3 style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '12px'
-                          }}>
-                            Technical Skills & Levels
-                          </h3>
+                      {/* Header with Regenerate button */}
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        borderRadius: '16px',
+                        padding: '20px 24px',
+                        color: 'white'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                           <div style={{
+                            background: 'rgba(255,255,255,0.2)',
+                            borderRadius: '12px',
+                            padding: '12px',
                             display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '8px'
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}>
-                            {guidance.technical_skills.map((s, idx) => (
-                              <span
-                                key={idx}
-                                style={{
-                                  padding: '6px 12px',
-                                  borderRadius: '20px',
-                                  fontSize: '14px',
-                                  border: '1px solid #0ea5e9',
-                                  background: '#e0f2fe',
-                                  color: '#0c4a6e',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '4px'
-                                }}
-                              >
-                                <span>{s.name}</span>
-                                {s.level && (
-                                  <span style={{
-                                    fontSize: '12px',
-                                    color: '#64748b',
-                                    textTransform: 'capitalize'
-                                  }}>
-                                    ({s.level})
-                                  </span>
-                                )}
-                              </span>
-                            ))}
+                            <Rocket size={28} />
+                          </div>
+                          <div>
+                            <h3 style={{ fontSize: '22px', fontWeight: '700', margin: 0 }}>
+                              Your Personalized Learning Roadmap
+                            </h3>
+                            <p style={{ fontSize: '14px', opacity: 0.9, margin: '4px 0 0 0' }}>
+                              Follow these steps to boost your career! 🚀
+                            </p>
                           </div>
                         </div>
-                      )}
-
-                      {Array.isArray(guidance.missing_skills) && guidance.missing_skills.length > 0 && (
-                        <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
-                        }}>
-                          <h3 style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '12px'
-                          }}>
-                            Missing / Recommended Skills
-                          </h3>
-                          <ul style={{
-                            margin: 0,
-                            padding: 0,
-                            listStyle: 'none',
+                        <button
+                          onClick={() => fetchGuidance(true)}
+                          style={{
                             display: 'flex',
-                            flexDirection: 'column',
-                            gap: '8px'
-                          }}>
-                            {guidance.missing_skills.map((ms, idx) => (
-                              <li key={idx} style={{
-                                display: 'flex',
-                                gap: '8px',
-                                fontSize: '14px',
-                                color: '#475569'
-                              }}>
-                                <span style={{
-                                  fontWeight: '600',
-                                  color: '#1e293b'
-                                }}>
-                                  {ms.name}:
-                                </span>
-                                <span>{ms.reason}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {Array.isArray(guidance.learning_paths) && guidance.learning_paths.length > 0 && (
-                        <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
-                        }}>
-                          <h3 style={{
-                            fontSize: '18px',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: 'rgba(255,255,255,0.2)',
+                            color: 'white',
+                            padding: '10px 18px',
+                            borderRadius: '10px',
+                            fontSize: '13px',
                             fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '16px'
-                          }}>
-                            Learning Paths
-                          </h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {guidance.learning_paths.map((lp, idx) => (
-                              <div key={idx} style={{
+                            border: '1px solid rgba(255,255,255,0.3)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            backdropFilter: 'blur(4px)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.background = 'rgba(255,255,255,0.3)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.background = 'rgba(255,255,255,0.2)';
+                          }}
+                        >
+                          🔄 Regenerate
+                        </button>
+                      </div>
+
+                      {/* Sub-Tab Navigation */}
+                      <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        background: '#f1f5f9',
+                        padding: '8px',
+                        borderRadius: '16px'
+                      }}>
+                        <button
+                          onClick={() => setGuidanceSubTab('roadmap')}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            padding: '16px 24px',
+                            borderRadius: '12px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            transition: 'all 0.3s ease',
+                            background: guidanceSubTab === 'roadmap' 
+                              ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' 
+                              : 'transparent',
+                            color: guidanceSubTab === 'roadmap' ? 'white' : '#64748b',
+                            boxShadow: guidanceSubTab === 'roadmap' 
+                              ? '0 4px 15px rgba(139, 92, 246, 0.3)' 
+                              : 'none'
+                          }}
+                        >
+                          <Target size={20} />
+                          🎯 Role-Based Roadmap
+                          <span style={{
+                            background: guidanceSubTab === 'roadmap' ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontSize: '10px',
+                            fontWeight: '700'
+                          }}>I KNOW MY GOAL</span>
+                        </button>
+                        <button
+                          onClick={() => setGuidanceSubTab('direction')}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            padding: '16px 24px',
+                            borderRadius: '12px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            transition: 'all 0.3s ease',
+                            background: guidanceSubTab === 'direction' 
+                              ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' 
+                              : 'transparent',
+                            color: guidanceSubTab === 'direction' ? 'white' : '#64748b',
+                            boxShadow: guidanceSubTab === 'direction' 
+                              ? '0 4px 15px rgba(6, 182, 212, 0.3)' 
+                              : 'none'
+                          }}
+                        >
+                          <Lightbulb size={20} />
+                          🧭 Find Your Direction
+                          <span style={{
+                            background: guidanceSubTab === 'direction' ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontSize: '10px',
+                            fontWeight: '700'
+                          }}>HELP ME DECIDE</span>
+                        </button>
+                      </div>
+
+                      {/* TAB 1: Role Roadmap Generator */}
+                      {guidanceSubTab === 'roadmap' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                          {/* Role Roadmap Generator - Custom Role Learning Path */}
+                      <div style={{
+                        background: 'white',
+                        borderRadius: '16px',
+                        border: '2px solid #8b5cf6',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 20px rgba(139, 92, 246, 0.15)'
+                      }}>
+                        <div 
+                          onClick={() => setExpandedSections(prev => ({ ...prev, roleRoadmap: !prev.roleRoadmap }))}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '20px 24px',
+                            background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '12px',
+                              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                            }}>
+                              <Target size={24} color="white" />
+                            </div>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#5b21b6', margin: 0 }}>
+                                  🎯 Role Roadmap Generator
+                                </h4>
+                              </div>
+                              <p style={{ fontSize: '13px', color: '#7c3aed', margin: '4px 0 0 0' }}>
+                                Enter your target role & get a personalized learning path
+                              </p>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{
+                              background: '#8b5cf6',
+                              color: 'white',
+                              padding: '4px 12px',
+                              borderRadius: '20px',
+                              fontSize: '11px',
+                              fontWeight: '600'
+                            }}>
+                              NEW ✨
+                            </span>
+                            {expandedSections.roleRoadmap ? <ChevronUp size={24} color="#8b5cf6" /> : <ChevronDown size={24} color="#8b5cf6" />}
+                          </div>
+                        </div>
+                        {(expandedSections.roleRoadmap !== false) && (
+                          <div style={{ padding: '24px' }}>
+                            {/* Input Section */}
+                            <div style={{
+                              background: '#f8fafc',
+                              borderRadius: '12px',
+                              padding: '20px',
+                              marginBottom: '20px',
+                              border: '1px solid #e2e8f0'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                                <Briefcase size={20} style={{ color: '#8b5cf6' }} />
+                                <label style={{ fontWeight: '600', color: '#1e293b', fontSize: '15px' }}>
+                                  What role do you want to become?
+                                </label>
+                              </div>
+                              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                <input
+                                  type="text"
+                                  value={targetRole}
+                                  onChange={(e) => setTargetRole(e.target.value)}
+                                  placeholder="e.g., Frontend Developer, Data Scientist, ML Engineer..."
+                                  style={{
+                                    flex: 1,
+                                    minWidth: '250px',
+                                    padding: '14px 18px',
+                                    borderRadius: '10px',
+                                    border: '2px solid #e2e8f0',
+                                    fontSize: '15px',
+                                    outline: 'none',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                  onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
+                                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                                />
+                                <button
+                                  onClick={async () => {
+                                    if (!targetRole.trim()) return;
+                                    setRoadmapLoading(true);
+                                    setRoadmapError(null);
+                                    try {
+                                      const currentSkills = guidance?.technical_skills?.map(s => s.name) || 
+                                        resumeData?.data?.skills?.technical || [];
+                                      const response = await fetch(`${API_BASE}/guidance/role-roadmap`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          target_role: targetRole,
+                                          current_skills: currentSkills,
+                                          experience_level: 'fresher'
+                                        })
+                                      });
+                                      if (!response.ok) throw new Error('Failed to generate roadmap');
+                                      const data = await response.json();
+                                      setRoleRoadmap(data.roadmap);
+                                    } catch (err) {
+                                      setRoadmapError(err.message);
+                                    } finally {
+                                      setRoadmapLoading(false);
+                                    }
+                                  }}
+                                  disabled={roadmapLoading || !targetRole.trim()}
+                                  style={{
+                                    padding: '14px 28px',
+                                    borderRadius: '10px',
+                                    background: roadmapLoading || !targetRole.trim() 
+                                      ? '#e2e8f0' 
+                                      : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                    color: roadmapLoading || !targetRole.trim() ? '#94a3b8' : 'white',
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    border: 'none',
+                                    cursor: roadmapLoading || !targetRole.trim() ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: roadmapLoading || !targetRole.trim() ? 'none' : '0 4px 12px rgba(139, 92, 246, 0.3)'
+                                  }}
+                                >
+                                  {roadmapLoading ? (
+                                    <>
+                                      <div style={{
+                                        width: '16px',
+                                        height: '16px',
+                                        border: '2px solid rgba(255,255,255,0.3)',
+                                        borderTop: '2px solid white',
+                                        borderRadius: '50%',
+                                        animation: 'spin 1s linear infinite'
+                                      }} />
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Rocket size={18} />
+                                      Generate Roadmap
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                              
+                              {/* Quick Role Suggestions */}
+                              <div style={{ marginTop: '16px' }}>
+                                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '8px' }}>
+                                  Popular roles:
+                                </p>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                  {['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'Data Scientist', 'ML Engineer', 'DevOps Engineer', 'Data Analyst'].map(role => (
+                                    <button
+                                      key={role}
+                                      onClick={() => setTargetRole(role)}
+                                      style={{
+                                        padding: '6px 14px',
+                                        borderRadius: '20px',
+                                        background: targetRole === role ? '#8b5cf6' : 'white',
+                                        color: targetRole === role ? 'white' : '#64748b',
+                                        fontSize: '12px',
+                                        fontWeight: '500',
+                                        border: `1px solid ${targetRole === role ? '#8b5cf6' : '#e2e8f0'}`,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                    >
+                                      {role}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Error Display */}
+                            {roadmapError && (
+                              <div style={{
+                                background: '#fef2f2',
+                                border: '1px solid #fecaca',
                                 borderRadius: '12px',
-                                border: '1px solid #e0f2fe',
-                                background: 'white',
-                                padding: '16px'
-                              }}>
-                                <div style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'flex-start',
-                                  gap: '12px',
-                                  marginBottom: '8px'
-                                }}>
-                                  <p style={{
-                                    color: '#1e293b',
-                                    fontWeight: '600',
-                                    fontSize: '14px',
-                                    margin: 0
-                                  }}>
-                                    {lp.track}
-                                  </p>
-                                  {typeof lp.estimated_time_weeks === 'number' && (
-                                    <p style={{
-                                      fontSize: '12px',
-                                      color: '#64748b',
-                                      margin: 0
-                                    }}>
-                                      ~{lp.estimated_time_weeks} weeks
-                                    </p>
-                                  )}
-                                </div>
-                                {Array.isArray(lp.topics) && lp.topics.length > 0 && (
-                                  <div style={{ marginBottom: '8px' }}>
-                                    <p style={{
-                                      fontSize: '12px',
-                                      color: '#64748b',
-                                      marginBottom: '4px'
-                                    }}>
-                                      Topics
-                                    </p>
-                                    <ul style={{
-                                      margin: 0,
-                                      padding: 0,
-                                      paddingLeft: '16px',
-                                      listStyle: 'disc',
-                                      fontSize: '12px',
-                                      color: '#475569'
-                                    }}>
-                                      {lp.topics.map((t, i) => (
-                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                                {Array.isArray(lp.tools) && lp.tools.length > 0 && (
-                                  <div style={{ marginBottom: '8px' }}>
-                                    <p style={{
-                                      fontSize: '12px',
-                                      color: '#64748b',
-                                      marginBottom: '4px'
-                                    }}>
-                                      Tools
-                                    </p>
-                                    <div style={{
-                                      display: 'flex',
-                                      flexWrap: 'wrap',
-                                      gap: '4px'
-                                    }}>
-                                      {lp.tools.map((t, i) => (
-                                        <span key={i} style={{
-                                          fontSize: '11px',
-                                          padding: '2px 8px',
-                                          borderRadius: '12px',
-                                          background: '#e0f2fe',
-                                          color: '#0c4a6e',
-                                          border: '1px solid #0ea5e9'
-                                        }}>
-                                          {t}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                                {Array.isArray(lp.exercises) && lp.exercises.length > 0 && (
-                                  <div style={{ marginBottom: '8px' }}>
-                                    <p style={{
-                                      fontSize: '12px',
-                                      color: '#64748b',
-                                      marginBottom: '4px'
-                                    }}>
-                                      Practice Tasks
-                                    </p>
-                                    <ul style={{
-                                      margin: 0,
-                                      padding: 0,
-                                      paddingLeft: '16px',
-                                      listStyle: 'disc',
-                                      fontSize: '12px',
-                                      color: '#475569'
-                                    }}>
-                                      {lp.exercises.map((t, i) => (
-                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                                {Array.isArray(lp.projects) && lp.projects.length > 0 && (
-                                  <div>
-                                    <p style={{
-                                      fontSize: '12px',
-                                      color: '#64748b',
-                                      marginBottom: '4px'
-                                    }}>
-                                      Suggested Projects
-                                    </p>
-                                    <ul style={{
-                                      margin: 0,
-                                      padding: 0,
-                                      paddingLeft: '16px',
-                                      listStyle: 'disc',
-                                      fontSize: '12px',
-                                      color: '#475569'
-                                    }}>
-                                      {lp.projects.map((t, i) => (
-                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {Array.isArray(guidance.project_ideas) && guidance.project_ideas.length > 0 && (
-                        <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
-                        }}>
-                          <h3 style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '12px'
-                          }}>
-                            Personalized Project Ideas
-                          </h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {guidance.project_ideas.map((p, idx) => (
-                              <div key={idx} style={{
-                                border: '1px solid #e0f2fe',
-                                borderRadius: '8px',
-                                padding: '12px',
-                                background: 'white'
-                              }}>
-                                <p style={{
-                                  color: '#1e293b',
-                                  fontWeight: '600',
-                                  fontSize: '14px',
-                                  margin: '0 0 4px 0'
-                                }}>
-                                  {p.title}
-                                </p>
-                                {p.type && (
-                                  <p style={{
-                                    fontSize: '11px',
-                                    color: '#64748b',
-                                    margin: '0 0 4px 0'
-                                  }}>
-                                    Type: {p.type}
-                                  </p>
-                                )}
-                                {p.description && (
-                                  <p style={{
-                                    fontSize: '12px',
-                                    color: '#475569',
-                                    margin: 0
-                                  }}>
-                                    {p.description}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {Array.isArray(guidance.certificate_recommendations) && guidance.certificate_recommendations.length > 0 && (
-                        <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
-                        }}>
-                          <h3 style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '12px'
-                          }}>
-                            Certificate Recommendations
-                          </h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {guidance.certificate_recommendations.map((c, idx) => (
-                              <div key={idx} style={{
+                                padding: '16px',
+                                marginBottom: '20px',
                                 display: 'flex',
-                                flexDirection: 'column',
-                                gap: '8px',
-                                border: '1px solid #e0f2fe',
-                                borderRadius: '8px',
-                                padding: '12px',
-                                background: 'white'
+                                alignItems: 'center',
+                                gap: '12px'
                               }}>
-                                <div>
-                                  <p style={{
-                                    color: '#1e293b',
-                                    fontWeight: '600',
-                                    fontSize: '14px',
-                                    margin: 0
-                                  }}>
-                                    {c.name}
-                                  </p>
-                                  {c.reason && (
-                                    <p style={{
-                                      color: '#64748b',
-                                      fontSize: '12px',
-                                      marginTop: '4px',
-                                      margin: '4px 0 0 0'
-                                    }}>
-                                      {c.reason}
-                                    </p>
-                                  )}
-                                </div>
-                                <div style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'flex-end',
-                                  gap: '2px',
-                                  fontSize: '12px'
-                                }}>
-                                  {c.value_level && (
-                                    <p style={{
-                                      color: '#64748b',
-                                      margin: 0,
-                                      textTransform: 'capitalize'
-                                    }}>
-                                      Value: {c.value_level}
-                                    </p>
-                                  )}
-                                  {c.recommendation && (
-                                    <p style={{
-                                      color: '#64748b',
-                                      margin: 0,
-                                      textTransform: 'capitalize'
-                                    }}>
-                                      Action: {c.recommendation}
-                                    </p>
-                                  )}
-                                </div>
+                                <AlertCircle size={20} style={{ color: '#ef4444' }} />
+                                <p style={{ color: '#991b1b', fontSize: '14px', margin: 0 }}>{roadmapError}</p>
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                            )}
 
-                      {Array.isArray(guidance.role_matching) && guidance.role_matching.length > 0 && (
-                        <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
-                        }}>
-                          <h3 style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '12px'
-                          }}>
-                            Role Match Analysis
-                          </h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {guidance.role_matching.map((r, idx) => (
-                              <div key={idx} style={{
-                                border: '1px solid #e0f2fe',
-                                borderRadius: '8px',
-                                padding: '12px',
-                                background: 'white'
-                              }}>
+                            {/* Roadmap Results */}
+                            {roleRoadmap && !roadmapLoading && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                {/* Match Percentage & Overview */}
                                 <div style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  marginBottom: '8px'
+                                  background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+                                  borderRadius: '16px',
+                                  padding: '24px',
+                                  color: 'white'
                                 }}>
-                                  <p style={{
-                                    color: '#1e293b',
-                                    fontWeight: '600',
-                                    fontSize: '14px',
-                                    margin: 0
-                                  }}>
-                                    {r.role}
-                                  </p>
-                                  {typeof r.match_percentage === 'number' && (
-                                    <p style={{
-                                      fontSize: '14px',
-                                      fontWeight: '600',
-                                      color: '#d97706',
-                                      margin: 0
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                                    <div>
+                                      <p style={{ fontSize: '14px', opacity: 0.8, marginBottom: '4px' }}>Target Role</p>
+                                      <h3 style={{ fontSize: '28px', fontWeight: '700', margin: 0 }}>
+                                        {roleRoadmap.target_role}
+                                      </h3>
+                                    </div>
+                                    <div style={{ textAlign: 'center' }}>
+                                      <div style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        borderRadius: '50%',
+                                        background: `conic-gradient(#22c55e ${roleRoadmap.match_percentage}%, #4c1d95 ${roleRoadmap.match_percentage}%)`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        position: 'relative'
+                                      }}>
+                                        <div style={{
+                                          width: '80px',
+                                          height: '80px',
+                                          borderRadius: '50%',
+                                          background: '#1e1b4b',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          flexDirection: 'column'
+                                        }}>
+                                          <span style={{ fontSize: '24px', fontWeight: '700' }}>{roleRoadmap.match_percentage}%</span>
+                                          <span style={{ fontSize: '10px', opacity: 0.8 }}>Ready</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                      <p style={{ fontSize: '14px', opacity: 0.8, marginBottom: '4px' }}>Estimated Time</p>
+                                      <p style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
+                                        ⏱️ {roleRoadmap.estimated_timeline}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Skills Comparison */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                                  {/* Skills You Have */}
+                                  {Array.isArray(roleRoadmap.skills_you_have) && roleRoadmap.skills_you_have.length > 0 && (
+                                    <div style={{
+                                      background: '#f0fdf4',
+                                      borderRadius: '14px',
+                                      padding: '20px',
+                                      border: '2px solid #22c55e'
                                     }}>
-                                      {r.match_percentage}% match
-                                    </p>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                                        <CheckCircle size={22} style={{ color: '#22c55e' }} />
+                                        <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#166534', margin: 0 }}>
+                                          ✅ Skills You Already Have ({roleRoadmap.skills_you_have.length})
+                                        </h4>
+                                      </div>
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                        {roleRoadmap.skills_you_have.map((skill, idx) => (
+                                          <span key={idx} style={{
+                                            background: 'white',
+                                            color: '#166534',
+                                            padding: '8px 14px',
+                                            borderRadius: '8px',
+                                            fontSize: '13px',
+                                            fontWeight: '500',
+                                            border: '1px solid #86efac',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px'
+                                          }}>
+                                            <CheckCircle size={14} />
+                                            {skill.name || skill}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Skills To Learn */}
+                                  {Array.isArray(roleRoadmap.skills_to_learn) && roleRoadmap.skills_to_learn.length > 0 && (
+                                    <div style={{
+                                      background: '#fef2f2',
+                                      borderRadius: '14px',
+                                      padding: '20px',
+                                      border: '2px solid #ef4444'
+                                    }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                                        <BookOpen size={22} style={{ color: '#ef4444' }} />
+                                        <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#991b1b', margin: 0 }}>
+                                          📚 Skills You Need to Learn ({roleRoadmap.skills_to_learn.length})
+                                        </h4>
+                                      </div>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        {roleRoadmap.skills_to_learn.slice(0, 8).map((skill, idx) => (
+                                          <div key={idx} style={{
+                                            background: 'white',
+                                            padding: '12px 14px',
+                                            borderRadius: '8px',
+                                            border: '1px solid #fca5a5',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            gap: '10px'
+                                          }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                              <span style={{
+                                                width: '24px',
+                                                height: '24px',
+                                                borderRadius: '6px',
+                                                background: skill.priority === 'high' ? '#ef4444' : '#f59e0b',
+                                                color: 'white',
+                                                fontSize: '11px',
+                                                fontWeight: '700',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                              }}>
+                                                {idx + 1}
+                                              </span>
+                                              <span style={{ fontWeight: '600', color: '#991b1b', fontSize: '14px' }}>
+                                                {skill.name}
+                                              </span>
+                                            </div>
+                                            <span style={{
+                                              fontSize: '10px',
+                                              padding: '3px 8px',
+                                              borderRadius: '12px',
+                                              background: skill.priority === 'high' ? '#fef2f2' : '#fffbeb',
+                                              color: skill.priority === 'high' ? '#ef4444' : '#f59e0b',
+                                              fontWeight: '600',
+                                              textTransform: 'uppercase'
+                                            }}>
+                                              {skill.priority || 'Required'}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
-                                <div style={{
-                                  display: 'grid',
-                                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                  gap: '12px',
-                                  fontSize: '12px'
-                                }}>
-                                  <div>
-                                    <p style={{
-                                      fontWeight: '600',
-                                      marginBottom: '4px',
-                                      color: '#1e293b'
-                                    }}>
-                                      Matched Skills
-                                    </p>
-                                    <div style={{
-                                      display: 'flex',
-                                      flexWrap: 'wrap',
-                                      gap: '4px'
-                                    }}>
-                                      {(r.matched_skills || []).map((s, i) => (
-                                        <span key={i} style={{
-                                          padding: '2px 6px',
-                                          borderRadius: '10px',
-                                          background: '#f0fdf4',
-                                          color: '#14532d',
-                                          border: '1px solid #bbf7d0',
-                                          fontSize: '11px'
-                                        }}>
-                                          {s}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <p style={{
-                                      fontWeight: '600',
-                                      marginBottom: '4px',
-                                      color: '#1e293b'
-                                    }}>
-                                      Missing Skills
-                                    </p>
-                                    <div style={{
-                                      display: 'flex',
-                                      flexWrap: 'wrap',
-                                      gap: '4px'
-                                    }}>
-                                      {(r.missing_skills || []).map((s, i) => (
-                                        <span key={i} style={{
-                                          padding: '2px 6px',
-                                          borderRadius: '10px',
-                                          background: '#fef2f2',
-                                          color: '#991b1b',
-                                          border: '1px solid #fecaca',
-                                          fontSize: '11px'
-                                        }}>
-                                          {s}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <p style={{
-                                      fontWeight: '600',
-                                      marginBottom: '4px',
-                                      color: '#1e293b'
-                                    }}>
-                                      Additional Skills To Learn
-                                    </p>
-                                    <div style={{
-                                      display: 'flex',
-                                      flexWrap: 'wrap',
-                                      gap: '4px'
-                                    }}>
-                                      {(r.additional_skills_to_learn || []).map((s, i) => (
-                                        <span key={i} style={{
-                                          padding: '2px 6px',
-                                          borderRadius: '10px',
-                                          background: '#dbeafe',
-                                          color: '#1e3a8a',
-                                          border: '1px solid #93c5fd',
-                                          fontSize: '11px'
-                                        }}>
-                                          {s}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
 
-                      {Array.isArray(guidance.weak_skills) && guidance.weak_skills.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-5">
-                          <h3 className="text-lg font-semibold text-purple-300 mb-3">Low-value / Weak Skills</h3>
-                          <ul className="space-y-2 text-sm text-purple-100">
-                            {guidance.weak_skills.map((ws, idx) => (
-                              <li key={idx} className="flex gap-2">
-                                <span className="font-semibold text-white">{ws.name}:</span>
-                                <span className="text-purple-200">{ws.reason}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {Array.isArray(guidance.recommended_tech_stacks) && guidance.recommended_tech_stacks.length > 0 && (
-                        <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
-                        }}>
-                          <h3 style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '12px'
-                          }}>
-                            Recommended Tech Stacks
-                          </h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {guidance.recommended_tech_stacks.map((ts, idx) => (
-                              <div key={idx} style={{
-                                border: '1px solid #e0f2fe',
-                                borderRadius: '8px',
-                                padding: '12px',
-                                background: 'white'
-                              }}>
-                                <p style={{
-                                  color: '#1e293b',
-                                  fontWeight: '600',
-                                  fontSize: '14px',
-                                  margin: '0 0 4px 0'
-                                }}>
-                                  {ts.stack}
-                                </p>
-                                {ts.reason && (
-                                  <p style={{
-                                    fontSize: '12px',
-                                    color: '#64748b',
-                                    margin: 0
+                                {/* Learning Roadmap Phases */}
+                                {Array.isArray(roleRoadmap.roadmap_phases) && roleRoadmap.roadmap_phases.length > 0 && (
+                                  <div style={{
+                                    background: 'white',
+                                    borderRadius: '14px',
+                                    padding: '24px',
+                                    border: '2px solid #8b5cf6'
                                   }}>
-                                    {ts.reason}
-                                  </p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                                      <div style={{
+                                        background: '#8b5cf6',
+                                        borderRadius: '10px',
+                                        padding: '10px',
+                                        display: 'flex'
+                                      }}>
+                                        <GitBranch size={22} color="white" />
+                                      </div>
+                                      <div>
+                                        <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#5b21b6', margin: 0 }}>
+                                          🛤️ Your Learning Roadmap
+                                        </h4>
+                                        <p style={{ fontSize: '13px', color: '#7c3aed', margin: '2px 0 0 0' }}>
+                                          Follow these phases step by step
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    <div style={{ position: 'relative' }}>
+                                      {/* Vertical line */}
+                                      <div style={{
+                                        position: 'absolute',
+                                        left: '24px',
+                                        top: '0',
+                                        bottom: '0',
+                                        width: '3px',
+                                        background: 'linear-gradient(180deg, #8b5cf6 0%, #06b6d4 50%, #22c55e 100%)',
+                                        borderRadius: '4px'
+                                      }} />
+
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                        {roleRoadmap.roadmap_phases.map((phase, idx) => {
+                                          const phaseColors = [
+                                            { bg: '#dbeafe', border: '#3b82f6', accent: '#1d4ed8' },
+                                            { bg: '#fef3c7', border: '#f59e0b', accent: '#b45309' },
+                                            { bg: '#d1fae5', border: '#10b981', accent: '#047857' },
+                                            { bg: '#fce7f3', border: '#ec4899', accent: '#be185d' },
+                                            { bg: '#e0e7ff', border: '#6366f1', accent: '#4338ca' },
+                                          ];
+                                          const color = phaseColors[idx % phaseColors.length];
+                                          
+                                          return (
+                                            <div key={idx} style={{ display: 'flex', gap: '20px', position: 'relative', zIndex: 1 }}>
+                                              {/* Phase number circle */}
+                                              <div style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                borderRadius: '50%',
+                                                background: `linear-gradient(135deg, ${color.border} 0%, ${color.accent} 100%)`,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                boxShadow: `0 4px 12px ${color.border}40`,
+                                                border: '3px solid white'
+                                              }}>
+                                                <span style={{ color: 'white', fontWeight: '700', fontSize: '18px' }}>
+                                                  {phase.phase || idx + 1}
+                                                </span>
+                                              </div>
+                                              
+                                              {/* Phase content */}
+                                              <div style={{
+                                                flex: 1,
+                                                background: color.bg,
+                                                borderRadius: '14px',
+                                                padding: '20px',
+                                                border: `2px solid ${color.border}`
+                                              }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                                                  <div>
+                                                    <h5 style={{ fontSize: '18px', fontWeight: '700', color: color.accent, margin: 0 }}>
+                                                      {phase.title}
+                                                    </h5>
+                                                    <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
+                                                      {phase.focus}
+                                                    </p>
+                                                  </div>
+                                                  <span style={{
+                                                    background: 'white',
+                                                    color: color.accent,
+                                                    padding: '6px 14px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '600',
+                                                    border: `1px solid ${color.border}`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px'
+                                                  }}>
+                                                    <Clock size={14} />
+                                                    {phase.duration}
+                                                  </span>
+                                                </div>
+
+                                                {/* Skills to learn in this phase */}
+                                                {Array.isArray(phase.skills) && phase.skills.length > 0 && (
+                                                  <div style={{ marginBottom: '16px' }}>
+                                                    <p style={{ fontSize: '12px', fontWeight: '600', color: color.accent, marginBottom: '8px' }}>
+                                                      📚 Skills to Master:
+                                                    </p>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                      {phase.skills.map((skill, i) => (
+                                                        <span key={i} style={{
+                                                          background: 'white',
+                                                          color: color.accent,
+                                                          padding: '6px 12px',
+                                                          borderRadius: '6px',
+                                                          fontSize: '12px',
+                                                          fontWeight: '500',
+                                                          border: `1px solid ${color.border}`
+                                                        }}>
+                                                          {skill}
+                                                        </span>
+                                                      ))}
+                                                    </div>
+                                                  </div>
+                                                )}
+
+                                                {/* Action items */}
+                                                {Array.isArray(phase.action_items) && phase.action_items.length > 0 && (
+                                                  <div style={{ marginBottom: '12px' }}>
+                                                    <p style={{ fontSize: '12px', fontWeight: '600', color: color.accent, marginBottom: '8px' }}>
+                                                      ⚡ Action Items:
+                                                    </p>
+                                                    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                                                      {phase.action_items.map((item, i) => (
+                                                        <li key={i} style={{
+                                                          display: 'flex',
+                                                          alignItems: 'flex-start',
+                                                          gap: '8px',
+                                                          fontSize: '13px',
+                                                          color: '#475569',
+                                                          marginBottom: '6px',
+                                                          background: 'white',
+                                                          padding: '8px 12px',
+                                                          borderRadius: '6px'
+                                                        }}>
+                                                          <span style={{ color: color.border }}>▸</span>
+                                                          {item}
+                                                        </li>
+                                                      ))}
+                                                    </ul>
+                                                  </div>
+                                                )}
+
+                                                {/* Milestone */}
+                                                {phase.milestone && (
+                                                  <div style={{
+                                                    background: 'white',
+                                                    padding: '12px 16px',
+                                                    borderRadius: '8px',
+                                                    border: `2px dashed ${color.border}`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px'
+                                                  }}>
+                                                    <Trophy size={18} style={{ color: color.accent }} />
+                                                    <div>
+                                                      <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Milestone</p>
+                                                      <p style={{ fontSize: '13px', fontWeight: '600', color: color.accent, margin: 0 }}>
+                                                        {phase.milestone}
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Project Ideas */}
+                                {Array.isArray(roleRoadmap.projects) && roleRoadmap.projects.length > 0 && (
+                                  <div style={{
+                                    background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                                    borderRadius: '14px',
+                                    padding: '24px',
+                                    border: '2px solid #22c55e'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                      <Lightbulb size={24} style={{ color: '#22c55e' }} />
+                                      <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#166534', margin: 0 }}>
+                                        🚀 Project Ideas to Build
+                                      </h4>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                                      {roleRoadmap.projects.map((project, idx) => {
+                                        const difficultyColors = {
+                                          beginner: { bg: '#dbeafe', color: '#1d4ed8' },
+                                          intermediate: { bg: '#fef3c7', color: '#b45309' },
+                                          advanced: { bg: '#fce7f3', color: '#be185d' }
+                                        };
+                                        const dc = difficultyColors[project.difficulty?.toLowerCase()] || difficultyColors.intermediate;
+                                        
+                                        return (
+                                          <div key={idx} style={{
+                                            background: 'white',
+                                            borderRadius: '12px',
+                                            padding: '18px',
+                                            border: '1px solid #86efac',
+                                            boxShadow: '0 2px 8px rgba(34, 197, 94, 0.1)'
+                                          }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                                              <span style={{
+                                                width: '28px',
+                                                height: '28px',
+                                                borderRadius: '8px',
+                                                background: '#22c55e',
+                                                color: 'white',
+                                                fontSize: '13px',
+                                                fontWeight: '700',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                              }}>
+                                                {idx + 1}
+                                              </span>
+                                              <h5 style={{ fontSize: '15px', fontWeight: '700', color: '#166534', margin: 0 }}>
+                                                {project.title}
+                                              </h5>
+                                            </div>
+                                            <p style={{ fontSize: '13px', color: '#475569', marginBottom: '12px', lineHeight: '1.5' }}>
+                                              {project.description}
+                                            </p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                              <span style={{
+                                                background: dc.bg,
+                                                color: dc.color,
+                                                padding: '4px 10px',
+                                                borderRadius: '12px',
+                                                fontSize: '11px',
+                                                fontWeight: '600',
+                                                textTransform: 'capitalize'
+                                              }}>
+                                                {project.difficulty}
+                                              </span>
+                                              {project.duration && (
+                                                <span style={{
+                                                  background: '#f1f5f9',
+                                                  color: '#64748b',
+                                                  padding: '4px 10px',
+                                                  borderRadius: '12px',
+                                                  fontSize: '11px',
+                                                  fontWeight: '500'
+                                                }}>
+                                                  ⏱️ {project.duration}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Tips */}
+                                {Array.isArray(roleRoadmap.tips) && roleRoadmap.tips.length > 0 && (
+                                  <div style={{
+                                    background: '#fffbeb',
+                                    borderRadius: '14px',
+                                    padding: '20px',
+                                    border: '2px solid #f59e0b'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                                      <Star size={20} style={{ color: '#f59e0b' }} />
+                                      <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#92400e', margin: 0 }}>
+                                        💡 Pro Tips for Success
+                                      </h4>
+                                    </div>
+                                    <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                      {roleRoadmap.tips.map((tip, idx) => (
+                                        <li key={idx} style={{
+                                          display: 'flex',
+                                          alignItems: 'flex-start',
+                                          gap: '10px',
+                                          background: 'white',
+                                          padding: '12px 16px',
+                                          borderRadius: '8px',
+                                          border: '1px solid #fde68a',
+                                          fontSize: '13px',
+                                          color: '#78350f'
+                                        }}>
+                                          <span>⭐</span>
+                                          {tip}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
                                 )}
                               </div>
-                            ))}
+                            )}
                           </div>
-                        </div>
+                        )}
+                      </div>
+                      </div>
                       )}
 
+                      {/* TAB 2: Find Your Direction - 7 Step Guidance */}
+                      {guidanceSubTab === 'direction' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                          {/* Intro Card for Direction Tab */}
+                          <div style={{
+                            background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                            borderRadius: '16px',
+                            padding: '24px',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '20px'
+                          }}>
+                            <div style={{
+                              background: 'rgba(255,255,255,0.2)',
+                              borderRadius: '16px',
+                              padding: '16px',
+                              display: 'flex'
+                            }}>
+                              <Lightbulb size={32} />
+                            </div>
+                            <div>
+                              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 6px 0' }}>
+                                🧭 Not Sure Which Role is Right for You?
+                              </h3>
+                              <p style={{ fontSize: '14px', opacity: 0.9, margin: 0 }}>
+                                Follow these 7 steps to discover your ideal career path based on your skills, interests, and goals!
+                              </p>
+                            </div>
+                          </div>
+
+                      {/* Step 1: Career Clarity Summary - Your Direction */}
                       {guidance.career_clarity_summary && (
                         <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
+                          background: 'white',
+                          borderRadius: '16px',
+                          border: '2px solid #6366f1',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 20px rgba(99, 102, 241, 0.15)'
                         }}>
-                          <h3 style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '12px'
-                          }}>
-                            Career Clarity Summary
-                          </h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {guidance.career_clarity_summary.primary_alignment && (
-                              <p style={{ margin: 0, color: '#475569', fontSize: '14px' }}>
-                                <span style={{ fontWeight: '600', color: '#1e293b' }}>Primary Alignment:</span> {guidance.career_clarity_summary.primary_alignment}
-                              </p>
-                            )}
-                            {Array.isArray(guidance.career_clarity_summary.aligned_roles) && guidance.career_clarity_summary.aligned_roles.length > 0 && (
-                              <p style={{ margin: 0, color: '#475569', fontSize: '14px' }}>
-                                <span style={{ fontWeight: '600', color: '#1e293b' }}>Good Roles:</span>{' '}
-                                {guidance.career_clarity_summary.aligned_roles.join(', ')}
-                              </p>
-                            )}
-                            {Array.isArray(guidance.career_clarity_summary.roles_to_avoid) && guidance.career_clarity_summary.roles_to_avoid.length > 0 && (
-                              <p style={{ margin: 0, color: '#475569', fontSize: '14px' }}>
-                                <span style={{ fontWeight: '600', color: '#1e293b' }}>Roles to Avoid:</span>{' '}
-                                {guidance.career_clarity_summary.roles_to_avoid.join(', ')}
-                              </p>
-                            )}
-                            {guidance.career_clarity_summary.reasoning && (
-                              <p style={{
-                                color: '#64748b',
-                                fontSize: '12px',
-                                margin: 0
+                          <div 
+                            onClick={() => setExpandedSections(prev => ({ ...prev, career: !prev.career }))}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '20px 24px',
+                              background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '18px',
+                                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
                               }}>
-                                {guidance.career_clarity_summary.reasoning}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {Array.isArray(guidance.weekly_schedule) && guidance.weekly_schedule.length > 0 && (
-                        <div style={{
-                          background: '#f8fafc',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: '1px solid #e0f2fe'
-                        }}>
-                          <h3 style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            marginBottom: '12px'
-                          }}>
-                            4–8 Week Skill-Improvement Plan
-                          </h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {guidance.weekly_schedule.map((w, idx) => (
-                              <div key={idx} style={{
-                                border: '1px solid #e0f2fe',
-                                borderRadius: '8px',
-                                padding: '12px',
-                                background: 'white'
-                              }}>
-                                <p style={{
-                                  color: '#1e293b',
-                                  fontWeight: '600',
-                                  fontSize: '14px',
-                                  margin: '0 0 8px 0'
-                                }}>
-                                  Week {w.week || idx + 1}: {w.focus}
+                                1
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <Target size={20} style={{ color: '#6366f1' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#312e81', margin: 0 }}>
+                                    Know Your Direction
+                                  </h4>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#6366f1', margin: '4px 0 0 0' }}>
+                                  Understand your career alignment & best-fit roles
                                 </p>
-                                {Array.isArray(w.topics) && w.topics.length > 0 && (
-                                  <div style={{ marginBottom: '8px' }}>
-                                    <p style={{
-                                      fontSize: '12px',
-                                      color: '#64748b',
-                                      marginBottom: '4px'
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{
+                                background: '#6366f1',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}>
+                                START HERE
+                              </span>
+                              {expandedSections.career ? <ChevronUp size={24} color="#6366f1" /> : <ChevronDown size={24} color="#6366f1" />}
+                            </div>
+                          </div>
+                          {(expandedSections.career !== false) && (
+                            <div style={{ padding: '24px' }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+                                {/* Primary Alignment */}
+                                <div style={{
+                                  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                                  borderRadius: '12px',
+                                  padding: '20px',
+                                  border: '1px solid #0ea5e9'
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                                    <div style={{
+                                      background: '#0ea5e9',
+                                      borderRadius: '8px',
+                                      padding: '8px',
+                                      display: 'flex'
                                     }}>
-                                      Topics
-                                    </p>
-                                    <ul style={{
-                                      margin: 0,
-                                      padding: 0,
-                                      paddingLeft: '16px',
-                                      listStyle: 'disc',
-                                      fontSize: '12px',
-                                      color: '#475569'
-                                    }}>
-                                      {w.topics.map((t, i) => (
-                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
+                                      <Briefcase size={18} color="white" />
+                                    </div>
+                                    <span style={{ fontWeight: '600', color: '#0369a1', fontSize: '14px' }}>
+                                      Your Primary Track
+                                    </span>
+                                  </div>
+                                  <p style={{ 
+                                    fontSize: '20px', 
+                                    fontWeight: '700', 
+                                    color: '#0c4a6e', 
+                                    margin: 0,
+                                    lineHeight: '1.3'
+                                  }}>
+                                    {guidance.career_clarity_summary.primary_alignment}
+                                  </p>
+                                </div>
+
+                                {/* Best Fit Roles */}
+                                {Array.isArray(guidance.career_clarity_summary.aligned_roles) && guidance.career_clarity_summary.aligned_roles.length > 0 && (
+                                  <div style={{
+                                    background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                                    borderRadius: '12px',
+                                    padding: '20px',
+                                    border: '1px solid #22c55e'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                                      <div style={{
+                                        background: '#22c55e',
+                                        borderRadius: '8px',
+                                        padding: '8px',
+                                        display: 'flex'
+                                      }}>
+                                        <CheckCircle size={18} color="white" />
+                                      </div>
+                                      <span style={{ fontWeight: '600', color: '#15803d', fontSize: '14px' }}>
+                                        Best Fit Roles For You
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                      {guidance.career_clarity_summary.aligned_roles.map((role, idx) => (
+                                        <span key={idx} style={{
+                                          background: 'white',
+                                          color: '#166534',
+                                          padding: '8px 14px',
+                                          borderRadius: '8px',
+                                          fontSize: '13px',
+                                          fontWeight: '600',
+                                          border: '1px solid #86efac',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '6px'
+                                        }}>
+                                          <Star size={14} /> {role}
+                                        </span>
                                       ))}
-                                    </ul>
+                                    </div>
                                   </div>
                                 )}
-                                {Array.isArray(w.practice_tasks) && w.practice_tasks.length > 0 && (
-                                  <div style={{ marginBottom: '8px' }}>
-                                    <p style={{
-                                      fontSize: '12px',
-                                      color: '#64748b',
-                                      marginBottom: '4px'
-                                    }}>
-                                      Practice Tasks
-                                    </p>
-                                    <ul style={{
-                                      margin: 0,
-                                      padding: 0,
-                                      paddingLeft: '16px',
-                                      listStyle: 'disc',
-                                      fontSize: '12px',
-                                      color: '#475569'
-                                    }}>
-                                      {w.practice_tasks.map((t, i) => (
-                                        <li key={i} style={{ marginBottom: '2px' }}>{t}</li>
+
+                                {/* Roles to Avoid */}
+                                {Array.isArray(guidance.career_clarity_summary.roles_to_avoid) && guidance.career_clarity_summary.roles_to_avoid.length > 0 && (
+                                  <div style={{
+                                    background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                                    borderRadius: '12px',
+                                    padding: '20px',
+                                    border: '1px solid #ef4444'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                                      <div style={{
+                                        background: '#ef4444',
+                                        borderRadius: '8px',
+                                        padding: '8px',
+                                        display: 'flex'
+                                      }}>
+                                        <AlertCircle size={18} color="white" />
+                                      </div>
+                                      <span style={{ fontWeight: '600', color: '#b91c1c', fontSize: '14px' }}>
+                                        Not Recommended For You
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                      {guidance.career_clarity_summary.roles_to_avoid.map((role, idx) => (
+                                        <span key={idx} style={{
+                                          background: 'white',
+                                          color: '#991b1b',
+                                          padding: '8px 14px',
+                                          borderRadius: '8px',
+                                          fontSize: '13px',
+                                          fontWeight: '500',
+                                          border: '1px solid #fca5a5',
+                                          textDecoration: 'line-through',
+                                          opacity: 0.8
+                                        }}>
+                                          {role}
+                                        </span>
                                       ))}
-                                    </ul>
-                                  </div>
-                                )}
-                                {Array.isArray(w.checkpoints) && w.checkpoints.length > 0 && (
-                                  <div>
-                                    <p style={{
-                                      fontSize: '12px',
-                                      color: '#64748b',
-                                      marginBottom: '4px'
-                                    }}>
-                                      Checkpoints
-                                    </p>
-                                    <ul style={{
-                                      margin: 0,
-                                      padding: 0,
-                                      paddingLeft: '16px',
-                                      listStyle: 'disc',
-                                      fontSize: '12px',
-                                      color: '#475569'
-                                    }}>
-                                      {w.checkpoints.map((c, i) => (
-                                        <li key={i} style={{ marginBottom: '2px' }}>{c}</li>
-                                      ))}
-                                    </ul>
+                                    </div>
                                   </div>
                                 )}
                               </div>
-                            ))}
-                          </div>
+                              
+                              {guidance.career_clarity_summary.reasoning && (
+                                <div style={{
+                                  marginTop: '16px',
+                                  padding: '16px',
+                                  background: '#f8fafc',
+                                  borderRadius: '10px',
+                                  border: '1px solid #e2e8f0',
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  gap: '12px'
+                                }}>
+                                  <Lightbulb size={20} style={{ color: '#f59e0b', flexShrink: 0, marginTop: '2px' }} />
+                                  <p style={{ fontSize: '13px', color: '#475569', margin: 0, lineHeight: '1.6' }}>
+                                    {guidance.career_clarity_summary.reasoning}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
+                      )}
+
+                      {/* Step 2: Your Current Skills Assessment */}
+                      {Array.isArray(guidance.technical_skills) && guidance.technical_skills.length > 0 && (
+                        <div style={{
+                          background: 'white',
+                          borderRadius: '16px',
+                          border: '2px solid #0ea5e9',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 20px rgba(14, 165, 233, 0.15)'
+                        }}>
+                          <div 
+                            onClick={() => setExpandedSections(prev => ({ ...prev, skills: !prev.skills }))}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '20px 24px',
+                              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '18px',
+                                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
+                              }}>
+                                2
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <Code size={20} style={{ color: '#0ea5e9' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#0c4a6e', margin: 0 }}>
+                                    Your Current Skills Assessment
+                                  </h4>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#0284c7', margin: '4px 0 0 0' }}>
+                                  {guidance.technical_skills.length} skills identified • See your proficiency levels
+                                </p>
+                              </div>
+                            </div>
+                            {expandedSections.skills ? <ChevronUp size={24} color="#0ea5e9" /> : <ChevronDown size={24} color="#0ea5e9" />}
+                          </div>
+                          {(expandedSections.skills !== false) && (
+                            <div style={{ padding: '24px' }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                                {guidance.technical_skills.map((s, idx) => {
+                                  const levelColors = {
+                                    'beginner': { bg: '#fef3c7', border: '#f59e0b', color: '#92400e', icon: '🌱' },
+                                    'intermediate': { bg: '#dbeafe', border: '#3b82f6', color: '#1e40af', icon: '📈' },
+                                    'advanced': { bg: '#d1fae5', border: '#10b981', color: '#047857', icon: '🚀' },
+                                    'expert': { bg: '#e0e7ff', border: '#6366f1', color: '#4338ca', icon: '⭐' },
+                                  };
+                                  const levelColor = levelColors[s.level?.toLowerCase()] || levelColors['intermediate'];
+                                  
+                                  return (
+                                    <div
+                                      key={idx}
+                                      style={{
+                                        padding: '12px 18px',
+                                        borderRadius: '12px',
+                                        fontSize: '14px',
+                                        border: `2px solid ${levelColor.border}`,
+                                        background: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px',
+                                        boxShadow: `0 2px 8px ${levelColor.border}20`,
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                    >
+                                      <span style={{ fontSize: '16px' }}>{levelColor.icon}</span>
+                                      <span style={{ fontWeight: '600', color: '#1e293b' }}>{s.name}</span>
+                                      {s.level && (
+                                        <span style={{
+                                          fontSize: '11px',
+                                          padding: '4px 10px',
+                                          borderRadius: '20px',
+                                          background: levelColor.bg,
+                                          color: levelColor.color,
+                                          fontWeight: '600',
+                                          textTransform: 'capitalize'
+                                        }}>
+                                          {s.level}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              
+                              {/* Skill Level Legend */}
+                              <div style={{
+                                marginTop: '20px',
+                                padding: '16px',
+                                background: '#f8fafc',
+                                borderRadius: '10px',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '16px',
+                                justifyContent: 'center'
+                              }}>
+                                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>Skill Levels:</span>
+                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>🌱 Beginner</span>
+                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>📈 Intermediate</span>
+                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>🚀 Advanced</span>
+                                <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>⭐ Expert</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Step 3: Skills You Need to Learn */}
+                      {Array.isArray(guidance.missing_skills) && guidance.missing_skills.length > 0 && (
+                        <div style={{
+                          background: 'white',
+                          borderRadius: '16px',
+                          border: '2px solid #ef4444',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 20px rgba(239, 68, 68, 0.15)'
+                        }}>
+                          <div 
+                            onClick={() => setExpandedSections(prev => ({ ...prev, missing: !prev.missing }))}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '20px 24px',
+                              background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '18px',
+                                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                              }}>
+                                3
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <BookOpen size={20} style={{ color: '#ef4444' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#991b1b', margin: 0 }}>
+                                    Skills You Need to Learn
+                                  </h4>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#dc2626', margin: '4px 0 0 0' }}>
+                                  {guidance.missing_skills.length} essential skills to boost your profile
+                                </p>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{
+                                background: '#ef4444',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}>
+                                ACTION NEEDED
+                              </span>
+                              {expandedSections.missing ? <ChevronUp size={24} color="#ef4444" /> : <ChevronDown size={24} color="#ef4444" />}
+                            </div>
+                          </div>
+                          {(expandedSections.missing !== false) && (
+                            <div style={{ padding: '24px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {guidance.missing_skills.map((ms, idx) => (
+                                  <div key={idx} style={{
+                                    display: 'flex',
+                                    gap: '16px',
+                                    padding: '16px',
+                                    background: idx % 2 === 0 ? '#fff7ed' : '#fef3c7',
+                                    borderRadius: '12px',
+                                    border: '1px solid #fed7aa',
+                                    alignItems: 'flex-start',
+                                    transition: 'all 0.2s ease'
+                                  }}>
+                                    <div style={{
+                                      width: '36px',
+                                      height: '36px',
+                                      borderRadius: '10px',
+                                      background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      color: 'white',
+                                      fontWeight: '700',
+                                      fontSize: '14px',
+                                      flexShrink: 0
+                                    }}>
+                                      {idx + 1}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                                        <Zap size={16} style={{ color: '#ea580c' }} />
+                                        <span style={{
+                                          fontWeight: '700',
+                                          color: '#9a3412',
+                                          fontSize: '15px'
+                                        }}>
+                                          {ms.name}
+                                        </span>
+                                      </div>
+                                      <p style={{
+                                        fontSize: '13px',
+                                        color: '#78350f',
+                                        margin: 0,
+                                        lineHeight: '1.5',
+                                        display: 'flex',
+                                        alignItems: 'flex-start',
+                                        gap: '8px'
+                                      }}>
+                                        <ArrowRight size={14} style={{ marginTop: '3px', flexShrink: 0 }} />
+                                        {ms.reason}
+                                      </p>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCompletedSteps(prev => ({ 
+                                          ...prev, 
+                                          [`skill_${idx}`]: !prev[`skill_${idx}`] 
+                                        }));
+                                      }}
+                                      style={{
+                                        width: '32px',
+                                        height: '32px',
+                                        borderRadius: '8px',
+                                        border: completedSteps[`skill_${idx}`] ? '2px solid #22c55e' : '2px solid #d1d5db',
+                                        background: completedSteps[`skill_${idx}`] ? '#22c55e' : 'white',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                    >
+                                      {completedSteps[`skill_${idx}`] && <CheckCircle size={18} color="white" />}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Step 4: Your Learning Path */}
+                      {Array.isArray(guidance.learning_paths) && guidance.learning_paths.length > 0 && (
+                        <div style={{
+                          background: 'white',
+                          borderRadius: '16px',
+                          border: '2px solid #d946ef',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 20px rgba(217, 70, 239, 0.15)'
+                        }}>
+                          <div 
+                            onClick={() => setExpandedSections(prev => ({ ...prev, learning: !prev.learning }))}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '20px 24px',
+                              background: 'linear-gradient(135deg, #fdf4ff 0%, #f5d0fe 100%)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #d946ef 0%, #a855f7 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '18px',
+                                boxShadow: '0 4px 12px rgba(217, 70, 239, 0.3)'
+                              }}>
+                                4
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <GraduationCap size={20} style={{ color: '#d946ef' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#701a75', margin: 0 }}>
+                                    Step-by-Step Learning Path
+                                  </h4>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#a21caf', margin: '4px 0 0 0' }}>
+                                  Follow this roadmap to master your skills
+                                </p>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{
+                                background: '#d946ef',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}>
+                                ROADMAP
+                              </span>
+                              {expandedSections.learning ? <ChevronUp size={24} color="#d946ef" /> : <ChevronDown size={24} color="#d946ef" />}
+                            </div>
+                          </div>
+                          {(expandedSections.learning !== false) && (
+                            <div style={{ padding: '24px' }}>
+                              {guidance.learning_paths.map((lp, lpIdx) => (
+                                <div key={lpIdx} style={{ marginBottom: lpIdx < guidance.learning_paths.length - 1 ? '24px' : 0 }}>
+                                  {/* Track Header */}
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '16px 20px',
+                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                    borderRadius: '12px 12px 0 0',
+                                    color: 'white'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                      <Layers size={24} />
+                                      <div>
+                                        <h5 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>
+                                          {lp.track}
+                                        </h5>
+                                        <p style={{ fontSize: '12px', opacity: 0.9, margin: '2px 0 0 0' }}>
+                                          Learning Track {lpIdx + 1}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {typeof lp.estimated_time_weeks === 'number' && (
+                                      <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        background: 'rgba(255,255,255,0.2)',
+                                        padding: '8px 14px',
+                                        borderRadius: '20px'
+                                      }}>
+                                        <Clock size={16} />
+                                        <span style={{ fontWeight: '600', fontSize: '13px' }}>
+                                          ~{lp.estimated_time_weeks} weeks
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Learning Steps Container */}
+                                  <div style={{
+                                    background: '#faf5ff',
+                                    borderRadius: '0 0 12px 12px',
+                                    padding: '20px',
+                                    border: '2px solid #e9d5ff',
+                                    borderTop: 'none'
+                                  }}>
+                                    {/* Topics Section */}
+                                    {Array.isArray(lp.topics) && lp.topics.length > 0 && (
+                                      <div style={{ marginBottom: '20px' }}>
+                                        <div style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '10px',
+                                          marginBottom: '14px'
+                                        }}>
+                                          <div style={{
+                                            background: '#7c3aed',
+                                            borderRadius: '8px',
+                                            padding: '8px',
+                                            display: 'flex'
+                                          }}>
+                                            <BookOpen size={18} color="white" />
+                                          </div>
+                                          <span style={{ fontWeight: '700', color: '#5b21b6', fontSize: '15px' }}>
+                                            📚 Topics to Master (in order)
+                                          </span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingLeft: '8px' }}>
+                                          {lp.topics.map((topic, tIdx) => (
+                                            <div 
+                                              key={tIdx} 
+                                              style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '14px',
+                                                padding: '12px 16px',
+                                                background: 'white',
+                                                borderRadius: '10px',
+                                                border: '1px solid #ddd6fe',
+                                                position: 'relative'
+                                              }}
+                                            >
+                                              <div style={{
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '50%',
+                                                background: completedSteps[`topic_${lpIdx}_${tIdx}`] 
+                                                  ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+                                                  : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'white',
+                                                fontWeight: '700',
+                                                fontSize: '13px',
+                                                flexShrink: 0
+                                              }}>
+                                                {completedSteps[`topic_${lpIdx}_${tIdx}`] ? '✓' : tIdx + 1}
+                                              </div>
+                                              <div style={{ flex: 1 }}>
+                                                <span style={{ 
+                                                  fontWeight: '600', 
+                                                  color: '#1e293b', 
+                                                  fontSize: '14px',
+                                                  textDecoration: completedSteps[`topic_${lpIdx}_${tIdx}`] ? 'line-through' : 'none',
+                                                  opacity: completedSteps[`topic_${lpIdx}_${tIdx}`] ? 0.7 : 1
+                                                }}>
+                                                  {topic}
+                                                </span>
+                                              </div>
+                                              <button
+                                                onClick={() => setCompletedSteps(prev => ({
+                                                  ...prev,
+                                                  [`topic_${lpIdx}_${tIdx}`]: !prev[`topic_${lpIdx}_${tIdx}`]
+                                                }))}
+                                                style={{
+                                                  width: '28px',
+                                                  height: '28px',
+                                                  borderRadius: '6px',
+                                                  border: completedSteps[`topic_${lpIdx}_${tIdx}`] 
+                                                    ? '2px solid #22c55e' 
+                                                    : '2px solid #d1d5db',
+                                                  background: completedSteps[`topic_${lpIdx}_${tIdx}`] 
+                                                    ? '#22c55e' 
+                                                    : 'white',
+                                                  cursor: 'pointer',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  justifyContent: 'center',
+                                                  transition: 'all 0.2s ease'
+                                                }}
+                                              >
+                                                {completedSteps[`topic_${lpIdx}_${tIdx}`] && (
+                                                  <CheckCircle size={16} color="white" />
+                                                )}
+                                              </button>
+                                              {tIdx < lp.topics.length - 1 && (
+                                                <div style={{
+                                                  position: 'absolute',
+                                                  left: '23px',
+                                                  bottom: '-12px',
+                                                  width: '2px',
+                                                  height: '12px',
+                                                  background: '#ddd6fe',
+                                                  zIndex: 1
+                                                }} />
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Tools & Exercises Grid */}
+                                    <div style={{
+                                      display: 'grid',
+                                      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                                      gap: '16px'
+                                    }}>
+                                      {/* Tools */}
+                                      {Array.isArray(lp.tools) && lp.tools.length > 0 && (
+                                        <div style={{
+                                          background: 'white',
+                                          borderRadius: '12px',
+                                          padding: '16px',
+                                          border: '1px solid #c4b5fd'
+                                        }}>
+                                          <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            marginBottom: '12px'
+                                          }}>
+                                            <Wrench size={18} style={{ color: '#7c3aed' }} />
+                                            <span style={{ fontWeight: '700', color: '#5b21b6', fontSize: '14px' }}>
+                                              🔧 Tools You'll Need
+                                            </span>
+                                          </div>
+                                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                            {lp.tools.map((tool, i) => (
+                                              <span key={i} style={{
+                                                background: '#f3e8ff',
+                                                color: '#7c3aed',
+                                                padding: '6px 12px',
+                                                borderRadius: '8px',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                border: '1px solid #ddd6fe'
+                                              }}>
+                                                {tool}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Exercises */}
+                                      {Array.isArray(lp.exercises) && lp.exercises.length > 0 && (
+                                        <div style={{
+                                          background: '#fffbeb',
+                                          borderRadius: '12px',
+                                          padding: '16px',
+                                          border: '1px solid #fde68a'
+                                        }}>
+                                          <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            marginBottom: '12px'
+                                          }}>
+                                            <Zap size={18} style={{ color: '#d97706' }} />
+                                            <span style={{ fontWeight: '700', color: '#92400e', fontSize: '14px' }}>
+                                              ⚡ Practice Exercises
+                                            </span>
+                                          </div>
+                                          <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                                            {lp.exercises.map((ex, i) => (
+                                              <li key={i} style={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                gap: '8px',
+                                                fontSize: '13px',
+                                                color: '#78350f',
+                                                marginBottom: '8px'
+                                              }}>
+                                                <PlayCircle size={14} style={{ marginTop: '3px', flexShrink: 0 }} />
+                                                {ex}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Projects */}
+                                    {Array.isArray(lp.projects) && lp.projects.length > 0 && (
+                                      <div style={{
+                                        marginTop: '16px',
+                                        background: '#f0fdf4',
+                                        borderRadius: '12px',
+                                        padding: '16px',
+                                        border: '1px solid #bbf7d0'
+                                      }}>
+                                        <div style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '8px',
+                                          marginBottom: '12px'
+                                        }}>
+                                          <FolderOpen size={18} style={{ color: '#16a34a' }} />
+                                          <span style={{ fontWeight: '700', color: '#166534', fontSize: '14px' }}>
+                                            🚀 Build These Projects
+                                          </span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                          {lp.projects.map((proj, i) => (
+                                            <div key={i} style={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: '8px',
+                                              background: 'white',
+                                              padding: '10px 14px',
+                                              borderRadius: '8px',
+                                              border: '1px solid #86efac',
+                                              fontSize: '13px',
+                                              color: '#14532d',
+                                              fontWeight: '500'
+                                            }}>
+                                              <Rocket size={14} />
+                                              {proj}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Step 5: Project Ideas */}
+                      {Array.isArray(guidance.project_ideas) && guidance.project_ideas.length > 0 && (
+                        <div style={{
+                          background: 'white',
+                          borderRadius: '16px',
+                          border: '2px solid #22c55e',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 20px rgba(34, 197, 94, 0.15)'
+                        }}>
+                          <div 
+                            onClick={() => setExpandedSections(prev => ({ ...prev, projects: !prev.projects }))}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '20px 24px',
+                              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '18px',
+                                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                              }}>
+                                5
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <Lightbulb size={20} style={{ color: '#22c55e' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#166534', margin: 0 }}>
+                                    Project Ideas to Build
+                                  </h4>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#15803d', margin: '4px 0 0 0' }}>
+                                  Build these to showcase your skills to employers
+                                </p>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{
+                                background: '#22c55e',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}>
+                                PORTFOLIO
+                              </span>
+                              {expandedSections.projects ? <ChevronUp size={24} color="#22c55e" /> : <ChevronDown size={24} color="#22c55e" />}
+                            </div>
+                          </div>
+                          {(expandedSections.projects !== false) && (
+                            <div style={{ padding: '24px' }}>
+                              <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                                gap: '16px'
+                              }}>
+                                {guidance.project_ideas.map((p, idx) => {
+                                  const projectColors = [
+                                    { bg: '#dbeafe', border: '#3b82f6', accent: '#1d4ed8', icon: '🌐' },
+                                    { bg: '#fce7f3', border: '#ec4899', accent: '#be185d', icon: '📱' },
+                                    { bg: '#fef3c7', border: '#f59e0b', accent: '#b45309', icon: '⚙️' },
+                                    { bg: '#e0e7ff', border: '#6366f1', accent: '#4338ca', icon: '🔒' },
+                                    { bg: '#ccfbf1', border: '#14b8a6', accent: '#0f766e', icon: '📊' },
+                                  ];
+                                  const color = projectColors[idx % projectColors.length];
+                                  
+                                  return (
+                                    <div key={idx} style={{
+                                      border: `2px solid ${color.border}`,
+                                      borderRadius: '14px',
+                                      padding: '18px',
+                                      background: 'white',
+                                      boxShadow: `0 4px 12px ${color.border}20`,
+                                      position: 'relative',
+                                      overflow: 'hidden',
+                                      transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                                    }}>
+                                      {/* Decorative corner */}
+                                      <div style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        right: 0,
+                                        width: '60px',
+                                        height: '60px',
+                                        background: color.bg,
+                                        borderRadius: '0 0 0 60px',
+                                        display: 'flex',
+                                        alignItems: 'flex-start',
+                                        justifyContent: 'flex-end',
+                                        padding: '8px'
+                                      }}>
+                                        <span style={{ fontSize: '20px' }}>{color.icon}</span>
+                                      </div>
+                                      
+                                      <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        marginBottom: '12px'
+                                      }}>
+                                        <div style={{
+                                          width: '32px',
+                                          height: '32px',
+                                          borderRadius: '8px',
+                                          background: `linear-gradient(135deg, ${color.border} 0%, ${color.accent} 100%)`,
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          color: 'white',
+                                          fontWeight: '700',
+                                          fontSize: '14px'
+                                        }}>
+                                          {idx + 1}
+                                        </div>
+                                        <p style={{
+                                          color: color.accent,
+                                          fontWeight: '700',
+                                          fontSize: '15px',
+                                          margin: 0,
+                                          paddingRight: '40px',
+                                          flex: 1
+                                        }}>
+                                          {p.title}
+                                        </p>
+                                      </div>
+                                      
+                                      {p.type && (
+                                        <span style={{
+                                          display: 'inline-block',
+                                          background: color.bg,
+                                          color: color.accent,
+                                          padding: '4px 12px',
+                                          borderRadius: '6px',
+                                          fontSize: '11px',
+                                          fontWeight: '600',
+                                          marginBottom: '10px',
+                                          border: `1px solid ${color.border}`,
+                                          textTransform: 'uppercase'
+                                        }}>
+                                          {p.type}
+                                        </span>
+                                      )}
+                                      
+                                      {p.description && (
+                                        <p style={{
+                                          fontSize: '13px',
+                                          color: '#475569',
+                                          margin: 0,
+                                          lineHeight: '1.6'
+                                        }}>
+                                          {p.description}
+                                        </p>
+                                      )}
+                                      
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setCompletedSteps(prev => ({
+                                            ...prev,
+                                            [`project_${idx}`]: !prev[`project_${idx}`]
+                                          }));
+                                        }}
+                                        style={{
+                                          marginTop: '14px',
+                                          width: '100%',
+                                          padding: '10px',
+                                          borderRadius: '8px',
+                                          border: completedSteps[`project_${idx}`] 
+                                            ? '2px solid #22c55e' 
+                                            : `2px solid ${color.border}`,
+                                          background: completedSteps[`project_${idx}`] 
+                                            ? '#22c55e' 
+                                            : 'white',
+                                          color: completedSteps[`project_${idx}`] 
+                                            ? 'white' 
+                                            : color.accent,
+                                          fontWeight: '600',
+                                          fontSize: '13px',
+                                          cursor: 'pointer',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          gap: '8px',
+                                          transition: 'all 0.2s ease'
+                                        }}
+                                      >
+                                        {completedSteps[`project_${idx}`] ? (
+                                          <>
+                                            <CheckCircle size={16} />
+                                            Completed!
+                                          </>
+                                        ) : (
+                                          <>
+                                            <PlayCircle size={16} />
+                                            Mark as Built
+                                          </>
+                                        )}
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Step 6: Certifications */}
+                      {Array.isArray(guidance.certificate_recommendations) && guidance.certificate_recommendations.length > 0 && (
+                        <div style={{
+                          background: 'white',
+                          borderRadius: '16px',
+                          border: '2px solid #f59e0b',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 20px rgba(245, 158, 11, 0.15)'
+                        }}>
+                          <div 
+                            onClick={() => setExpandedSections(prev => ({ ...prev, certs: !prev.certs }))}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '20px 24px',
+                              background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '18px',
+                                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+                              }}>
+                                6
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <Award size={20} style={{ color: '#f59e0b' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#92400e', margin: 0 }}>
+                                    Recommended Certifications
+                                  </h4>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#b45309', margin: '4px 0 0 0' }}>
+                                  Boost your resume with these credentials
+                                </p>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{
+                                background: '#f59e0b',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}>
+                                CREDENTIALS
+                              </span>
+                              {expandedSections.certs ? <ChevronUp size={24} color="#f59e0b" /> : <ChevronDown size={24} color="#f59e0b" />}
+                            </div>
+                          </div>
+                          {(expandedSections.certs !== false) && (
+                            <div style={{ padding: '24px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {guidance.certificate_recommendations.map((cert, idx) => {
+                                  const isPursue = cert.recommendation?.toLowerCase() === 'pursue';
+                                  const valueColors = {
+                                    'high': { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
+                                    'medium': { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+                                    'low': { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' }
+                                  };
+                                  const valueColor = valueColors[cert.value_level?.toLowerCase()] || valueColors['medium'];
+                                  
+                                  return (
+                                    <div key={idx} style={{
+                                      display: 'flex',
+                                      gap: '16px',
+                                      padding: '16px',
+                                      background: isPursue ? '#f0fdf4' : '#fef2f2',
+                                      borderRadius: '12px',
+                                      border: `2px solid ${isPursue ? '#86efac' : '#fca5a5'}`,
+                                      alignItems: 'flex-start'
+                                    }}>
+                                      <div style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        borderRadius: '10px',
+                                        background: isPursue 
+                                          ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+                                          : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        flexShrink: 0
+                                      }}>
+                                        {isPursue ? (
+                                          <Trophy size={20} color="white" />
+                                        ) : (
+                                          <AlertCircle size={20} color="white" />
+                                        )}
+                                      </div>
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '10px',
+                                          flexWrap: 'wrap',
+                                          marginBottom: '6px'
+                                        }}>
+                                          <span style={{
+                                            fontWeight: '700',
+                                            fontSize: '15px',
+                                            color: isPursue ? '#166534' : '#991b1b'
+                                          }}>
+                                            {cert.name}
+                                          </span>
+                                          <span style={{
+                                            fontSize: '10px',
+                                            padding: '3px 8px',
+                                            borderRadius: '12px',
+                                            background: valueColor.bg,
+                                            color: valueColor.text,
+                                            border: `1px solid ${valueColor.border}`,
+                                            fontWeight: '600',
+                                            textTransform: 'uppercase'
+                                          }}>
+                                            {cert.value_level} Value
+                                          </span>
+                                          <span style={{
+                                            fontSize: '10px',
+                                            padding: '3px 8px',
+                                            borderRadius: '12px',
+                                            background: isPursue ? '#22c55e' : '#ef4444',
+                                            color: 'white',
+                                            fontWeight: '600',
+                                            textTransform: 'uppercase'
+                                          }}>
+                                            {isPursue ? '✓ PURSUE' : '✗ AVOID'}
+                                          </span>
+                                        </div>
+                                        {cert.reason && (
+                                          <p style={{
+                                            fontSize: '13px',
+                                            color: isPursue ? '#15803d' : '#b91c1c',
+                                            margin: 0,
+                                            lineHeight: '1.5'
+                                          }}>
+                                            {cert.reason}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Step 7: Weekly Schedule - Your Action Plan */}
+                      {Array.isArray(guidance.weekly_schedule) && guidance.weekly_schedule.length > 0 && (
+                        <div style={{
+                          background: 'white',
+                          borderRadius: '16px',
+                          border: '2px solid #0ea5e9',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 20px rgba(14, 165, 233, 0.15)'
+                        }}>
+                          <div 
+                            onClick={() => setExpandedSections(prev => ({ ...prev, schedule: !prev.schedule }))}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '20px 24px',
+                              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '18px',
+                                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
+                              }}>
+                                7
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <Calendar size={20} style={{ color: '#0ea5e9' }} />
+                                  <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#0c4a6e', margin: 0 }}>
+                                    {guidance.weekly_schedule.length}-Week Action Plan
+                                  </h4>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#0284c7', margin: '4px 0 0 0' }}>
+                                  Your week-by-week learning schedule
+                                </p>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{
+                                background: '#0ea5e9',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}>
+                                SCHEDULE
+                              </span>
+                              {expandedSections.schedule ? <ChevronUp size={24} color="#0ea5e9" /> : <ChevronDown size={24} color="#0ea5e9" />}
+                            </div>
+                          </div>
+                          {(expandedSections.schedule !== false) && (
+                            <div style={{ padding: '24px' }}>
+                              {/* Timeline container */}
+                              <div style={{ position: 'relative' }}>
+                                {/* Vertical line */}
+                                <div style={{
+                                  position: 'absolute',
+                                  left: '24px',
+                                  top: '0',
+                                  bottom: '0',
+                                  width: '3px',
+                                  background: 'linear-gradient(180deg, #0ea5e9 0%, #06b6d4 50%, #10b981 100%)',
+                                  borderRadius: '4px',
+                                  zIndex: 0
+                                }} />
+                                
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                  {guidance.weekly_schedule.map((w, idx) => {
+                                    const weekColors = [
+                                      { bg: '#dbeafe', border: '#3b82f6', accent: '#1d4ed8', icon: '🚀' },
+                                      { bg: '#d1fae5', border: '#10b981', accent: '#047857', icon: '📚' },
+                                      { bg: '#fef3c7', border: '#f59e0b', accent: '#b45309', icon: '💡' },
+                                      { bg: '#fce7f3', border: '#ec4899', accent: '#be185d', icon: '🎯' },
+                                      { bg: '#e0e7ff', border: '#6366f1', accent: '#4338ca', icon: '⚡' },
+                                      { bg: '#ccfbf1', border: '#14b8a6', accent: '#0f766e', icon: '🔧' },
+                                      { bg: '#fed7aa', border: '#f97316', accent: '#c2410c', icon: '🏆' },
+                                      { bg: '#d9f99d', border: '#84cc16', accent: '#4d7c0f', icon: '✨' },
+                                    ];
+                                    const color = weekColors[idx % weekColors.length];
+                                    
+                                    return (
+                                      <div key={idx} style={{
+                                        display: 'flex',
+                                        gap: '20px',
+                                        position: 'relative',
+                                        zIndex: 1
+                                      }}>
+                                        {/* Week number circle */}
+                                        <div style={{
+                                          width: '50px',
+                                          height: '50px',
+                                          borderRadius: '50%',
+                                          background: completedSteps[`week_${idx}`] 
+                                            ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+                                            : `linear-gradient(135deg, ${color.border} 0%, ${color.accent} 100%)`,
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          flexShrink: 0,
+                                          boxShadow: `0 4px 12px ${color.border}40`,
+                                          border: '3px solid white',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s ease'
+                                        }}
+                                        onClick={() => setCompletedSteps(prev => ({
+                                          ...prev,
+                                          [`week_${idx}`]: !prev[`week_${idx}`]
+                                        }))}
+                                        >
+                                          {completedSteps[`week_${idx}`] ? (
+                                            <CheckCircle size={24} color="white" />
+                                          ) : (
+                                            <span style={{
+                                              color: 'white',
+                                              fontWeight: '700',
+                                              fontSize: '16px'
+                                            }}>
+                                              W{w.week || idx + 1}
+                                            </span>
+                                          )}
+                                        </div>
+                                        
+                                        {/* Week content card */}
+                                        <div style={{
+                                          flex: 1,
+                                          background: 'white',
+                                          borderRadius: '16px',
+                                          padding: '20px',
+                                          border: `2px solid ${completedSteps[`week_${idx}`] ? '#22c55e' : color.border}`,
+                                          boxShadow: `0 4px 16px ${color.border}20`,
+                                          transition: 'all 0.3s ease',
+                                          opacity: completedSteps[`week_${idx}`] ? 0.85 : 1
+                                        }}>
+                                          {/* Week header */}
+                                          <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            marginBottom: '16px',
+                                            paddingBottom: '12px',
+                                            borderBottom: `2px dashed ${color.bg}`
+                                          }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                              <span style={{ fontSize: '24px' }}>{color.icon}</span>
+                                              <div>
+                                                <h4 style={{
+                                                  fontSize: '18px',
+                                                  fontWeight: '700',
+                                                  color: color.accent,
+                                                  margin: 0,
+                                                  textDecoration: completedSteps[`week_${idx}`] ? 'line-through' : 'none'
+                                                }}>
+                                                  Week {w.week || idx + 1}
+                                                </h4>
+                                                <p style={{
+                                                  fontSize: '14px',
+                                                  color: '#64748b',
+                                                  margin: '2px 0 0 0',
+                                                  fontWeight: '500'
+                                                }}>
+                                                  {w.focus}
+                                                </p>
+                                              </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                              {completedSteps[`week_${idx}`] && (
+                                                <span style={{
+                                                  background: '#22c55e',
+                                                  color: 'white',
+                                                  padding: '4px 10px',
+                                                  borderRadius: '20px',
+                                                  fontSize: '11px',
+                                                  fontWeight: '600'
+                                                }}>
+                                                  ✓ DONE
+                                                </span>
+                                              )}
+                                              <span style={{
+                                                background: color.bg,
+                                                color: color.accent,
+                                                padding: '6px 14px',
+                                                borderRadius: '20px',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                border: `1px solid ${color.border}`
+                                              }}>
+                                                {idx === 0 ? 'Start Here!' : idx === guidance.weekly_schedule.length - 1 ? 'Final Week!' : `Week ${idx + 1}`}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Content sections in grid */}
+                                          <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                            gap: '16px'
+                                          }}>
+                                            {/* Topics */}
+                                            {Array.isArray(w.topics) && w.topics.length > 0 && (
+                                              <div style={{
+                                                background: '#f8fafc',
+                                                borderRadius: '12px',
+                                                padding: '14px',
+                                                border: '1px solid #e2e8f0'
+                                              }}>
+                                                <div style={{
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: '8px',
+                                                  marginBottom: '10px'
+                                                }}>
+                                                  <BookOpen size={16} style={{ color: color.accent }} />
+                                                  <p style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: '700',
+                                                    color: '#1e293b',
+                                                    margin: 0
+                                                  }}>
+                                                    Topics to Learn
+                                                  </p>
+                                                </div>
+                                                <ul style={{
+                                                  margin: 0,
+                                                  padding: 0,
+                                                  listStyle: 'none',
+                                                  display: 'flex',
+                                                  flexDirection: 'column',
+                                                  gap: '6px'
+                                                }}>
+                                                  {w.topics.map((t, i) => (
+                                                    <li key={i} style={{
+                                                      display: 'flex',
+                                                      alignItems: 'flex-start',
+                                                      gap: '8px',
+                                                      fontSize: '13px',
+                                                      color: '#475569'
+                                                    }}>
+                                                      <span style={{ color: color.border }}>▸</span>
+                                                      <span>{t}</span>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+                                            )}
+                                            
+                                            {/* Practice Tasks */}
+                                            {Array.isArray(w.practice_tasks) && w.practice_tasks.length > 0 && (
+                                              <div style={{
+                                                background: '#fefce8',
+                                                borderRadius: '12px',
+                                                padding: '14px',
+                                                border: '1px solid #fef08a'
+                                              }}>
+                                                <div style={{
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: '8px',
+                                                  marginBottom: '10px'
+                                                }}>
+                                                  <Zap size={16} style={{ color: '#d97706' }} />
+                                                  <p style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: '700',
+                                                    color: '#854d0e',
+                                                    margin: 0
+                                                  }}>
+                                                    Practice Tasks
+                                                  </p>
+                                                </div>
+                                                <ul style={{
+                                                  margin: 0,
+                                                  padding: 0,
+                                                  listStyle: 'none',
+                                                  display: 'flex',
+                                                  flexDirection: 'column',
+                                                  gap: '6px'
+                                                }}>
+                                                  {w.practice_tasks.map((t, i) => (
+                                                    <li key={i} style={{
+                                                      display: 'flex',
+                                                      alignItems: 'flex-start',
+                                                      gap: '8px',
+                                                      fontSize: '13px',
+                                                      color: '#713f12'
+                                                    }}>
+                                                      <span>🔹</span>
+                                                      <span>{t}</span>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+                                            )}
+                                            
+                                            {/* Checkpoints */}
+                                            {Array.isArray(w.checkpoints) && w.checkpoints.length > 0 && (
+                                              <div style={{
+                                                background: '#f0fdf4',
+                                                borderRadius: '12px',
+                                                padding: '14px',
+                                                border: '1px solid #bbf7d0'
+                                              }}>
+                                                <div style={{
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: '8px',
+                                                  marginBottom: '10px'
+                                                }}>
+                                                  <CheckCircle size={16} style={{ color: '#16a34a' }} />
+                                                  <p style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: '700',
+                                                    color: '#166534',
+                                                    margin: 0
+                                                  }}>
+                                                    Checkpoints
+                                                  </p>
+                                                </div>
+                                                <ul style={{
+                                                  margin: 0,
+                                                  padding: 0,
+                                                  listStyle: 'none',
+                                                  display: 'flex',
+                                                  flexDirection: 'column',
+                                                  gap: '6px'
+                                                }}>
+                                                  {w.checkpoints.map((c, i) => (
+                                                    <li key={i} style={{
+                                                      display: 'flex',
+                                                      alignItems: 'flex-start',
+                                                      gap: '8px',
+                                                      fontSize: '13px',
+                                                      color: '#14532d'
+                                                    }}>
+                                                      <span>☐</span>
+                                                      <span>{c}</span>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              
+                              {/* Completion badge */}
+                              <div style={{
+                                marginTop: '24px',
+                                textAlign: 'center',
+                                padding: '20px',
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                borderRadius: '12px',
+                                color: 'white'
+                              }}>
+                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎓</div>
+                                <p style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 6px 0' }}>
+                                  Complete all {guidance.weekly_schedule.length} weeks to level up!
+                                </p>
+                                <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>
+                                  Click the week circles to mark them as done ✓
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      </div>
                       )}
                     </div>
                   )}

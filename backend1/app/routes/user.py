@@ -180,6 +180,42 @@ def get_history(email: str):
 
 
 # ---------------------------------------------------------------------
+# 3.5️⃣ Guidance Caching - GET cached guidance
+# ---------------------------------------------------------------------
+@router.get("/guidance/{email}")
+def get_cached_guidance(email: str):
+    """Get cached guidance for a user."""
+    user = users.find_one(
+        {"email": {"$regex": f"^{email}$", "$options": "i"}},
+        {"_id": 0, "cached_guidance": 1}
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"guidance": user.get("cached_guidance", {})}
+
+
+# ---------------------------------------------------------------------
+# 3.6️⃣ Guidance Caching - POST/save guidance
+# ---------------------------------------------------------------------
+class GuidanceCacheRequest(BaseModel):
+    guidance: dict
+
+
+@router.post("/guidance/{email}")
+def save_cached_guidance(email: str, payload: GuidanceCacheRequest):
+    """Save generated guidance to user's cache."""
+    result = users.update_one(
+        {"email": {"$regex": f"^{email}$", "$options": "i"}},
+        {"$set": {"cached_guidance": payload.guidance}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"status": "success", "message": "Guidance cached successfully"}
+
+
+# ---------------------------------------------------------------------
 # 4️⃣ Admin – List all users
 # ---------------------------------------------------------------------
 @router.get("/all")

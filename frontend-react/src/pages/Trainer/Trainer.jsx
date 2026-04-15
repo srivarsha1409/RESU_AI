@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { X, PlusCircle, Upload, Filter, FileText, TrendingUp, Users, Award, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { X, PlusCircle, Upload, Filter, FileText, TrendingUp, Users, Award, Trash2, LogOut } from "lucide-react";
 
 const Trainer = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("filter"); // "filter" or "skillset"
   const [totalFiles, setTotalFiles] = useState(0);
   const [processedFiles, setProcessedFiles] = useState(0);
@@ -629,6 +631,49 @@ const handleSort = (key) => {
       >
         <Award size={16} style={{ display: "inline", marginRight: "8px" }} />
         Company Skillset
+      </button>
+      
+      {/* Logout Button */}
+      <button
+        onClick={async () => {
+          try {
+            await fetch("http://localhost:8000/auth/logout", {
+              method: "POST",
+              credentials: "include",
+            });
+            localStorage.clear();
+            sessionStorage.clear();
+            navigate("/login");
+          } catch (err) {
+            console.error("Logout error:", err);
+            localStorage.clear();
+            navigate("/login");
+          }
+        }}
+        style={{
+          marginLeft: "auto",
+          padding: "10px 20px",
+          background: "rgba(239, 68, 68, 0.2)",
+          color: "#fff",
+          border: "1px solid rgba(255,255,255,0.3)",
+          borderRadius: "8px",
+          cursor: "pointer",
+          fontSize: "14px",
+          fontWeight: "500",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          transition: "all 0.3s",
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = "rgba(239, 68, 68, 0.4)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = "rgba(239, 68, 68, 0.2)";
+        }}
+      >
+        <LogOut size={16} />
+        Logout
       </button>
     </div>
   </div>

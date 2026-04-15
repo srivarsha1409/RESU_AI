@@ -364,3 +364,18 @@ def google_signin(payload: GoogleSignInModel):
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Google Sign-In failed: {str(e)}")
+
+
+# -------------------------------
+# Logout Route
+# -------------------------------
+@router.post("/logout")
+def logout_user():
+    """
+    Logout user - clears session on server side.
+    Client should clear local storage/cookies after this.
+    """
+    return {
+        "status": "success",
+        "message": "Logged out successfully ✅"
+    }
