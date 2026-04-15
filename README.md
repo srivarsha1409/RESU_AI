@@ -110,12 +110,4 @@ Create a `.env` file in the `backend1` directory with the following variables (i
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-Your Name - your.email@example.com
-
-Project Link: [https://github.com/yourusername/your-project](https://github.com/yourusername/your-project)
