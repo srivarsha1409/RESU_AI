@@ -11,6 +11,9 @@ from bson import ObjectId
 from datetime import datetime, timedelta
 import jwt
 from app.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+import requests
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 load_dotenv()
 
@@ -54,6 +57,9 @@ class SetPasswordModel(BaseModel):
     email: str
     password: str
     role: str | None = None
+
+class GoogleSignInModel(BaseModel):
+    token: str
 
 
 # -------------------------------
@@ -264,3 +270,97 @@ def verify_token(authorization: str | None = Header(default=None)):
         raise HTTPException(status_code=401, detail="Token verification failed ❌")
 
     return {"status": "success", "message": "Token is valid ✅", "data": payload}
+
+
+# -------------------------------
+# Google Sign-In Route (User Portal Only)
+# -------------------------------
+@router.post("/google_signin")
+def google_signin(payload: GoogleSignInModel):
+    """
+    Google Sign-In endpoint restricted to @bitsathy.ac.in domain only.
+    Verifies Google ID token, validates email domain, creates/updates user.
+    """
+    try:
+        # Verify Google ID token
+        google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+        if not google_client_id:
+            raise HTTPException(status_code=500, detail="Google client ID not configured")
+        
+        idinfo = id_token.verify_oauth2_token(
+            payload.token, 
+            google_requests.Request(), 
+            google_client_id
+        )
+        
+        # Extract email from verified token
+        email = idinfo.get("email")
+        if not email:
+            raise HTTPException(status_code=400, detail="Email not found in Google token")
+        
+        # Validate domain - only allow @bitsathy.ac.in
+        if not email.endswith("@bitsathy.ac.in"):
+            raise HTTPException(
+                status_code=403, 
+                detail="Only @bitsathy.ac.in email accounts are allowed to sign in."
+            )
+        
+        # Check if user exists
+        try:
+            existing_user = users.find_one({"email": {"$regex": f"^{email}$", "$options": "i"}})
+        except PyMongoError:
+            raise HTTPException(status_code=503, detail="Database unavailable")
+        
+        if existing_user:
+            # User exists - force user role for Google Sign-In and update last login
+            user_safe = _sanitize_user_doc(existing_user)
+            role = "user"  # Force user role for Google Sign-In
+            
+            # Update user role to 'user' and last login timestamp
+            try:
+                users.update_one(
+                    {"_id": existing_user["_id"]},
+                    {"$set": {"role": "user", "last_login": datetime.utcnow()}}
+                )
+            except PyMongoError:
+                pass  # Non-critical error
+                
+        else:
+            # Create new user with Google OAuth
+            doc = {
+                "email": email,
+                "role": "user",  # Force user role for Google Sign-In
+                "auth_method": "google",
+                "created_at": datetime.utcnow(),
+                "last_login": datetime.utcnow()
+            }
+            
+            try:
+                result = users.insert_one(doc)
+                created_user = users.find_one({"_id": result.inserted_id})
+                user_safe = _sanitize_user_doc(created_user)
+                role = "user"
+            except PyMongoError:
+                raise HTTPException(status_code=503, detail="Database unavailable")
+        
+        # Create JWT token
+        token_data = {"sub": user_safe.get("_id"), "email": user_safe.get("email"), "role": role}
+        access_token = create_access_token(token_data)
+        
+        return {
+            "status": "success",
+            "message": f"Google Sign-In successful as {role} ✅",
+            "role": role,
+            "user": user_safe,
+            "access_token": access_token,
+            "token_type": "bearer",
+        }
+        
+    except ValueError as e:
+        # Invalid token
+        raise HTTPException(status_code=401, detail="Invalid Google token")
+    except Exception as e:
+        # Other errors
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Google Sign-In failed: {str(e)}")

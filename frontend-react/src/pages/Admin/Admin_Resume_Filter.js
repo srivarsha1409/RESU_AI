@@ -447,7 +447,7 @@ const Admin_Resume_Filter = () => {
           </div>
 
           <div style={{
-  background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+  background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
   padding: "24px",
   borderRadius: "16px",
   color: "#fff",
@@ -493,7 +493,7 @@ const Admin_Resume_Filter = () => {
 
 
           <div style={{
-            background: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+            background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
             padding: "24px",
             borderRadius: "16px",
             color: "#fff",
@@ -512,7 +512,7 @@ const Admin_Resume_Filter = () => {
 
           {/* Academic Stats (informational only) */}
           <div style={{
-            background: "linear-gradient(135deg, #1d976c 0%, #93f9b9 100%)",
+            background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
             padding: "24px",
             borderRadius: "16px",
             color: "#fff",
@@ -1003,7 +1003,7 @@ const Admin_Resume_Filter = () => {
         <span
           key={i}
           style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: "#4f46e5",
             color: "#fff",
             padding: "6px 12px",
             borderRadius: "20px",
@@ -1166,7 +1166,7 @@ const Admin_Resume_Filter = () => {
                     onClick={addSkill}
                     style={{
                       padding: "10px 16px",
-                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
                       color: "#fff",
                       borderRadius: "8px",
                       border: "none",
@@ -1184,7 +1184,7 @@ const Admin_Resume_Filter = () => {
                       <span
                         key={idx}
                         style={{
-                          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                          background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
                           color: "#fff",
                           padding: "6px 12px",
                           borderRadius: "20px",
@@ -1309,7 +1309,7 @@ const Admin_Resume_Filter = () => {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{
-                  background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                  background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
                   padding: "10px",
                   borderRadius: "12px",
                   display: "flex",
