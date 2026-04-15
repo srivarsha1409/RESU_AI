@@ -70,102 +70,62 @@ export default function Login() {
   };
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
-        <h2 style={{ fontSize: "2rem", marginBottom: 15, fontWeight: 600 }}>
-          Login Portal
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-200 selection:text-blue-900 flex items-center justify-center p-6 relative overflow-hidden">
+
+      {/* Background Shapes */}
+      <div className="absolute top-[-100px] left-[-100px] w-96 h-96 bg-blue-100/50 rounded-full blur-[100px] mix-blend-multiply"></div>
+      <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-purple-100/50 rounded-full blur-[100px] mix-blend-multiply"></div>
+
+      <div className="relative z-10 w-full max-w-md bg-white/70 backdrop-blur-xl border border-white/50 p-8 rounded-3xl shadow-xl">
+        <h2 className="text-3xl font-extrabold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+          Welcome Back
         </h2>
 
-        <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="Email"
-            required
-            style={inputStyle}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-slate-600 mb-2 ml-1">Email Address</label>
+            <input
+              type="email"
+              placeholder="name@example.com"
+              required
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-600 mb-2 ml-1">Password</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+
+          <button
+            type="submit"
             disabled={loading}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            style={inputStyle}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-          />
-          <button type="submit" style={loginBtnStyle} disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-lg shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Logging in..." : "Sign In"}
           </button>
         </form>
 
-        <Link
-          to="/"
-          style={{
-            display: "inline-block",
-            marginTop: 25,
-            padding: "10px 18px",
-            border: "none",
-            borderRadius: 10,
-            background: "rgba(255, 255, 255, 0.2)",
-            color: "#fff",
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
-        >
-          ⬅ Back to Home
-        </Link>
+        <div className="mt-8 text-center">
+          <Link
+            to="/"
+            className="text-slate-500 hover:text-blue-600 transition-colors text-sm font-semibold"
+          >
+            ← Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
-
-// -------------------- STYLES --------------------
-const pageStyle = {
-  minHeight: "100vh",
-  margin: 0,
-  padding: 0,
-  fontFamily: "Poppins, sans-serif",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  background:
-    "linear-gradient(-45deg, #00c6ff, #0072ff, #6a00f4, #b400ff)",
-  backgroundSize: "400% 400%",
-};
-
-const cardStyle = {
-  background: "rgba(255, 255, 255, 0.15)",
-  backdropFilter: "blur(12px)",
-  borderRadius: 25,
-  boxShadow: "0 0 40px rgba(0, 0, 0, 0.3)",
-  width: 400,
-  padding: "40px 30px",
-  textAlign: "center",
-  color: "#fff",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px 15px",
-  margin: "10px 0",
-  border: "none",
-  borderRadius: 10,
-  background: "rgba(255, 255, 255, 0.2)",
-  color: "#fff",
-  fontSize: "1rem",
-  outline: "none",
-};
-
-const loginBtnStyle = {
-  width: "100%",
-  padding: 12,
-  border: "none",
-  borderRadius: 10,
-  background: "linear-gradient(90deg, #00e5ff, #0072ff)",
-  color: "#fff",
-  fontSize: "1rem",
-  fontWeight: 600,
-  cursor: "pointer",
-};

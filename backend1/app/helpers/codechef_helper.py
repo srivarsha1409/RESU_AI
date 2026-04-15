@@ -22,12 +22,19 @@ def is_valid_topic(text):
 
 def extract_codechef_paths_and_badges(profile_url: str):
     """Scrape CodeChef profile for paths, badges, and stats (rating, ranks, total solved)."""
-    headers = {"User-Agent": "Mozilla/5.0", "Accept-Language": "en-US,en;q=0.9"}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept-Language": "en-US,en;q=0.9"}
     try:
+        print(f"Attempting to access CodeChef profile: {profile_url}")
         resp = requests.get(profile_url, headers=headers, timeout=12)
+        print(f"Response status: {resp.status_code}")
         if resp.status_code != 200:
-            return {"error": f"Failed to access CodeChef (status {resp.status_code})"}
+            return {"error": f"Failed to access CodeChef (status {resp.status_code}). Profile may not exist or be private."}
         soup = BeautifulSoup(resp.content, "html.parser")
+        
+        # Check if profile exists
+        if "User not found" in resp.text or "The page you are looking for" in resp.text:
+            return {"error": "CodeChef user not found"}
+            
     except Exception as e:
         return {"error": f"Request failed: {str(e)}"}
 

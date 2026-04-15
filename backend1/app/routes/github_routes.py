@@ -20,6 +20,19 @@ def analyze_github(user_input: str, token: str = Query(None, description="GitHub
             status_code=400,
         )
 
+    # Test token validity first
+    try:
+        import requests
+        headers = {"Authorization": f"Bearer {token_to_use}"}
+        test_response = requests.get("https://api.github.com/user", headers=headers, timeout=5)
+        if test_response.status_code == 401:
+            return JSONResponse(
+                {"error": "GitHub token is invalid or expired. Please generate a new token."},
+                status_code=400,
+            )
+    except Exception:
+        pass
+
     gql = get_github_repo_counts(username, token_to_use)
     if "error_graphql" in gql:
         return JSONResponse(gql, status_code=400)

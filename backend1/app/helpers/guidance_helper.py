@@ -416,7 +416,7 @@ async def generate_guidance(resume_data: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         response = openrouter_client.chat.completions.create(
-            model="gpt-4.1-mini",
+            model="openai/gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
