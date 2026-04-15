@@ -747,7 +747,7 @@ TECH_SKILL_HEADINGS = [
     "technologies","tech stack","technical toolkit","programming skills",
     "it skills","computer skills","domain skills","specialized skills",
     "primary skills","relevant skills","development skills",
-    "technical competencies","skill highlights","skills highlights","languages","language","programming languages",
+    "technical competencies","skill highlights","skills highlights","languages","language","programming languages","Programming languages","Languages","Language",
 ]
 
 AREA_INTEREST_HEADINGS = [
