@@ -101,6 +101,13 @@ export default function UserDashboard() {
     fetchUserData();
   }, []);
 
+  // Auto-fetch guidance when Guidance tab is active and resumeData becomes available
+  useEffect(() => {
+    if (activeTab === 'guidance' && resumeData?.data && !guidance && !guidanceLoading) {
+      fetchGuidance();
+    }
+  }, [activeTab, resumeData, guidance, guidanceLoading]);
+
   // Coding profiles removed from user portal
 
   const handleFileChange = (e) => {
