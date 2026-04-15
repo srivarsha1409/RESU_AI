@@ -721,7 +721,25 @@ const Admin_Resume_Filter = () => {
             </div>
 
             <form onSubmit={handleFilter}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+              <div
+                style={{
+                  background: "#f9fafb",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  border: "1px solid #e2e8f0",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    columnGap: "20px",
+                    rowGap: "16px",
+                  }}
+                >
                 
                 {/* Minimum CGPA */}
                 <div>
@@ -978,7 +996,7 @@ const Admin_Resume_Filter = () => {
             fontWeight: "500",
             display: "flex",
             alignItems: "center",
-            gap: "6px",
+            gap: "6px"
           }}
         >
           {dept.short}
@@ -1207,9 +1225,9 @@ const Admin_Resume_Filter = () => {
               <div style={{
                 display: "flex",
                 gap: "12px",
-                marginTop: "28px",
-                paddingTop: "24px",
-                borderTop: "2px solid #f1f5f9"
+                marginTop: "12px",
+                paddingTop: "16px",
+                borderTop: "2px solid #e2e8f0",
               }}>
                 <button
                   type="submit"
@@ -1260,6 +1278,7 @@ const Admin_Resume_Filter = () => {
                   🔄 Clear All
                 </button>
               </div>
+            </div>
             </form>
           </div>
         </div>
