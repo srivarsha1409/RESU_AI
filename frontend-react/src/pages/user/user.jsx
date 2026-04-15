@@ -77,19 +77,6 @@ export default function UserDashboard() {
         const data = await res.json();
         const userDoc = data.user || {};
         setUser(userDoc);
-
-        // If backend already has resume analysis, hydrate resumeData
-        if (userDoc.structured_info) {
-          setResumeData({
-            ats_score: userDoc.ats_score || 0,
-            word_count: userDoc.word_count || 0,
-            data: userDoc.structured_info,
-            ats_breakdown: userDoc.ats_breakdown || {},
-            detected_role: userDoc.detected_role || null,
-            suggested_skills: userDoc.suggested_skills || [],
-          });
-
-        }
       } catch (err) {
         console.error("User fetch error:", err);
         setError("Failed to load user data");

@@ -18,19 +18,6 @@ export default function About() {
           </div>
         ))}
       </div>
-
-      <div style={{textAlign:'center',padding:'60px 20px'}}>
-        <h2 style={{fontSize:'2.2rem',marginBottom:30,color:'#fff'}}>Meet the Pinnacle Group</h2>
-        <div style={{display:'flex',justifyContent:'center',flexWrap:'wrap',gap:25}}>
-          {[['Manoj','AI Engineer'],['Sri Varsha','Full Stack Developer'],['Yuvashri','UI/UX Designer'],['Arjun Hareesh','Backend Developer']].map(([name,role]) => (
-            <div key={name} style={{background:'rgba(255, 255, 255, 0.15)',borderRadius:20,padding:'20px 25px',width:200,boxShadow:'0 5px 20px rgba(0,0,0,0.25)'}}>
-              <h3 style={{margin:'10px 0 5px',fontSize:'1.2rem'}}>{name}</h3>
-              <p style={{color:'rgba(255, 255, 255, 0.85)',fontSize:'0.95rem',margin:0}}>{role}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <footer style={{textAlign:'center',padding:'30px 10px',color:'rgba(255, 255, 255, 0.8)',fontSize:'0.95rem'}}>
         <p><Link to="/" style={{color:'#00e5ff',textDecoration:'none',fontWeight:'bold'}}>Back to Home</Link></p>
       </footer>
