@@ -29,8 +29,10 @@ export default function UserDashboard() {
   const [userMessage, setUserMessage] = useState('');
   const [chatting, setChatting] = useState(false);
 
-  // Skillset tab data
+  // Skillset tab data - multiple uploads with tabs
   const [skillsetData, setSkillsetData] = useState(null);
+  const [skillsetUploads, setSkillsetUploads] = useState([]);
+  const [activeSkillsetTab, setActiveSkillsetTab] = useState(null);
   const [skillsetLoading, setSkillsetLoading] = useState(false);
   const [skillsetError, setSkillsetError] = useState(null);
 
@@ -107,17 +109,24 @@ export default function UserDashboard() {
     }
   }, [activeTab, resumeData, guidance, guidanceLoading, fetchGuidance]);
 
-  // Fetch skillset JSON when user navigates to the skillset tab
+  // Fetch skillset uploads when user navigates to the skillset tab
   useEffect(() => {
     if (activeTab !== 'skillset') return;
-    const fetchSkillset = async () => {
+    const fetchSkillsetUploads = async () => {
       setSkillsetLoading(true);
       setSkillsetError(null);
       try {
-        const res = await fetch(`${API_BASE}/user/skillset_json`);
+        const res = await fetch(`${API_BASE}/user/skillset_uploads`);
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         const data = await res.json();
-        setSkillsetData(data);
+        if (data.uploads && data.uploads.length > 0) {
+          setSkillsetUploads(data.uploads);
+          setActiveSkillsetTab(data.uploads[0].id);
+          setSkillsetData(data.uploads[0].sheets);
+        } else {
+          setSkillsetUploads([]);
+          setSkillsetData(null);
+        }
       } catch (err) {
         console.error('Skillset fetch error:', err);
         setSkillsetError(err.message || 'Failed to load skillset');
@@ -126,8 +135,16 @@ export default function UserDashboard() {
         setSkillsetLoading(false);
       }
     };
-    fetchSkillset();
+    fetchSkillsetUploads();
   }, [activeTab]);
+
+  // Update skillsetData when active tab changes
+  useEffect(() => {
+    if (activeSkillsetTab && skillsetUploads.length > 0) {
+      const currentUpload = skillsetUploads.find(u => u.id === activeSkillsetTab);
+      setSkillsetData(currentUpload?.sheets || null);
+    }
+  }, [activeSkillsetTab, skillsetUploads]);
 
   // Coding profiles removed from user portal
 
@@ -750,37 +767,106 @@ const getSuggestedSkills = () => {
                 <div style={{ color: '#b91c1c' }}>Error loading skillset: {skillsetError}</div>
               )}
 
-              {skillsetData && (
-                (() => {
-                  const sheets = skillsetData.sheets || {};
-                  const first = Object.keys(sheets)[0];
-                  const rows = sheets[first] || [];
-                  const headers = rows[0] ? Object.keys(rows[0]) : [];
+              {/* Skillset Tabs */}
+              {skillsetUploads.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                    borderBottom: '2px solid #e2e8f0',
+                    paddingBottom: '8px'
+                  }}>
+                    {skillsetUploads.map((upload) => (
+                      <button
+                        key={upload.id}
+                        onClick={() => setActiveSkillsetTab(upload.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '10px 16px',
+                          background: activeSkillsetTab === upload.id ? '#0ea5e9' : '#f1f5f9',
+                          color: activeSkillsetTab === upload.id ? '#fff' : '#475569',
+                          borderRadius: '8px 8px 0 0',
+                          cursor: 'pointer',
+                          fontWeight: activeSkillsetTab === upload.id ? '600' : '500',
+                          fontSize: '14px',
+                          transition: 'all 0.2s',
+                          border: activeSkillsetTab === upload.id ? '2px solid #0ea5e9' : '2px solid #e2e8f0',
+                          borderBottom: activeSkillsetTab === upload.id ? '2px solid #0ea5e9' : 'none',
+                        }}
+                      >
+                        <FileText size={16} />
+                        <span>{upload.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                  return (
-                    <div style={{ overflowX: 'auto', marginTop: '12px' }}>
-                      <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>{first}</h3>
-                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                          <tr>
-                            {headers.map(h => (
-                              <th key={h} style={{ border: '1px solid #e5e7eb', padding: '8px', textAlign: 'left', background: '#f8fafc' }}>{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rows.map((r, idx) => (
-                            <tr key={idx} style={{ background: idx % 2 === 0 ? 'white' : '#f8fafc' }}>
-                              {headers.map(h => (
-                                <td key={h} style={{ border: '1px solid #e5e7eb', padding: '8px' }}>{String(r[h] ?? '')}</td>
+              {skillsetData && Object.keys(skillsetData).length > 0 && (
+                <div>
+                  {Object.entries(skillsetData).map(([sheetName, rows]) => (
+                    <div key={sheetName} style={{ marginBottom: '24px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: '#475569' }}>
+                        {sheetName}
+                      </h3>
+                      <div style={{ overflowX: 'auto', maxHeight: '500px', overflowY: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                          <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                              {rows.length > 0 && Object.keys(rows[0]).map(col => (
+                                <th key={col} style={{
+                                  padding: '10px',
+                                  textAlign: 'left',
+                                  fontWeight: '600',
+                                  color: '#475569',
+                                  borderRight: '1px solid #e2e8f0',
+                                  background: '#f8fafc'
+                                }}>
+                                  {col}
+                                </th>
                               ))}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {rows.map((row, idx) => (
+                              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                                {Object.entries(row).map(([col, val]) => (
+                                  <td key={col} style={{
+                                    padding: '10px',
+                                    color: '#334155',
+                                    borderRight: '1px solid #e2e8f0'
+                                  }}>
+                                    {String(val ?? '')}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p style={{ color: '#64748b', fontSize: '12px', marginTop: '8px' }}>
+                        Total: {rows.length} rows
+                      </p>
                     </div>
-                  );
-                })()
+                  ))}
+                </div>
+              )}
+
+              {!skillsetLoading && skillsetUploads.length === 0 && !skillsetError && (
+                <div style={{
+                  padding: '32px',
+                  textAlign: 'center',
+                  background: '#f0f9ff',
+                  borderRadius: '12px',
+                  color: '#0369a1'
+                }}>
+                  <FileText size={40} style={{ margin: '0 auto 12px', opacity: 0.6 }} />
+                  <p>No skillset files uploaded yet. Please check back later.</p>
+                </div>
               )}
             </div>
           </div>

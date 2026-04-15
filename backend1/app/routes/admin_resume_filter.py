@@ -7,10 +7,11 @@ from io import BytesIO
 import json
 import re
 import asyncio
+from datetime import datetime
 
 router = APIRouter()
 
-from app.config import SECRET_KEY, ALGORITHM
+from app.config import SECRET_KEY, ALGORITHM, db
 import jwt
 
 # ---------------------------------------------------------
@@ -612,3 +613,159 @@ async def update_skillset(request: UpdateSkillsetRequest, authorization: str | N
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update skillset: {str(e)}")
+
+
+# ---------------------------------------------------------
+# 📊 Multiple Skillset Uploads Management (MongoDB)
+# ---------------------------------------------------------
+
+class SkillsetUploadRequest(BaseModel):
+    """Request model for saving a skillset upload."""
+    name: str
+    sheets: Dict[str, List[Dict[str, Any]]]
+
+
+@router.get("/skillset_uploads")
+async def list_skillset_uploads(authorization: str | None = Header(default=None)):
+    """Get all saved skillset uploads from MongoDB (Trainer only).
+    
+    Returns list of all skillset uploads with their names and data.
+    """
+    # Authorization check (require trainer role)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token verification failed")
+    role = payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required")
+    
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not connected")
+    
+    try:
+        uploads = list(db.skillset_uploads.find({}, {"_id": 0}))
+        return {"status": "success", "uploads": uploads}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch uploads: {str(e)}")
+
+
+@router.post("/skillset_uploads")
+async def save_skillset_upload(
+    request: SkillsetUploadRequest,
+    authorization: str | None = Header(default=None)
+):
+    """Save a new skillset upload to MongoDB (Trainer only).
+    
+    Creates a new skillset entry with name and sheet data.
+    """
+    # Authorization check (require trainer role)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token verification failed")
+    role = payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required")
+    
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not connected")
+    
+    try:
+        upload_id = str(int(datetime.now().timestamp() * 1000))
+        upload_doc = {
+            "id": upload_id,
+            "name": request.name,
+            "sheets": request.sheets,
+            "uploadedAt": datetime.now().isoformat()
+        }
+        db.skillset_uploads.insert_one(upload_doc)
+        return {"status": "success", "id": upload_id, "message": "Skillset saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save upload: {str(e)}")
+
+
+@router.delete("/skillset_uploads/{upload_id}")
+async def delete_skillset_upload(
+    upload_id: str,
+    authorization: str | None = Header(default=None)
+):
+    """Delete a skillset upload from MongoDB (Trainer only)."""
+    # Authorization check (require trainer role)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token verification failed")
+    role = payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required")
+    
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not connected")
+    
+    try:
+        result = db.skillset_uploads.delete_one({"id": upload_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Upload not found")
+        return {"status": "success", "message": "Skillset deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete upload: {str(e)}")
+
+
+@router.put("/skillset_uploads/{upload_id}")
+async def update_skillset_upload(
+    upload_id: str,
+    request: SkillsetUploadRequest,
+    authorization: str | None = Header(default=None)
+):
+    """Update an existing skillset upload in MongoDB (Trainer only)."""
+    # Authorization check (require trainer role)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token verification failed")
+    role = payload.get("role")
+    if role != "trainer":
+        raise HTTPException(status_code=403, detail="Trainer role required")
+    
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not connected")
+    
+    try:
+        result = db.skillset_uploads.update_one(
+            {"id": upload_id},
+            {"$set": {"name": request.name, "sheets": request.sheets, "updatedAt": datetime.now().isoformat()}}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Upload not found")
+        return {"status": "success", "message": "Skillset updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update upload: {str(e)}")

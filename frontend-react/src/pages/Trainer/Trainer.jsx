@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { X, PlusCircle, Upload, Filter, FileText, TrendingUp, Users, Award } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, PlusCircle, Upload, Filter, FileText, TrendingUp, Users, Award, Trash2 } from "lucide-react";
 
 const Trainer = () => {
   const [activeTab, setActiveTab] = useState("filter"); // "filter" or "skillset"
@@ -7,12 +7,43 @@ const Trainer = () => {
   const [processedFiles, setProcessedFiles] = useState(0);
   const [loading, setLoading] = useState(false);
   const [resumes, setResumes] = useState([]);
-  const [skillsetData, setSkillsetData] = useState(null);
+  // Multiple skillset uploads - each has: { id, name, data, sheets }
+  const [skillsetUploads, setSkillsetUploads] = useState([]);
+  const [activeSkillsetTab, setActiveSkillsetTab] = useState(null); // ID of active skillset tab
   const [skillsetLoading, setSkillsetLoading] = useState(false);
   const [skillsetError, setSkillsetError] = useState(null);
   const [uploadMode, setUploadMode] = useState("replace"); // "replace" or "append"
   const [editMode, setEditMode] = useState(false); // Edit existing skillset
   const [editedData, setEditedData] = useState(null); // Store edited data
+  
+  // Get current active skillset data
+  const currentSkillset = skillsetUploads.find(s => s.id === activeSkillsetTab);
+  const skillsetData = currentSkillset?.sheets || null;
+
+  // Load saved skillset uploads from backend on mount
+  useEffect(() => {
+    const loadSkillsetUploads = async () => {
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
+      
+      try {
+        const response = await fetch('http://127.0.0.1:8000/admin/skillset_uploads', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.uploads && data.uploads.length > 0) {
+            setSkillsetUploads(data.uploads);
+            setActiveSkillsetTab(data.uploads[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load skillset uploads:', err);
+      }
+    };
+    loadSkillsetUploads();
+  }, []);
+
   const [filters, setFilters] = useState({
     cgpa: "",
     tenth: "",
@@ -313,7 +344,7 @@ const handleSort = (key) => {
 };
 
   // ===== Skillset Management Functions =====
-  const fetchSkillsetPreview = async () => {
+  const fetchSkillsetPreview = async (uploadId = null) => {
     const token = localStorage.getItem('access_token');
     setSkillsetLoading(true);
     setSkillsetError(null);
@@ -323,7 +354,12 @@ const handleSort = (key) => {
       });
       const data = await response.json();
       if (response.ok) {
-        setSkillsetData(data.sheets);
+        // If we have an uploadId, update that specific upload's data
+        if (uploadId) {
+          setSkillsetUploads(prev => prev.map(u => 
+            u.id === uploadId ? { ...u, data: data.sheets } : u
+          ));
+        }
       } else {
         setSkillsetError(data.detail || 'Failed to load skillset');
       }
@@ -338,6 +374,15 @@ const handleSort = (key) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Ask for a custom name for this upload
+    const uploadName = prompt("Enter a name for this skillset upload:", file.name.replace(/\.[^/.]+$/, ""));
+    if (uploadName === null) {
+      // User cancelled
+      e.target.value = '';
+      return;
+    }
+    const finalName = uploadName.trim() || file.name.replace(/\.[^/.]+$/, "");
+
     const token = localStorage.getItem('access_token');
     const formData = new FormData();
     formData.append('file', file);
@@ -346,6 +391,7 @@ const handleSort = (key) => {
     setSkillsetLoading(true);
     setSkillsetError(null);
     try {
+      // First upload the file to process it
       const response = await fetch('http://127.0.0.1:8000/admin/upload_skillset', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
@@ -353,9 +399,42 @@ const handleSort = (key) => {
       });
       const data = await response.json();
       if (response.ok) {
-        // Refresh preview after upload
-        await fetchSkillsetPreview();
-        alert(data.message || 'Skillset uploaded successfully!');
+        // Fetch the uploaded data
+        const previewResponse = await fetch('http://127.0.0.1:8000/admin/skillset_preview', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const previewData = await previewResponse.json();
+        
+        if (previewResponse.ok) {
+          // Save to MongoDB with the custom name
+          const saveResponse = await fetch('http://127.0.0.1:8000/admin/skillset_uploads', {
+            method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: finalName,
+              sheets: previewData.sheets
+            })
+          });
+          
+          if (saveResponse.ok) {
+            const saveData = await saveResponse.json();
+            const newUpload = {
+              id: saveData.id,
+              name: finalName,
+              sheets: previewData.sheets,
+              uploadedAt: new Date().toISOString()
+            };
+            
+            setSkillsetUploads(prev => [...prev, newUpload]);
+            setActiveSkillsetTab(saveData.id);
+            alert('Skillset uploaded and saved successfully! ✅');
+          } else {
+            setSkillsetError('Failed to save skillset to database');
+          }
+        }
       } else {
         // Handle token errors specifically
         if (response.status === 401) {
@@ -373,12 +452,38 @@ const handleSort = (key) => {
     }
   };
 
-  // Fetch skillset when tab changes
-  React.useEffect(() => {
-    if (activeTab === 'skillset') {
-      fetchSkillsetPreview();
+  // Delete a skillset upload from MongoDB
+  const deleteSkillsetUpload = async (uploadId) => {
+    if (!window.confirm("Are you sure you want to delete this skillset upload?")) return;
+    
+    const token = localStorage.getItem('access_token');
+    
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/admin/skillset_uploads/${uploadId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        setSkillsetUploads(prev => {
+          const newUploads = prev.filter(u => u.id !== uploadId);
+          // If we deleted the active tab, switch to another one
+          if (activeSkillsetTab === uploadId) {
+            setActiveSkillsetTab(newUploads.length > 0 ? newUploads[0].id : null);
+          }
+          return newUploads;
+        });
+      } else {
+        const data = await response.json();
+        alert(data.detail || 'Failed to delete skillset');
+      }
+    } catch (err) {
+      alert('Failed to delete skillset: ' + err.message);
     }
-  }, [activeTab]);
+  };
+
+  // No automatic fetch - uploads are managed locally now
+  // The skillset data is stored per upload in skillsetUploads
 
   // ===== Skillset Edit Functions =====
   const startEditing = () => {
@@ -402,21 +507,30 @@ const handleSort = (key) => {
   };
 
   const saveEdits = async () => {
+    if (!activeSkillsetTab || !currentSkillset) return;
+    
     const token = localStorage.getItem('access_token');
     setSkillsetLoading(true);
     setSkillsetError(null);
     try {
-      const response = await fetch('http://127.0.0.1:8000/admin/update_skillset', {
-        method: 'POST',
+      // Update in MongoDB
+      const response = await fetch(`http://127.0.0.1:8000/admin/skillset_uploads/${activeSkillsetTab}`, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ sheets: editedData })
+        body: JSON.stringify({ 
+          name: currentSkillset.name,
+          sheets: editedData 
+        })
       });
       const data = await response.json();
       if (response.ok) {
-        setSkillsetData(editedData);
+        // Update the current skillset upload's data
+        setSkillsetUploads(prev => prev.map(u => 
+          u.id === activeSkillsetTab ? { ...u, sheets: editedData } : u
+        ));
         setEditMode(false);
         setEditedData(null);
         alert('Skillset updated successfully! ✅');
@@ -1695,12 +1809,76 @@ const handleSort = (key) => {
             </div>
           )}
 
+          {/* Uploaded Skillsets Tabs */}
+          {skillsetUploads.length > 0 && (
+            <div style={{ marginBottom: "20px" }}>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                flexWrap: "wrap",
+                borderBottom: "2px solid #e2e8f0",
+                paddingBottom: "8px"
+              }}>
+                {skillsetUploads.map((upload) => (
+                  <div
+                    key={upload.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "10px 14px",
+                      background: activeSkillsetTab === upload.id ? "#667eea" : "#f1f5f9",
+                      color: activeSkillsetTab === upload.id ? "#fff" : "#475569",
+                      borderRadius: "8px 8px 0 0",
+                      cursor: "pointer",
+                      fontWeight: activeSkillsetTab === upload.id ? "600" : "500",
+                      fontSize: "14px",
+                      transition: "all 0.2s",
+                      border: activeSkillsetTab === upload.id ? "2px solid #667eea" : "2px solid #e2e8f0",
+                      borderBottom: activeSkillsetTab === upload.id ? "2px solid #667eea" : "none",
+                    }}
+                    onClick={() => {
+                      setActiveSkillsetTab(upload.id);
+                      setEditMode(false);
+                      setEditedData(null);
+                    }}
+                  >
+                    <FileText size={16} />
+                    <span>{upload.name}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSkillsetUpload(upload.id);
+                      }}
+                      style={{
+                        background: activeSkillsetTab === upload.id ? "rgba(255,255,255,0.2)" : "#fee2e2",
+                        color: activeSkillsetTab === upload.id ? "#fff" : "#dc2626",
+                        border: "none",
+                        borderRadius: "4px",
+                        padding: "4px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginLeft: "4px"
+                      }}
+                      title="Delete this upload"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Preview Section */}
           {skillsetData && Object.keys(skillsetData).length > 0 && (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                 <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#1e293b" }}>
-                  Current Skillset Preview
+                  {currentSkillset ? `📄 ${currentSkillset.name}` : "Current Skillset Preview"}
                 </h3>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {!editMode ? (
@@ -1837,7 +2015,7 @@ const handleSort = (key) => {
             </div>
           )}
 
-          {!skillsetLoading && (!skillsetData || Object.keys(skillsetData).length === 0) && !skillsetError && (
+          {!skillsetLoading && skillsetUploads.length === 0 && !skillsetError && (
             <div style={{
               padding: "32px",
               textAlign: "center",
@@ -1847,6 +2025,19 @@ const handleSort = (key) => {
             }}>
               <Award size={40} style={{ margin: "0 auto 12px", opacity: 0.6 }} />
               <p>No skillset file uploaded yet. Upload an Excel file to get started.</p>
+            </div>
+          )}
+
+          {!skillsetLoading && skillsetUploads.length > 0 && !activeSkillsetTab && (
+            <div style={{
+              padding: "32px",
+              textAlign: "center",
+              background: "#fef3c7",
+              borderRadius: "12px",
+              color: "#92400e"
+            }}>
+              <FileText size={40} style={{ margin: "0 auto 12px", opacity: 0.6 }} />
+              <p>Select a tab above to view the skillset data.</p>
             </div>
           )}
         </div>

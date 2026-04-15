@@ -232,6 +232,19 @@ def skillset_json():
         raise HTTPException(status_code=500, detail=f"Failed to read Excel: {str(e)}")
 
 
+@router.get("/skillset_uploads")
+def get_skillset_uploads():
+    """Return all saved skillset uploads from MongoDB for users.
+    
+    This returns all skillset tabs uploaded by trainers.
+    """
+    try:
+        uploads = list(db.skillset_uploads.find({}, {"_id": 0}))
+        return {"status": "success", "uploads": uploads}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch skillset uploads: {str(e)}")
+
+
 class PortfolioRequest(BaseModel):
     email: str
 
