@@ -136,11 +136,16 @@ def local_extract_resume(text):
         out["phone"] = re.sub(r"\s+", " ", phone_match.group(0)).strip()
 
     # Name: take first non-empty line with letters and spaces and less than 4 words
+    # Skip lines that look like project titles or headers
+    project_keywords = ["project", "platform", "system", "application", "app", "tool", "powered", "team", "analysis", "learning", "certification", "resume", "portfolio"]
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     for ln in lines[:10]:
         if re.match(r"^[A-Za-z .,'-]{2,40}$", ln) and len(ln.split()) <= 4:
             # skip lines that contain @ or digits (likely email/phone)
             if "@" in ln or re.search(r"\d", ln):
+                continue
+            # skip lines that look like project titles
+            if any(kw in ln.lower() for kw in project_keywords):
                 continue
             out["name"] = ln
             break
@@ -157,7 +162,14 @@ def local_extract_resume(text):
     tech_keywords = [
         "python","java","c\+\+","c#","go","node","react","angular","vue","javascript","typescript",
         "mongodb","mysql","postgres","sql","redis","aws","azure","gcp","docker","kubernetes",
-        "tensorflow","pytorch","scikit-learn","pandas","numpy","fastapi","django","flask"
+        "tensorflow","pytorch","scikit-learn","pandas","numpy","fastapi","django","flask",
+        "html","css","bootstrap","tailwind","git","github","gitlab","linux","bash",
+        "machine learning","deep learning","ai","nlp","computer vision","data science",
+        "api","rest","graphql","microservices","spring","express","laravel","php","ruby",
+        "swift","kotlin","flutter","dart","figma","adobe","photoshop","illustrator",
+        "excel","power bi","tableau","jupyter","colab","vscode","visual studio",
+        "yolo","opencv","keras","huggingface","transformers","bert","gpt","llm",
+        "selenium","postman","jira","agile","scrum","devops","ci/cd","jenkins","terraform"
     ]
     text_lower = text.lower()
     found = []
@@ -177,6 +189,22 @@ def local_extract_resume(text):
             if snippet:
                 projects.append({"title": ln, "description": snippet})
     out["projects"] = projects
+
+    # Languages: look for common languages with proficiency indicators
+    lang_keywords = ["english", "tamil", "hindi", "telugu", "malayalam", "kannada", "french", "german", "spanish", "marathi", "bengali", "punjabi", "gujarati"]
+    found_langs = []
+    for lang in lang_keywords:
+        if re.search(rf"\b{lang}\b", text_lower):
+            found_langs.append(lang.capitalize())
+    out["languages"] = found_langs
+
+    # Area of interest: look for common AI/ML/Web/Data keywords
+    aoi_keywords = ["machine learning", "deep learning", "artificial intelligence", "data science", "web development", "mobile development", "cloud computing", "cybersecurity", "natural language processing", "computer vision", "blockchain", "iot", "devops", "generative ai", "large language models"]
+    found_aoi = []
+    for aoi in aoi_keywords:
+        if aoi in text_lower:
+            found_aoi.append(aoi.title())
+    out["skills"]["area_of_interest"] = found_aoi
 
     # Education: look for degree keywords
     edu = {}
@@ -354,8 +382,8 @@ async def evaluate_certificates(cert_list):
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,
-            # Lower token use to avoid OpenRouter credit (402) errors
-            max_tokens=400,
+            # Increased token limit for complete certificate evaluation
+            max_tokens=1200,
         )
         raw = response.choices[0].message.content or ""
     except Exception as exc:
@@ -522,8 +550,8 @@ async def evaluate_projects(project_list):
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,
-            # Conservative token limit to avoid OpenRouter 402 credit errors
-            max_tokens=800,
+            # Increased token limit for complete project evaluation
+            max_tokens=2500,
         )
         raw = response.choices[0].message.content or ""
     except Exception as exc:
@@ -790,8 +818,8 @@ Resume text:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.2,
-                # Reduced to stay within smaller OpenRouter credit limits (avoid 402)
-                max_tokens=800,
+                # Increased to allow complete JSON extraction
+                max_tokens=2000,
             )
             ai_output = response.choices[0].message.content
         except Exception as exc:
@@ -808,7 +836,7 @@ Resume text:
                         {"role": "user", "content": short_prompt}
                     ],
                     temperature=0.2,
-                    max_tokens=400,
+                    max_tokens=1200,
                 )
                 ai_output = response.choices[0].message.content
                 ai_error = None
@@ -904,22 +932,72 @@ Resume text:
             if ai_error:
                 data["raw_ai_error"] = ai_error
 
+        # ---- Validate AI extraction and merge with local fallback if key fields are missing ----
+        local_data = local_extract_resume(text)
+        
+        # Check if key fields are missing or empty in AI response
+        skills_block = data.get("skills", {})
+        if not isinstance(skills_block, dict):
+            skills_block = {}
+        
+        ai_technical = skills_block.get("technical", [])
+        ai_languages = data.get("languages", [])
+        ai_aoi = skills_block.get("area_of_interest", [])
+        ai_name = data.get("name", "")
+        
+        # Get local fallback data
+        local_skills = local_data.get("skills", {})
+        local_technical = local_skills.get("technical", []) if isinstance(local_skills, dict) else []
+        local_languages = local_data.get("languages", [])
+        local_aoi = local_skills.get("area_of_interest", []) if isinstance(local_skills, dict) else []
+        
+        # Merge: use local data if AI data is missing/empty
+        if not ai_technical or len(ai_technical) == 0:
+            print(f"⚠️ AI returned empty technical skills, using local extraction: {local_technical}")
+            if "skills" not in data or not isinstance(data["skills"], dict):
+                data["skills"] = {}
+            data["skills"]["technical"] = local_technical
+        
+        if not ai_languages or len(ai_languages) == 0:
+            print(f"⚠️ AI returned empty languages, using local extraction: {local_languages}")
+            data["languages"] = local_languages
+        
+        if not ai_aoi or len(ai_aoi) == 0:
+            print(f"⚠️ AI returned empty area_of_interest, using local extraction: {local_aoi}")
+            if "skills" not in data or not isinstance(data["skills"], dict):
+                data["skills"] = {}
+            data["skills"]["area_of_interest"] = local_aoi
+        
+        # Check if name looks like a project title (contains keywords) and use local extraction
+        project_keywords = ["project", "platform", "system", "application", "app", "tool", "powered", "team"]
+        if ai_name and any(kw in ai_name.lower() for kw in project_keywords):
+            print(f"⚠️ AI returned project title as name: '{ai_name}', using local extraction")
+            local_name = local_data.get("name", "")
+            if local_name:
+                data["name"] = local_name
+        
+        print(f"✅ After validation - Technical: {len(data.get('skills', {}).get('technical', []))}, Languages: {len(data.get('languages', []))}, AOI: {len(data.get('skills', {}).get('area_of_interest', []))}")
+
         # ---- Certificate worthiness evaluation (non-blocking fallback on failure) ----
         cert_list = data.get("certificates", [])
         if not isinstance(cert_list, list):
             cert_list = []
+        print(f"📜 Found {len(cert_list)} certificates to evaluate: {cert_list}")
         cert_analysis = await evaluate_certificates(cert_list)
         if not isinstance(cert_analysis, list):
             cert_analysis = []
+        print(f"✅ Certificate evaluation result: {len(cert_analysis)} evaluated")
         data["certificate_analysis"] = cert_analysis
 
         # ---- Project evaluation (LLM) ----
         project_list = data.get("projects", [])
         if not isinstance(project_list, list):
             project_list = []
+        print(f"🔧 Found {len(project_list)} projects to evaluate: {[str(p)[:50] for p in project_list]}")
         project_analysis = await evaluate_projects(project_list)
         if not isinstance(project_analysis, list):
             project_analysis = []
+        print(f"✅ Project evaluation result: {len(project_analysis)} evaluated")
         data["project_analysis"] = project_analysis
 
         # ---- Technical skills post-processing ----

@@ -76,7 +76,19 @@ export default function UserDashboard() {
       try {
         setLoading(true);
         const res = await fetch(`${API_BASE}/user/info/${storedEmail}`);
-        await res.json();
+        const data = await res.json();
+        
+        // Hydrate resumeData from saved user document in MongoDB
+        if (data.user && data.user.structured_info) {
+          setResumeData({
+            ats_score: data.user.ats_score || 0,
+            word_count: data.user.word_count || 0,
+            data: data.user.structured_info,
+            ats_breakdown: data.user.ats_breakdown || {},
+            detected_role: data.user.detected_role || null,
+            suggested_skills: data.user.suggested_skills || [],
+          });
+        }
       } catch (err) {
         console.error("User fetch error:", err);
         setError("Failed to load user data");
@@ -160,6 +172,34 @@ export default function UserDashboard() {
 
       } else {
         setError(result.error || result.detail || 'Failed to upload resume');
+      }
+    } catch (err) {
+      setError('Network error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Clear resume data for re-upload
+  const clearResumeData = async () => {
+    if (!email) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_BASE}/user/clear_resume/${email}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setResumeData(null);
+        setResumeFile(null);
+        setGuidance(null);
+        alert('Resume data cleared! Please upload your resume again.');
+      } else {
+        const result = await response.json();
+        setError(result.detail || 'Failed to clear resume data');
       }
     } catch (err) {
       setError('Network error: ' + err.message);
@@ -861,7 +901,32 @@ const getSuggestedSkills = () => {
                 </label>
               </div>
 
-              
+              {/* Clear & Re-upload Button */}
+              {resumeData && (
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <button
+                    onClick={clearResumeData}
+                    disabled={loading}
+                    style={{
+                      background: 'linear-gradient(135deg, #fef2f2, #fee2e2)',
+                      border: '1px solid #ef4444',
+                      borderRadius: '8px',
+                      padding: '10px 20px',
+                      color: '#dc2626',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.6 : 1,
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    🔄 Clear & Re-upload Resume
+                  </button>
+                  <p style={{ color: '#64748b', fontSize: '12px', marginTop: '8px' }}>
+                    If your data looks incorrect, click above to clear and re-upload
+                  </p>
+                </div>
+              )}
 
               {resumeData ? (
                 <>

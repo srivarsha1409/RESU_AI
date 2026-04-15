@@ -133,6 +133,32 @@ async def upload_resume(email: str = Form(...), file: UploadFile = File(...)):
 
 
 # ---------------------------------------------------------------------
+# 2.5️⃣ Clear Resume Data (for re-upload)
+# ---------------------------------------------------------------------
+@router.delete("/clear_resume/{email}")
+def clear_resume_data(email: str):
+    """Clear the user's resume data so they can re-upload and re-analyze."""
+    result = users.update_one(
+        {"email": {"$regex": f"^{email}$", "$options": "i"}},
+        {
+            "$unset": {
+                "resume_filename": "",
+                "structured_info": "",
+                "ats_score": "",
+                "ats_breakdown": "",
+                "word_count": "",
+                "suggested_skills": "",
+                "detected_role": "",
+                "last_uploaded": "",
+            }
+        }
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found or no data to clear")
+    return {"status": "success", "message": "Resume data cleared. Please re-upload your resume."}
+
+
+# ---------------------------------------------------------------------
 # 3️⃣ Fetch ATS + Resume History
 # ---------------------------------------------------------------------
 @router.get("/history/{email}")

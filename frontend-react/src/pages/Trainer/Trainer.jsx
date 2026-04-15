@@ -1777,9 +1777,9 @@ const handleSort = (key) => {
                   <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#475569", marginBottom: "8px" }}>
                     {sheetName}
                   </h4>
-                  <div style={{ overflowX: "auto" }}>
+                  <div style={{ overflowX: "auto", maxHeight: "600px", overflowY: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                      <thead>
+                      <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
                         <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
                           {rows.length > 0 && Object.keys(rows[0]).map(col => (
                             <th key={col} style={{
@@ -1787,7 +1787,8 @@ const handleSort = (key) => {
                               textAlign: "left",
                               fontWeight: "600",
                               color: "#475569",
-                              borderRight: "1px solid #e2e8f0"
+                              borderRight: "1px solid #e2e8f0",
+                              background: "#f8fafc"
                             }}>
                               {col}
                             </th>
@@ -1795,7 +1796,7 @@ const handleSort = (key) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {rows.slice(0, 10).map((row, idx) => (
+                        {rows.map((row, idx) => (
                           <tr key={idx} style={{ borderBottom: "1px solid #e2e8f0", background: idx % 2 === 0 ? "#fff" : "#f8fafc" }}>
                             {Object.entries(row).map(([col, val]) => (
                               <td key={col} style={{
@@ -1828,11 +1829,9 @@ const handleSort = (key) => {
                       </tbody>
                     </table>
                   </div>
-                  {rows.length > 10 && (
-                    <p style={{ color: "#64748b", fontSize: "12px", marginTop: "8px" }}>
-                      Showing 10 of {rows.length} rows
-                    </p>
-                  )}
+                  <p style={{ color: "#64748b", fontSize: "12px", marginTop: "8px" }}>
+                    Total: {rows.length} rows
+                  </p>
                 </div>
               ))}
             </div>
