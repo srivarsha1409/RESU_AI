@@ -70,7 +70,6 @@ async def filter_uploaded_resumes_stream(
     department: Optional[str] = Form(None),
     degree: Optional[str] = Form(None),
     area_of_interest: Optional[str] = Form(None),
-    certificate: Optional[str] = Form(None),
 ):
     """
     Stream resume filtering progress file by file, returning live updates to the frontend.
@@ -87,7 +86,6 @@ async def filter_uploaded_resumes_stream(
         ]
     department = department.lower().strip() if department else None
     degree = degree.lower().strip() if degree else None
-    certificate_filter = certificate.lower().strip() if certificate else None
     total_files = len(files)
 
     async def event_stream():
@@ -135,7 +133,6 @@ async def filter_uploaded_resumes_stream(
                 tech_skills = [s.lower() for s in display_tech_skills]
 
                 interest_areas = [a.lower().strip() for a in data.get("skills", {}).get("area_of_interest", []) if a]
-                cert_names = [str(c).lower() for c in data.get("certificates", []) if c]
                 email = data.get("email") or parsed.get("email")
                 phone = data.get("phone") or parsed.get("phone")
 
@@ -174,8 +171,6 @@ async def filter_uploaded_resumes_stream(
                     any(af in area for af in area_filters) for area in interest_areas
                 ):
                     continue
-                if certificate_filter and not any(certificate_filter in c for c in cert_names):
-                    continue
 
                 # Build final filtered record
                 skills_block = data.get("skills", {}) or {}
@@ -191,8 +186,6 @@ async def filter_uploaded_resumes_stream(
                     "skills": skills_block,
                     "languages": langs,
                     "area_of_interest": skills_block.get("area_of_interest", []),
-                    # pass through LLM-based certificate evaluation if present
-                    "certificate_analysis": data.get("certificate_analysis", []),
                 }
                 results.append(result)
                 processed_count += 1
@@ -237,7 +230,6 @@ async def filter_uploaded_resumes(
     language: Optional[str] = Form(None),
     department: Optional[str] = Form(None),
     degree: Optional[str] = Form(None),
-    certificate: Optional[str] = Form(None),
 ):
     results = []
     skill_list = [s.strip().lower() for s in skills.split(",")] if skills else []
@@ -246,7 +238,6 @@ async def filter_uploaded_resumes(
     language = language.lower().strip() if language else None
     department = department.lower().strip() if department else None
     degree = degree.lower().strip() if degree else None
-    certificate_filter = certificate.lower().strip() if certificate else None
 
     for file in files:
         parsed = await process_resume_file(file)
@@ -262,7 +253,6 @@ async def filter_uploaded_resumes(
             for s in (data.get("skills", {}) or {}).get("technical", [])
             if s
         ]
-        cert_names = [str(c).lower() for c in data.get("certificates", []) if c]
 
         # Convert numeric fields
         tenth_value = parse_percentage(edu.get("10th", {}).get("percentage"))
@@ -295,8 +285,6 @@ async def filter_uploaded_resumes(
             continue
         if degree and degree not in degree_text:
             continue
-        if certificate_filter and not any(certificate_filter in c for c in cert_names):
-            continue
 
         # Skills filter: all required skills must appear somewhere in technical skills
         if skill_list and not all(any(skill in s for s in tech_skills) for skill in skill_list):
@@ -311,8 +299,6 @@ async def filter_uploaded_resumes(
                 "skills": data.get("skills", {}),
                 "languages": langs,
                 "areas_of_interest": data.get("areas_of_interest", []),
-                # pass through LLM-based certificate evaluation if present
-                "certificate_analysis": data.get("certificate_analysis", []),
             }
         )
 

@@ -20,7 +20,6 @@ const Admin_Resume_Filter = () => {
     departments: [],
     degree: "",
     area_of_interest: "",
-    certificate: "",
     results: [],
   });
 
@@ -277,7 +276,6 @@ const Admin_Resume_Filter = () => {
     filters.department,
     filters.degree,
     filters.area_of_interest,
-    filters.certificate,
   ].filter(Boolean).length;
 
   // Academic stats: min/max CGPA and 10th/12th percentages from filtered results
@@ -1095,35 +1093,6 @@ const Admin_Resume_Filter = () => {
                 />
               </div>
 
-              {/* Certificate (keyword) */}
-              <div>
-                <label style={{
-                  display: "block",
-                  color: "#475569",
-                  marginBottom: "8px",
-                  fontWeight: "600",
-                  fontSize: "13px"
-                }}>
-                  📜 Certificate (keyword)
-                </label>
-                <input
-                  type="text"
-                  name="certificate"
-                  value={filters.certificate}
-                  onChange={handleChange}
-                  placeholder="e.g., AWS Cloud Practitioner"
-                  style={{
-                    border: "2px solid #e2e8f0",
-                    borderRadius: "8px",
-                    padding: "10px 12px",
-                    width: "100%",
-                    fontSize: "14px"
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = "#667eea"}
-                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
-                />
-              </div>
-
               {/* Skills - Full Width */}
               <div style={{ marginTop: "20px" }}>
                 <label style={{
@@ -1455,18 +1424,6 @@ const Admin_Resume_Filter = () => {
                     >
                       Area of Interest
                     </th>
-                    <th
-                      style={{
-                        border: "1px solid #e2e8f0",
-                        padding: "14px",
-                        textAlign: "left",
-                        fontWeight: "700",
-                        color: "#1f2937",
-                        fontSize: "13px",
-                      }}
-                    >
-                      Certificates (LLM)
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1603,113 +1560,6 @@ const Admin_Resume_Filter = () => {
                           ? res.area_of_interest
                           : res.skills?.area_of_interest || []
                         ).join(", ") || "-"}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #e2e8f0",
-                          padding: "14px",
-                          color: "#64748b",
-                          maxWidth: "260px",
-                        }}
-                      >
-                        {Array.isArray(res.certificate_analysis) &&
-                        res.certificate_analysis.length > 0 ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            {res.certificate_analysis.slice(0, 3).map((cert, cIdx) => (
-                              <div
-                                key={cIdx}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  background: "#f8fafc",
-                                  borderRadius: "8px",
-                                  padding: "6px 8px",
-                                  border: "1px solid #e2e8f0",
-                                }}
-                              >
-                                <div style={{ flex: 1, marginRight: "8px" }}>
-                                  <div
-                                    style={{
-                                      fontSize: "12px",
-                                      fontWeight: 600,
-                                      color: "#1f2937",
-                                      whiteSpace: "nowrap",
-                                      textOverflow: "ellipsis",
-                                      overflow: "hidden",
-                                    }}
-                                  >
-                                    {cert.certificate}
-                                  </div>
-                                  {cert.reason && (
-                                    <div
-                                      style={{
-                                        fontSize: "11px",
-                                        color: "#6b7280",
-                                        marginTop: "2px",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                        overflow: "hidden",
-                                      }}
-                                    >
-                                      {cert.reason}
-                                    </div>
-                                  )}
-                                </div>
-                                <div style={{ textAlign: "right" }}>
-                                  <div
-                                    style={{
-                                      fontSize: "11px",
-                                      color: "#6b7280",
-                                      marginBottom: "2px",
-                                    }}
-                                  >
-                                    Score
-                                  </div>
-                                  <div
-                                    style={{
-                                      fontSize: "13px",
-                                      fontWeight: 700,
-                                      color: "#f59e0b",
-                                    }}
-                                  >
-                                    {typeof cert.worthiness_score === "number"
-                                      ? cert.worthiness_score
-                                      : 0}
-                                  </div>
-                                  {cert.highlight && (
-                                    <div
-                                      style={{
-                                        marginTop: "4px",
-                                        fontSize: "10px",
-                                        padding: "2px 6px",
-                                        borderRadius: "999px",
-                                        background: "#dcfce7",
-                                        color: "#166534",
-                                        fontWeight: 600,
-                                      }}
-                                    >
-                                      Highlight
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                            {res.certificate_analysis.length > 3 && (
-                              <div
-                                style={{
-                                  fontSize: "11px",
-                                  color: "#6b7280",
-                                  marginTop: "2px",
-                                }}
-                              >
-                                +{res.certificate_analysis.length - 3} more
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span>-</span>
-                        )}
                       </td>
                     </tr>
                   ))}
