@@ -1,4 +1,5 @@
 
+
 # app/helpers/resume_helper.py
 # Combines your resume AI logic + detailed ATS scoring
 # Updated: robust language normalization + consistent OpenRouter usage
