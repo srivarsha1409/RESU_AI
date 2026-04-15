@@ -277,6 +277,229 @@ async def evaluate_certificates(cert_list):
 
 
 # -------------------------
+# LLM-based Project Evaluation
+# -------------------------
+async def evaluate_projects(project_list):
+    """Evaluate projects using OpenRouter LLM.
+
+    Expects project_list as a list of strings or dicts from the resume JSON.
+    Returns a list of objects with keys as per the strict schema:
+
+    [
+      {
+        "project_title": "",
+        "summary": "",
+        "technologies": [],
+        "domain": "",
+        "problem_statement": "",
+        "features": [],
+        "impact": "",
+        "complexity_level": "Beginner | Intermediate | Advanced",
+        "relevance_score": 0,
+        "missing_points": [],
+        "recommended_improvements": [],
+        "role_mapping": []
+      }
+    ]
+
+    On any error, returns [].
+    """
+
+    if not openrouter_client:
+        return []
+
+    if not project_list:
+        return []
+
+    # Normalize to a list of simple strings describing each project
+    normalized_projects = []
+    for p in project_list:
+        if p is None:
+            continue
+        if isinstance(p, str):
+            text = p.strip()
+        elif isinstance(p, dict):
+            title = str(p.get("title") or p.get("name") or "").strip()
+            desc = str(p.get("description") or p.get("details") or "").strip()
+            tech = p.get("tech_stack") or p.get("technologies") or []
+            if isinstance(tech, list):
+                tech_text = ", ".join(str(t).strip() for t in tech if str(t).strip())
+            else:
+                tech_text = str(tech).strip()
+            parts = [title, desc, tech_text]
+            text = ". ".join(part for part in parts if part)
+        else:
+            text = str(p).strip()
+
+        if text:
+            normalized_projects.append(text)
+
+    if not normalized_projects:
+        return []
+
+    schema_text = (
+        "[\n"
+        "  {\n"
+        "    \"project_title\": \"\",\n"
+        "    \"summary\": \"\",\n"
+        "    \"technologies\": [],\n"
+        "    \"domain\": \"\",\n"
+        "    \"problem_statement\": \"\",\n"
+        "    \"features\": [],\n"
+        "    \"impact\": \"\",\n"
+        "    \"complexity_level\": \"Beginner | Intermediate | Advanced\",\n"
+        "    \"relevance_score\": 0,\n"
+        "    \"missing_points\": [],\n"
+        "    \"recommended_improvements\": [],\n"
+        "    \"role_mapping\": []\n"
+        "  }\n"
+        "]"
+    )
+
+    prompt = (
+        "You are evaluating student projects from a fresher resume for industry hiring. "
+        "For EACH project text below, extract and evaluate using this STRICT JSON schema only (no extra keys, no comments, no markdown):\n\n"
+        f"{schema_text}\n\n"
+        "Field rules:\n"
+        "- technologies must be a list of tools/languages/frameworks detected from the project text.\n"
+        "- domain must be one of: [\"Web Development\", \"AI/ML\", \"Cloud\", \"Full Stack\", \"Mobile App\", \"IoT\", \"Cybersecurity\", \"Data Science\", \"Automation\", \"Other\"].\n"
+        "- complexity_level must be based on depth of stack, integrations, and features.\n"
+        "- relevance_score is an integer between 0 and 100 based on industry usefulness for fresher hiring.\n"
+        "- missing_points should include items like: \"No GitHub link\", \"No deployment link\", \"Weak problem statement\", \"No measurable achievements\" when applicable.\n"
+        "- role_mapping should be a list of suitable job roles such as: [\"Full Stack Developer\", \"Backend Developer\", \"Frontend Developer\", \"ML Engineer\", \"Cloud Engineer\", \"Data Analyst\", \"DevOps Engineer\", \"Software Engineer\"].\n\n"
+        "Return JSON ONLY as an array where each element corresponds to each project in the same order as provided.\n\n"
+        f"Projects: {json.dumps(normalized_projects)}"
+    )
+
+    try:
+        response = openrouter_client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Return JSON only. Do not include commentary or markdown fences.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            max_tokens=800,
+        )
+        raw = response.choices[0].message.content or ""
+    except Exception as exc:
+        print("⚠️ Project evaluation LLM call failed:", exc)
+        return []
+
+    raw_clean = raw.strip().replace("```json", "").replace("```", "").strip()
+
+    try:
+        parsed = json.loads(raw_clean)
+    except Exception as exc:
+        print("⚠️ Project evaluation JSON parse failed:", exc, "Raw:", raw_clean[:300])
+        return []
+
+    if isinstance(parsed, dict) and "results" in parsed:
+        items = parsed.get("results", [])
+    else:
+        items = parsed
+
+    if not isinstance(items, list):
+        return []
+
+    allowed_domains = {
+        "web development",
+        "ai/ml",
+        "cloud",
+        "full stack",
+        "mobile app",
+        "iot",
+        "cybersecurity",
+        "data science",
+        "automation",
+        "other",
+    }
+
+    valid_complexities = {"beginner", "intermediate", "advanced"}
+
+    results = []
+    for obj in items:
+        if not isinstance(obj, dict):
+            continue
+
+        title = str(obj.get("project_title", "")).strip()
+        summary = str(obj.get("summary", "")).strip()
+        problem = str(obj.get("problem_statement", "")).strip()
+        impact = str(obj.get("impact", "")).strip()
+
+        # Skip completely empty entries
+        if not (title or summary or problem or impact):
+            continue
+
+        techs = obj.get("technologies", [])
+        if isinstance(techs, list):
+            techs_clean = [str(t).strip() for t in techs if str(t).strip()]
+        elif isinstance(techs, str):
+            techs_clean = [s.strip() for s in techs.split(",") if s.strip()]
+        else:
+            techs_clean = []
+
+        domain_val = str(obj.get("domain", "")).strip()
+        domain_lower = domain_val.lower()
+        if domain_lower not in allowed_domains:
+            domain_val = "Other"
+
+        complexity_val = str(obj.get("complexity_level", "")).strip()
+        comp_lower = complexity_val.lower()
+        if comp_lower not in valid_complexities:
+            # Try to infer from wording if missing/invalid
+            comp_lower = "intermediate"
+        # Normalize capitalization
+        if comp_lower == "beginner":
+            complexity_val = "Beginner"
+        elif comp_lower == "advanced":
+            complexity_val = "Advanced"
+        else:
+            complexity_val = "Intermediate"
+
+        score_val = obj.get("relevance_score", 0)
+        try:
+            score_int = int(score_val)
+        except Exception:
+            score_int = 0
+        score_int = max(0, min(100, score_int))
+
+        def to_str_list(value):
+            if not value:
+                return []
+            if isinstance(value, list):
+                return [str(v).strip() for v in value if str(v).strip()]
+            return [str(value).strip()]
+
+        features = to_str_list(obj.get("features"))
+        missing_points = to_str_list(obj.get("missing_points"))
+        improvements = to_str_list(obj.get("recommended_improvements"))
+        role_mapping = to_str_list(obj.get("role_mapping"))
+
+        results.append(
+            {
+                "project_title": title,
+                "summary": summary,
+                "technologies": techs_clean,
+                "domain": domain_val,
+                "problem_statement": problem,
+                "features": features,
+                "impact": impact,
+                "complexity_level": complexity_val,
+                "relevance_score": score_int,
+                "missing_points": missing_points,
+                "recommended_improvements": improvements,
+                "role_mapping": role_mapping,
+            }
+        )
+
+    return results
+
+
+# -------------------------
 # Core Resume Processor
 # -------------------------
 async def process_resume_file(upload_file):
@@ -301,7 +524,17 @@ async def process_resume_file(upload_file):
 
         # ---- AI extraction ----
         prompt = f"""
-Extract structured resume info and return valid JSON ONLY:
+Extract structured resume info and return valid JSON ONLY.
+
+CRITICAL RULE FOR CERTIFICATES:
+  The "certificates" array must be extracted ONLY from sections whose heading (case-insensitive)
+  matches one of the following variations. Ignore any certificate-like text outside these sections.
+  Allowed headings:
+    ["CERTIFICATE", "CERTIFICATES", "CERTIFICATION", "CERTIFICATIONS",
+     "COURSES", "TRAININGS", "ACHIEVEMENTS", "SKILL CERTIFICATIONS",
+     "ONLINE COURSES", "LICENSES", "CREDENTIALS"].
+
+Return JSON in this exact structure:
 {{
   "name": "", 
   "email": "", 
@@ -343,6 +576,7 @@ Extract structured resume info and return valid JSON ONLY:
   "role_match": "", 
   "summary": ""
 }}
+
 Resume text:
 {prompt_text}
 """
@@ -376,6 +610,13 @@ Resume text:
         if not isinstance(cert_analysis, list):
             cert_analysis = []
         data["certificate_analysis"] = cert_analysis
+
+        # ---- Project evaluation (LLM) ----
+        project_list = data.get("projects", []) or []
+        project_analysis = await evaluate_projects(project_list)
+        if not isinstance(project_analysis, list):
+            project_analysis = []
+        data["project_analysis"] = project_analysis
 
         # ---- Technical skills: keep AI output as-is (no backend post-processing) ----
         # Use the "skills" block exactly as returned by the AI JSON.
@@ -436,7 +677,17 @@ async def extract_resume_data(text: str):
 
 
     prompt = f"""
-Extract structured resume info and return valid JSON ONLY:
+Extract structured resume info and return valid JSON ONLY.
+
+CRITICAL RULE FOR CERTIFICATES:
+  The "certificates" array must be extracted ONLY from sections whose heading (case-insensitive)
+  matches one of the following variations. Ignore any certificate-like text outside these sections.
+  Allowed headings:
+    ["CERTIFICATE", "CERTIFICATES", "CERTIFICATION", "CERTIFICATIONS",
+     "COURSES", "TRAININGS", "ACHIEVEMENTS", "SKILL CERTIFICATIONS",
+     "ONLINE COURSES", "LICENSES", "CREDENTIALS"].
+
+Return JSON in this exact structure:
 {{
   "name": "", "email": "", "phone": "",
   "linkedin": "", "github": "", "leetcode": "", "codechef": "",
@@ -451,8 +702,9 @@ Extract structured resume info and return valid JSON ONLY:
   "role_match": "",
   "summary": ""
 }}
+
 Resume text:
-{prompt_text}
+{text}
 """
     try:
         completion = openrouter_client.chat.completions.create(

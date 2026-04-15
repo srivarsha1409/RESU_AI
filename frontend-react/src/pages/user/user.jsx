@@ -646,6 +646,159 @@ const getSuggestedSkills = () => {
                           </div>
                         </div>
                       )}
+
+                      {/* LLM-based Project Evaluation */}
+                      {Array.isArray(resumeData?.data?.project_analysis) &&
+                       resumeData.data.project_analysis.length > 0 && (
+                        <div className="md:col-span-2 bg-white/5 rounded-xl p-5">
+                          <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
+                            <Briefcase size={20} className="text-purple-300" />
+                            Project Evaluation (LLM)
+                          </h3>
+
+                          <div className="space-y-4">
+                            {resumeData.data.project_analysis.map((proj, idx) => (
+                              <div
+                                key={idx}
+                                className="bg-purple-900/20 border border-purple-500/30 rounded-xl px-4 py-4 space-y-3"
+                              >
+                                {/* Header: title, domain, complexity, relevance */}
+                                <div className="flex flex-wrap justify-between gap-3">
+                                  <div className="flex-1 min-w-[180px]">
+                                    <p className="text-white font-semibold text-sm">
+                                      {proj.project_title || `Project ${idx + 1}`}
+                                    </p>
+                                    {proj.summary && (
+                                      <p className="text-purple-100 text-xs mt-1">
+                                        {proj.summary}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {proj.domain && (
+                                      <span className="text-[11px] px-3 py-1 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/40 font-semibold">
+                                        {proj.domain}
+                                      </span>
+                                    )}
+                                    {proj.complexity_level && (
+                                      <span className="text-[11px] px-3 py-1 rounded-full bg-green-500/20 text-green-100 border border-green-400/40 font-semibold">
+                                        {proj.complexity_level}
+                                      </span>
+                                    )}
+                                    <div className="text-right min-w-[80px]">
+                                      <p className="text-[11px] text-purple-200">Relevance</p>
+                                      <p className="text-lg font-semibold text-yellow-300">
+                                        {typeof proj.relevance_score === "number" ? proj.relevance_score : 0}
+                                        <span className="text-[11px] text-purple-300 ml-1">/100</span>
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Technologies & role mapping */}
+                                <div className="flex flex-wrap gap-4">
+                                  <div className="flex-1 min-w-[200px]">
+                                    <p className="text-[12px] text-purple-200 mb-1">Technologies</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {(proj.technologies || []).length > 0 ? (
+                                        proj.technologies.map((t, tIdx) => (
+                                          <span
+                                            key={tIdx}
+                                            className="text-[11px] px-3 py-1 rounded-full bg-slate-900/40 text-purple-50 border border-purple-500/30"
+                                          >
+                                            {t}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <span className="text-[12px] text-purple-300">Not detected</span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex-1 min-w-[200px]">
+                                    <p className="text-[12px] text-purple-200 mb-1">Mapped Roles</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {(proj.role_mapping || []).length > 0 ? (
+                                        proj.role_mapping.map((r, rIdx) => (
+                                          <span
+                                            key={rIdx}
+                                            className="text-[11px] px-3 py-1 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/40"
+                                          >
+                                            {r}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <span className="text-[12px] text-purple-300">No specific mapping</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Problem, features, impact */}
+                                {proj.problem_statement && (
+                                  <div>
+                                    <p className="text-[12px] text-purple-200 mb-1">Problem Statement</p>
+                                    <p className="text-[13px] text-purple-50">{proj.problem_statement}</p>
+                                  </div>
+                                )}
+
+                                {proj.features && proj.features.length > 0 && (
+                                  <div>
+                                    <p className="text-[12px] text-purple-200 mb-1">Key Features</p>
+                                    <ul className="list-disc list-inside space-y-1">
+                                      {proj.features.map((f, fIdx) => (
+                                        <li key={fIdx} className="text-[12px] text-purple-50">
+                                          {f}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {proj.impact && (
+                                  <div>
+                                    <p className="text-[12px] text-purple-200 mb-1">Impact</p>
+                                    <p className="text-[13px] text-purple-50">{proj.impact}</p>
+                                  </div>
+                                )}
+
+                                {/* Missing points & improvements */}
+                                {(proj.missing_points && proj.missing_points.length > 0) ||
+                                  (proj.recommended_improvements && proj.recommended_improvements.length > 0) ? (
+                                  <div className="grid md:grid-cols-2 gap-4 mt-1">
+                                    {proj.missing_points && proj.missing_points.length > 0 && (
+                                      <div>
+                                        <p className="text-[12px] text-red-200 mb-1">Missing Points</p>
+                                        <ul className="list-disc list-inside space-y-1">
+                                          {proj.missing_points.map((m, mIdx) => (
+                                            <li key={mIdx} className="text-[12px] text-red-100">
+                                              {m}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {proj.recommended_improvements && proj.recommended_improvements.length > 0 && (
+                                      <div>
+                                        <p className="text-[12px] text-green-200 mb-1">Recommended Improvements</p>
+                                        <ul className="list-disc list-inside space-y-1">
+                                          {proj.recommended_improvements.map((imp, iIdx) => (
+                                            <li key={iIdx} className="text-[12px] text-green-100">
+                                              {imp}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>

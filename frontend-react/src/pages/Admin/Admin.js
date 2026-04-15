@@ -1113,6 +1113,196 @@ const handleLogout = async () => {
             )}
           </div>
 
+          {/* Project Evaluation (LLM) */}
+          {Array.isArray(data?.project_analysis) && data.project_analysis.length > 0 && (
+            <div style={{ marginTop: 20, background: "#fff", borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)", padding: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>🧠</span>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1f2937" }}>Project Evaluation (LLM)</h3>
+                </div>
+                <div style={{ fontSize: 12, color: "#6b7280" }}>
+                  AI summary of each project for fresher hiring
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {data.project_analysis.map((proj, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      borderRadius: 10,
+                      padding: "12px 14px",
+                      background: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    {/* Header row: title + domain + complexity + relevance */}
+                    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 180 }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>
+                          {proj.project_title || `Project ${idx + 1}`}
+                        </div>
+                        {proj.summary && (
+                          <div style={{ fontSize: 13, color: "#4b5563", marginTop: 2 }}>
+                            {proj.summary}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                        {proj.domain && (
+                          <div style={{
+                            fontSize: 11,
+                            padding: "4px 8px",
+                            borderRadius: 999,
+                            background: "#dbeafe",
+                            color: "#1d4ed8",
+                            fontWeight: 600,
+                          }}>
+                            {proj.domain}
+                          </div>
+                        )}
+                        {proj.complexity_level && (
+                          <div style={{
+                            fontSize: 11,
+                            padding: "4px 8px",
+                            borderRadius: 999,
+                            background: "#dcfce7",
+                            color: "#166534",
+                            fontWeight: 600,
+                          }}>
+                            {proj.complexity_level}
+                          </div>
+                        )}
+                        <div style={{ textAlign: "right", minWidth: 80 }}>
+                          <div style={{ fontSize: 11, color: "#6b7280" }}>Relevance</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: "#d97706" }}>
+                            {typeof proj.relevance_score === "number" ? proj.relevance_score : 0}
+                            <span style={{ fontSize: 11, marginLeft: 2 }}>/100</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Technologies & role mapping */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <div style={{ fontSize: 12, color: "#4b5563", marginBottom: 4 }}>Technologies</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          {(proj.technologies || []).length > 0 ? (
+                            proj.technologies.map((t, tIdx) => (
+                              <span
+                                key={tIdx}
+                                style={{
+                                  fontSize: 11,
+                                  padding: "3px 8px",
+                                  borderRadius: 999,
+                                  background: "#e5e7eb",
+                                  color: "#111827",
+                                }}
+                              >
+                                {t}
+                              </span>
+                            ))
+                          ) : (
+                            <span style={{ fontSize: 12, color: "#9ca3af" }}>Not detected</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <div style={{ fontSize: 12, color: "#4b5563", marginBottom: 4 }}>Mapped Roles</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          {(proj.role_mapping || []).length > 0 ? (
+                            proj.role_mapping.map((r, rIdx) => (
+                              <span
+                                key={rIdx}
+                                style={{
+                                  fontSize: 11,
+                                  padding: "3px 8px",
+                                  borderRadius: 999,
+                                  background: "#e0f2fe",
+                                  color: "#1d4ed8",
+                                }}
+                              >
+                                {r}
+                              </span>
+                            ))
+                          ) : (
+                            <span style={{ fontSize: 12, color: "#9ca3af" }}>No specific mapping</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Problem, features, impact, missing points, improvements */}
+                    {proj.problem_statement && (
+                      <div style={{ marginTop: 4 }}>
+                        <div style={{ fontSize: 12, color: "#4b5563", marginBottom: 2 }}>Problem Statement</div>
+                        <div style={{ fontSize: 13, color: "#111827" }}>{proj.problem_statement}</div>
+                      </div>
+                    )}
+
+                    {proj.features && proj.features.length > 0 && (
+                      <div style={{ marginTop: 4 }}>
+                        <div style={{ fontSize: 12, color: "#4b5563", marginBottom: 2 }}>Key Features</div>
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          {proj.features.map((f, fIdx) => (
+                            <li key={fIdx} style={{ fontSize: 12, color: "#111827" }}>
+                              {f}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {proj.impact && (
+                      <div style={{ marginTop: 4 }}>
+                        <div style={{ fontSize: 12, color: "#4b5563", marginBottom: 2 }}>Impact</div>
+                        <div style={{ fontSize: 13, color: "#111827" }}>{proj.impact}</div>
+                      </div>
+                    )}
+
+                    {(proj.missing_points && proj.missing_points.length > 0) ||
+                      (proj.recommended_improvements && proj.recommended_improvements.length > 0) ? (
+                      <div style={{ marginTop: 6, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+                        {proj.missing_points && proj.missing_points.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 12, color: "#b91c1c", marginBottom: 2 }}>Missing Points</div>
+                            <ul style={{ margin: 0, paddingLeft: 18 }}>
+                              {proj.missing_points.map((m, mIdx) => (
+                                <li key={mIdx} style={{ fontSize: 12, color: "#991b1b" }}>
+                                  {m}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {proj.recommended_improvements && proj.recommended_improvements.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 12, color: "#166534", marginBottom: 2 }}>Recommended Improvements</div>
+                            <ul style={{ margin: 0, paddingLeft: 18 }}>
+                              {proj.recommended_improvements.map((imp, iIdx) => (
+                                <li key={iIdx} style={{ fontSize: 12, color: "#065f46" }}>
+                                  {imp}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Projects */}
           <div style={{ fontSize: 24, fontWeight: 700, margin: "30px 0 20px 0", color: "#1a237e", display: "flex", alignItems: "center", gap: 10 }}>
             Projects
@@ -1187,10 +1377,10 @@ const handleLogout = async () => {
 
           {/* Certificate Evaluation (LLM) */}
           {Array.isArray(data?.certificate_analysis) && data.certificate_analysis.length > 0 && (
-            <div style={{ marginTop: 20, background: "#111827", borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.25)", padding: 20 }}>
+            <div style={{ marginTop: 20, background: "#fff", borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06)", padding: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <span style={{ fontSize: 18 }}>🔑</span>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#e5e7eb" }}>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1f2937" }}>
                   Certificate Evaluation (LLM)
                 </h3>
               </div>
@@ -1202,28 +1392,28 @@ const handleLogout = async () => {
                     style={{
                       borderRadius: 10,
                       padding: "10px 14px",
-                      background: "linear-gradient(90deg, rgba(79,70,229,0.85), rgba(147,51,234,0.85))",
+                      background: "#f9fafb",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      border: "1px solid #e5e7eb",
                     }}
                   >
                     <div style={{ flex: 1, marginRight: 12 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#f9fafb" }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>
                         {cert.certificate}
                       </div>
                       {cert.reason && (
-                        <div style={{ fontSize: 12, color: "#e5e7eb", marginTop: 4 }}>
+                        <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>
                           {cert.reason}
                         </div>
                       )}
                     </div>
                     <div style={{ textAlign: "right", minWidth: 80 }}>
-                      <div style={{ fontSize: 11, color: "#e5e7eb", marginBottom: 2 }}>Worthiness Score</div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: "#facc15" }}>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 2 }}>Worthiness Score</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "#d97706" }}>
                         {typeof cert.worthiness_score === "number" ? cert.worthiness_score : 0}
-                        <span style={{ fontSize: 12, color: "#e5e7eb", marginLeft: 2 }}>/ 100</span>
+                        <span style={{ fontSize: 12, color: "#6b7280", marginLeft: 2 }}>/ 100</span>
                       </div>
                       {cert.highlight && (
                         <div
