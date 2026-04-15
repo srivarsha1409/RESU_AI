@@ -150,6 +150,32 @@ if (filters.departments.length > 0)
     let buffer = "";
     let currentResults = [];
 
+    // Helper function to handle progress updates
+    const handleProgressUpdate = (data) => {
+      setProcessedFiles(data.progress);
+      setTotalFiles(data.total);
+
+      if (data.results_so_far) {
+        currentResults = data.results_so_far;
+        setFilters((prev) => ({ ...prev, results: [...currentResults] }));
+      }
+    };
+
+    // Helper function to handle completion
+    const handleCompletion = (data) => {
+      // Merge backend data (real ATS, education, etc.) with the original uploaded files
+      const mergedResults = data.results.map((res) => {
+        const matchingFile = resumes.find((f) => f.name === res.filename);
+        return {
+          ...res,
+          previewUrl: matchingFile ? matchingFile.previewUrl : null, // 🔥 connect with real local file
+        };
+      });
+
+      setFilters((prev) => ({ ...prev, results: mergedResults }));
+      setProcessedFiles(data.count);
+    };
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -164,30 +190,13 @@ if (filters.departments.length > 0)
 
           // 🔹 Update live progress
           if (data.progress) {
-            setProcessedFiles(data.progress);
-            setTotalFiles(data.total);
-
-            if (data.results_so_far) {
-              currentResults = data.results_so_far;
-              setFilters((prev) => ({ ...prev, results: [...currentResults] }));
-            }
+            handleProgressUpdate(data);
           }
 
           // 🔹 When done, finalize the results
           if (data.done) {
-  // Merge backend data (real ATS, education, etc.) with the original uploaded files
-  const mergedResults = data.results.map((res) => {
-    const matchingFile = resumes.find((f) => f.name === res.filename);
-    return {
-      ...res,
-      previewUrl: matchingFile ? matchingFile.previewUrl : null, // 🔥 connect with real local file
-    };
-  });
-
-  setFilters((prev) => ({ ...prev, results: mergedResults }));
-  setProcessedFiles(data.count);
-}
-
+            handleCompletion(data);
+          }
         }
       }
     }
@@ -206,8 +215,7 @@ React.useEffect(() => {
       if (r.previewUrl) URL.revokeObjectURL(r.previewUrl);
     });
   };
-}, []);
-
+}, [filters.results]);
 
 
 const downloadReport = async () => {

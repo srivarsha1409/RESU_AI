@@ -19,14 +19,14 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.5",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "recharts": "^3.3.0",
     "tailwind-variants": "^3.1.1",
     "tailwindcss-animate": "^1.0.7",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "cross-env NODE_NO_WARNINGS=1 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -51,7 +51,10 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "baseline-browser-mapping": "^2.9.17",
+    "cross-env": "^10.1.0",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.18"
+    "tailwindcss": "^3.4.18",
+    "webpack-dev-server": "^5.2.3"
   }
 }

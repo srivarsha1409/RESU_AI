@@ -65,20 +65,6 @@ export default function Home() {
             </Link>
           </div>
         </div>
-
-        {/* Stats */}
-        <div className="mt-24 grid grid-cols-3 gap-8 md:gap-24 text-center">
-          {[
-            { label: 'Resumes Analyzed', val: '10k+' },
-            { label: 'Success Rate', val: '95%' },
-            { label: 'AI Availability', val: '24/7' }
-          ].map((stat, idx) => (
-            <div key={idx} className="group cursor-default">
-              <p className="text-3xl md:text-4xl font-black text-slate-800 group-hover:text-blue-600 transition-colors duration-300">{stat.val}</p>
-              <p className="text-sm md:text-base font-semibold text-slate-500 uppercase tracking-wide mt-1">{stat.label}</p>
-            </div>
-          ))}
-        </div>
       </section>
     </div>
   );

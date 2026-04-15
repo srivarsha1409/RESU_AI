@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, PlusCircle, Upload, Filter, TrendingUp, Users, Award } from "lucide-react";
+import { X, PlusCircle, Upload, Filter, TrendingUp, Users, Award, Download } from "lucide-react";
 
 const Admin_Resume_Filter = () => {
   const [totalFiles, setTotalFiles] = useState(0);
@@ -110,6 +110,62 @@ const Admin_Resume_Filter = () => {
       ...prev,
       departments: prev.departments.filter((d) => d.short !== shortCode),
     }));
+  };
+
+  // Download CSV function
+  const downloadCSV = () => {
+    if (!filters.results || filters.results.length === 0) {
+      alert("No results to download");
+      return;
+    }
+
+    const headers = [
+      "Name",
+      "Filename", 
+      "Department",
+      "10th %",
+      "12th %",
+      "CGPA",
+      "ATS Score",
+      "Languages",
+      "Key Skills",
+      "Area of Interest",
+      "Email",
+      "Phone"
+    ];
+
+    const csvData = filters.results.map((res) => [
+      res.name || "N/A",
+      res.filename || "N/A",
+      res.education?.bachelor?.degree || "N/A",
+      res.education?.["10th"]?.percentage || "N/A",
+      res.education?.["12th"]?.percentage || "N/A",
+      res.education?.bachelor?.cgpa || "N/A",
+      res.ats_score ? `${res.ats_score}%` : "N/A",
+      res.languages?.join("; ") || "N/A",
+      res.skills?.technical?.join("; ") || "N/A",
+      (res.area_of_interest && res.area_of_interest.length
+        ? res.area_of_interest
+        : res.skills?.area_of_interest || []
+      ).join("; ") || "N/A",
+      res.email || "N/A",
+      res.phone || "N/A"
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `filtered_resumes_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // handle form submit
@@ -1266,6 +1322,29 @@ const Admin_Resume_Filter = () => {
                   Filtered Results ({filters.results.length})
                 </h2>
               </div>
+              <button
+                onClick={downloadCSV}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "10px 16px",
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
+                  transition: "all 0.2s"
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+                onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
+              >
+                <Download size={16} />
+                Download CSV
+              </button>
             </div>
 
             <div style={{ overflowX: "auto" }}>

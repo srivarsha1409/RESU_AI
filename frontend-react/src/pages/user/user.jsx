@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Upload, Target, Briefcase, MessageSquare, CheckCircle, AlertCircle, Info, TrendingUp, Award, FileText, User, Mail, Phone, LogOut } from 'lucide-react';
+import { Upload, Target, Briefcase, MessageSquare, CheckCircle, AlertCircle, Info, TrendingUp, Award, FileText, User, Mail, Phone } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 
 const API_BASE = 'http://127.0.0.1:8000';
@@ -11,8 +11,6 @@ export default function UserDashboard() {
   const [error, setError] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
-  // User data
-  const [user, setUser] = useState({});
   
   // Resume data
   const [resumeFile, setResumeFile] = useState(null);
@@ -33,7 +31,7 @@ export default function UserDashboard() {
 
   const email = localStorage.getItem("email");
 
-  const fetchGuidance = async () => {
+  const fetchGuidance = useCallback(async () => {
     if (!resumeData?.data || guidanceLoading) return;
 
     setGuidanceLoading(true);
@@ -48,12 +46,11 @@ export default function UserDashboard() {
         body: JSON.stringify({ resume_data: resumeData.data }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.detail || data.error || "Failed to generate guidance");
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
 
+      const data = await res.json();
       setGuidance(data.guidance || {});
     } catch (err) {
       console.error("Guidance error:", err);
@@ -62,14 +59,8 @@ export default function UserDashboard() {
     } finally {
       setGuidanceLoading(false);
     }
-  };
+  }, [resumeData, guidanceLoading]);
 
-  const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-    if (tabId === 'guidance' && resumeData?.data && !guidance && !guidanceLoading) {
-      fetchGuidance();
-    }
-  };
 
   // Fetch user info and hydrate resume data (so role tab works after reload)
   useEffect(() => {
@@ -80,9 +71,7 @@ export default function UserDashboard() {
       try {
         setLoading(true);
         const res = await fetch(`${API_BASE}/user/info/${storedEmail}`);
-        const data = await res.json();
-        const userDoc = data.user || {};
-        setUser(userDoc);
+        await res.json();
       } catch (err) {
         console.error("User fetch error:", err);
         setError("Failed to load user data");
@@ -99,7 +88,7 @@ export default function UserDashboard() {
     if (activeTab === 'guidance' && resumeData?.data && !guidance && !guidanceLoading) {
       fetchGuidance();
     }
-  }, [activeTab, resumeData, guidance, guidanceLoading]);
+  }, [activeTab, resumeData, guidance, guidanceLoading, fetchGuidance]);
 
   // Coding profiles removed from user portal
 
